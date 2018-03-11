@@ -1,0 +1,18 @@
+[package]
+name = "oftb"
+version = "0.1.0"
+authors = ["Nathan Ringo <remexre@gmail.com>"]
+
+[dependencies]
+log = "0.4.1"
+pest = "1.0.6"
+pest_derive = "1.0.6"
+stderrlog = { version = "0.3.1-pre", git = "https://github.com/remexre/stderrlog-rs.git" }
+structopt = "0.2.5"
+failure = "0.1.1"
+symbol = "0.1.1"
+
+[[bin]]
+doc = false
+name = "oftb"
+path = "src/bin/main.rs"

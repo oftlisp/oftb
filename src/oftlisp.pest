@@ -1,0 +1,36 @@
+program = { soi ~ value* ~ eoi }
+value = { rmacro | symbolish | list | vector | bytes | string }
+
+// Common rules for byteStrings and strings.
+hex_esc = { "x" ~ hex_digit{2} }
+hex_digit = { '0'..'9' | 'a'..'f' | 'A'..'F' }
+predef_esc = { "n" | "r" | "t" | "\\" | "\"" | "'" }
+
+// Byte Strings
+bytes = ${ "b\"" ~ (bytes_raw_ch | bytes_esc_ch)* ~ "\"" }
+bytes_raw_ch = { !("\\" | "\"") ~ ' '..'~' }
+bytes_esc_ch = { "\\" ~ (hex_esc | predef_esc) }
+
+// Lists and Vectors
+list = { "(" ~ value* ~ ("|" ~ value)? ~ ")" }
+vector = { "[" ~ value* ~ "]" }
+
+// Reader Macros
+rmacro = { rmacro_ch ~ value }
+rmacro_ch = { "'" | "`" | ",@" | "," | "\\" | "!" | "%" }
+
+// Symbols and Numbers
+symbolish = @{ symbolish_ch+ }
+symbolish_ch = { 'a'..'z' | 'A'..'Z' | '0'..'9' | "+" | "-" | "." | "/" | "$" |
+	"?" | "*" | "=" | "<" | ">" | "_" }
+
+// Strings
+string = ${ "\"" ~ (string_raw_ch | string_esc_ch)* ~ "\"" }
+string_raw_ch = { !("\\" | "\"") ~ any }
+string_4_esc = { "u" ~ hex_digit{4} }
+string_8_esc = { "U" ~ hex_digit{8} }
+string_esc_ch = { "\\" ~ (hex_esc | string_4_esc | string_8_esc | predef_esc) }
+
+whitespace = _{ " " | "\t" | line_break }
+line_break = _{ "\n" | "\r" }
+comment = _{ ";" ~ (!line_break ~ any)* ~ line_break }
