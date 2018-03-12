@@ -64,6 +64,11 @@ impl Heap {
         self.alloc_cell(HeapCell::Vector(addrs))
     }
 
+    /// Deletes the contents of the heap.
+    pub fn clear(&mut self) {
+        self.cells.clear();
+    }
+
     /// Gets a `HeapRef` to a given place.
     pub fn get(&self, addr: usize) -> HeapRef {
         HeapRef(self, addr)
@@ -101,8 +106,32 @@ pub enum HeapCell {
 pub struct HeapRef<'a>(&'a Heap, usize);
 
 impl<'a> HeapRef<'a> {
-    fn cell(&self) -> &'a HeapCell {
+    /// Returns a reference to a different address on the same heap.
+    pub fn at(&self, addr: usize) -> HeapRef<'a> {
+        HeapRef(self.0, addr)
+    }
+
+    /// Returns a reference to the cell referred to by this HeapRef.
+    pub fn cell(&self) -> &'a HeapCell {
         &self.0[self.1]
+    }
+
+    /// Returns the head of the cons the ref points at, if it does.
+    pub fn head(&self) -> Option<HeapRef<'a>> {
+        if let HeapCell::Cons(h, _) = *self.cell() {
+            Some(self.at(h))
+        } else {
+            None
+        }
+    }
+
+    /// Returns the tail of the cons the ref points at, if it does.
+    pub fn tail(&self) -> Option<HeapRef<'a>> {
+        if let HeapCell::Cons(_, t) = *self.cell() {
+            Some(self.at(t))
+        } else {
+            None
+        }
     }
 }
 
@@ -127,17 +156,17 @@ impl<'a> Display for HeapRef<'a> {
                 write!(fmt, "\"")
             }
             HeapCell::Cons(h, t) => {
-                write!(fmt, "({}", HeapRef(self.0, h))?;
+                write!(fmt, "({}", self.at(h))?;
                 let mut addr = t;
                 loop {
-                    match *HeapRef(self.0, addr).cell() {
+                    match self.0[addr] {
                         HeapCell::Cons(h, t) => {
-                            write!(fmt, " {}", HeapRef(self.0, h))?;
+                            write!(fmt, " {}", self.at(h))?;
                             addr = t;
                         }
                         HeapCell::Nil => break,
                         _ => {
-                            write!(fmt, " | {}", HeapRef(self.0, addr))?;
+                            write!(fmt, " | {}", self.at(addr))?;
                             break;
                         }
                     }

@@ -1,4 +1,3 @@
-#[macro_use]
 extern crate failure;
 #[macro_use]
 extern crate log;
@@ -10,7 +9,8 @@ extern crate structopt;
 mod options;
 
 use failure::Error;
-use oftb::{parse_file, Heap};
+use oftb::parse_file;
+use oftb::ast::Module;
 use structopt::StructOpt;
 
 use options::Options;
@@ -25,10 +25,14 @@ fn main() {
 }
 
 fn run(options: Options) -> Result<(), Error> {
-    let mut heap = Heap::new();
+    let literals = parse_file(options.path)?;
+    println!("Literals:");
+    for l in &literals {
+        println!("{}", l);
+    }
 
-    let addr = parse_file(options.path, &mut heap)?;
-    println!("{}", heap.get(addr));
+    let ast = Module::from_values(literals)?;
+    println!("{:?}", ast);
 
     Ok(())
 }

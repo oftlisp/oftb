@@ -6,20 +6,18 @@ use pest::Parser;
 use pest::iterators::Pairs;
 use symbol::Symbol;
 
+use ast::Literal;
 use error::Error;
-use heap::{Heap, HeapCell};
 
 #[derive(Parser)]
 #[grammar = "oftlisp.pest"]
 pub struct OftLispParser;
 
-/// Parses an OftLisp program from a file. If successful, builds the program
-/// tree as a list of values on the heap, and returns its address.
-pub fn parse_file<P: AsRef<Path>>(
-    path: P,
-    heap: &mut Heap,
-) -> Result<usize, Error> {
+/// Parses an OftLisp program from a file. If successful, returns the values as
+/// Literals.
+pub fn parse_file<P: AsRef<Path>>(path: P) -> Result<Vec<Literal>, Error> {
     let path = path.as_ref();
+    debug!("Loading `{}'...", path.display());
     let src = File::open(path)
         .and_then(|mut file| {
             let mut src = String::new();
@@ -28,20 +26,18 @@ pub fn parse_file<P: AsRef<Path>>(
         .map_err(|err| {
             Error::CouldntOpenSource(path.display().to_string(), err)
         })?;
-    parse_program(&src, heap).map_err(|err| {
+    parse_program(&src).map_err(|err| {
         Error::Parse(path.display().to_string(), err.to_string())
     })
 }
 
 fn parse_program<'src>(
     src: &'src str,
-    heap: &mut Heap,
-) -> Result<usize, ::pest::Error<'src, Rule>> {
-    OftLispParser::parse(Rule::program, src)
-        .map(|pairs| convert_program(pairs, heap))
+) -> Result<Vec<Literal>, ::pest::Error<'src, Rule>> {
+    OftLispParser::parse(Rule::program, src).map(|pairs| convert_program(pairs))
 }
 
-fn convert_program(mut pairs: Pairs<Rule>, heap: &mut Heap) -> usize {
+fn convert_program(mut pairs: Pairs<Rule>) -> Vec<Literal> {
     let pairs = {
         let pair = pairs.next().unwrap();
         assert_eq!(pair.as_rule(), Rule::program);
@@ -51,34 +47,32 @@ fn convert_program(mut pairs: Pairs<Rule>, heap: &mut Heap) -> usize {
     let mut values = Vec::new();
     for pair in pairs {
         assert_eq!(pair.as_rule(), Rule::value);
-        values.push(convert_value(pair.into_inner(), heap));
+        values.push(convert_value(pair.into_inner()));
     }
-    heap.alloc_iter_as_list(values)
+    values
 }
 
-fn convert_value(mut pairs: Pairs<Rule>, heap: &mut Heap) -> HeapCell {
+fn convert_value(mut pairs: Pairs<Rule>) -> Literal {
     let pair = pairs.next().unwrap();
     match pair.as_rule() {
         Rule::bytes => unimplemented!(),
-        Rule::list => convert_list(pair.into_inner(), heap),
+        Rule::list => convert_list(pair.into_inner()),
         Rule::rmacro => unimplemented!(),
-        Rule::string => convert_string(pair.into_inner(), heap),
-        Rule::symbolish => HeapCell::Symbol(Symbol::from(pair.as_str())),
+        Rule::string => convert_string(pair.into_inner()),
+        Rule::symbolish => Literal::Symbol(Symbol::from(pair.as_str())),
         Rule::vector => unimplemented!(),
         r => panic!("Invalid rule: {:?}", r),
     }
 }
 
-fn convert_list(pairs: Pairs<Rule>, heap: &mut Heap) -> HeapCell {
-    let mut head = HeapCell::Nil;
+fn convert_list(pairs: Pairs<Rule>) -> Literal {
+    let mut head = Literal::Nil;
     // TODO: https://github.com/pest-parser/pest/issues/205
     let pairs = pairs.collect::<Vec<_>>().into_iter().rev();
     for pair in pairs {
         assert_eq!(pair.as_rule(), Rule::value);
-        let val = convert_value(pair.into_inner(), heap);
-        let val_addr = heap.alloc_cell(val);
-        let list_addr = heap.alloc_cell(head);
-        head = HeapCell::Cons(val_addr, list_addr);
+        let val = Box::new(convert_value(pair.into_inner()));
+        head = Literal::Cons(val, Box::new(head));
     }
     head
 }
@@ -97,7 +91,7 @@ fn convert_list(pairs: Pairs<Rule>, heap: &mut Heap) -> HeapCell {
 //rmacro = { rmacro_ch ~ value }
 //rmacro_ch = { "'" | "`" | ",@" | "," | "\\" | "!" | "%" }
 
-fn convert_string(pairs: Pairs<Rule>, heap: &mut Heap) -> HeapCell {
+fn convert_string(pairs: Pairs<Rule>) -> Literal {
     let mut s = String::new();
     for pair in pairs {
         match pair.as_rule() {
@@ -115,5 +109,5 @@ fn convert_string(pairs: Pairs<Rule>, heap: &mut Heap) -> HeapCell {
     //string_4_esc = { "u" ~ hex_digit{4} }
     //string_8_esc = { "U" ~ hex_digit{8} }
     //string_esc_ch = { "\\" ~ (hex_esc | string_4_esc | string_8_esc | predef_esc) }
-    HeapCell::String(s)
+    Literal::String(s)
 }
