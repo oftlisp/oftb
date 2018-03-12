@@ -1,6 +1,6 @@
 //! The types for the initial AST.
 
-mod from_values;
+mod helpers;
 
 use std::collections::BTreeSet;
 use std::fmt::{Display, Formatter, Result as FmtResult};
@@ -12,11 +12,13 @@ use heap::{Heap, HeapCell};
 /// An error converting values to an AST.
 #[derive(Debug, Fail)]
 pub enum Error {
+    #[fail(display = "Invalid declaration: {}", _0)] InvalidDecl(Literal),
+    #[fail(display = "Invalid expression: {}", _0)] InvalidExpr(Literal),
     #[fail(display = "No module form was found.")] NoModuleForm,
 }
 
 /// A module.
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Module {
     pub name: Symbol,
     pub exports: BTreeSet<Symbol>,
@@ -32,20 +34,22 @@ impl Module {
         }
 
         let (name, exports) =
-            from_values::convert_moduleish("module".into(), &l.remove(0))
+            helpers::convert_moduleish("module".into(), &l.remove(0))
                 .ok_or_else(|| unimplemented!())?;
         let imports = {
             let i = l.iter()
-                .position(|l| !from_values::is_moduleish("import".into(), l))
+                .position(|l| !helpers::is_moduleish("import".into(), l))
                 .unwrap_or(0);
             l.drain(0..i)
                 .map(|l| {
-                    from_values::convert_moduleish("import".into(), &l).unwrap()
+                    helpers::convert_moduleish("import".into(), &l).unwrap()
                 })
                 .flat_map(|(m, vs)| vs.into_iter().map(move |v| (m, v)))
                 .collect()
         };
-        let body = l.into_iter().map(Decl::from_value).collect();
+        let body = l.into_iter()
+            .map(Decl::from_value)
+            .collect::<Result<_, _>>()?;
         Ok(Module {
             name,
             imports,
@@ -56,35 +60,63 @@ impl Module {
 }
 
 /// A declaration.
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Decl {
-    // TODO
+    Def(Symbol, Box<Expr>),
+    Defn(Symbol, Vec<Symbol>, Vec<Expr>, Box<Expr>),
 }
 
 impl Decl {
     /// Creates a declaration from a literal.
-    pub fn from_value(l: Literal) -> Decl {
-        unimplemented!()
+    pub fn from_value(lit: Literal) -> Result<Decl, Error> {
+        if helpers::is_shl("def".into(), &lit) {
+            let mut l = helpers::as_list(&lit).unwrap();
+            if l.len() != 3 {
+                return Err(Error::InvalidDecl(lit));
+            }
+            let expr = Expr::from_value(l.pop().unwrap())?;
+            let name = l.pop().unwrap();
+            let name = unimplemented!("Decl::from_value {} {:?}", name, expr);
+            Ok(Decl::Def(name, Box::new(expr)))
+        } else if helpers::is_shl("defn".into(), &lit) {
+            let mut l = helpers::as_list(&lit).unwrap();
+            if l.len() < 4 {
+                return Err(Error::InvalidDecl(lit));
+            }
+            let tail = Expr::from_value(l.pop().unwrap())?;
+            let body = l.drain(3..)
+                .map(Expr::from_value)
+                .collect::<Result<_, _>>()?;
+            let args = l.pop().unwrap();
+            let name = l.pop().unwrap();
+            let (name, args) =
+                unimplemented!("Decl::from_value {} {}", name, args);
+            Ok(Decl::Defn(name, args, body, Box::new(tail)))
+        } else {
+            Err(Error::InvalidDecl(lit))
+        }
     }
 }
 
 /// The basic expression type.
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Expr {
+    Call(Box<Expr>, Vec<Expr>),
     Decl(Decl),
     Literal(Literal),
+    Var(Symbol),
     // TODO
 }
 
 impl Expr {
     /// Creates an expression from a literal.
-    pub fn from_value(l: Literal) -> Expr {
-        unimplemented!()
+    pub fn from_value(l: Literal) -> Result<Expr, Error> {
+        unimplemented!("Expr::from_value {}", l)
     }
 }
 
 /// Literal values.
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Literal {
     Byte(u8),
     Bytes(Vec<u8>),

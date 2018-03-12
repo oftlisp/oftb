@@ -26,13 +26,13 @@ fn main() {
 
 fn run(options: Options) -> Result<(), Error> {
     let literals = parse_file(options.path)?;
-    println!("Literals:");
+    info!("Literals:");
     for l in &literals {
-        println!("{}", l);
+        info!("{}", l);
     }
 
     let ast = Module::from_values(literals)?;
-    println!("{:?}", ast);
+    info!("{:?}", ast);
 
     Ok(())
 }

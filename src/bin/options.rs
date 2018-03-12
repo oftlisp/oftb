@@ -20,7 +20,7 @@ impl Options {
     /// Sets up logging as specified by the `-q` and `-v` flags.
     pub fn start_logger(&self) {
         if !self.quiet {
-            let r = ::stderrlog::new().verbosity(self.verbose).init();
+            let r = ::stderrlog::new().verbosity(1 + self.verbose).init();
             if let Err(err) = r {
                 eprintln!("Warning: logging couldn't start: {}", err);
             }
