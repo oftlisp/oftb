@@ -5,11 +5,11 @@
 //! ```text
 //! +------+    +------+    +---+    +---+    +--------+
 //! |Source|--->|Values|--->|AST|--->|ANF|--->|Flat ANF|
-//! +------+ ^  +------+ ^  +---+    +---+    +--------+
-//!          |           |
-//!  parser--+           +-----+
-//!                            |
-//!  ast::Module::from_values--+
+//! +------+ ^  +------+ ^  +---+ ^  +---+ ^  +--------+
+//!          |           |        |        |
+//!  parser--+           +-----+  |        +--flatanf::Program::flatten
+//!                            |  |
+//!  ast::Module::from_values--+  +---anf::Module::convert
 //! ```
 //!
 //! The Flat ANF form of the code is then interpreted by the `cesk` module.

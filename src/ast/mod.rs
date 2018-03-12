@@ -1,5 +1,7 @@
 //! The types for the initial AST.
 
+mod from_values;
+
 use std::collections::BTreeSet;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
@@ -19,6 +21,7 @@ pub struct Module {
     pub name: Symbol,
     pub exports: BTreeSet<Symbol>,
     pub imports: BTreeSet<(Symbol, Symbol)>,
+    pub body: Vec<Decl>,
 }
 
 impl Module {
@@ -28,6 +31,39 @@ impl Module {
             return Err(Error::NoModuleForm);
         }
 
+        let (name, exports) =
+            from_values::convert_moduleish("module".into(), &l.remove(0))
+                .ok_or_else(|| unimplemented!())?;
+        let imports = {
+            let i = l.iter()
+                .position(|l| !from_values::is_moduleish("import".into(), l))
+                .unwrap_or(0);
+            l.drain(0..i)
+                .map(|l| {
+                    from_values::convert_moduleish("import".into(), &l).unwrap()
+                })
+                .flat_map(|(m, vs)| vs.into_iter().map(move |v| (m, v)))
+                .collect()
+        };
+        let body = l.into_iter().map(Decl::from_value).collect();
+        Ok(Module {
+            name,
+            imports,
+            exports: exports.into_iter().collect(),
+            body,
+        })
+    }
+}
+
+/// A declaration.
+#[derive(Debug)]
+pub enum Decl {
+    // TODO
+}
+
+impl Decl {
+    /// Creates a declaration from a literal.
+    pub fn from_value(l: Literal) -> Decl {
         unimplemented!()
     }
 }
@@ -35,12 +71,14 @@ impl Module {
 /// The basic expression type.
 #[derive(Debug)]
 pub enum Expr {
+    Decl(Decl),
     Literal(Literal),
+    // TODO
 }
 
 impl Expr {
     /// Creates an expression from a literal.
-    pub fn from_values(l: Literal) -> Expr {
+    pub fn from_value(l: Literal) -> Expr {
         unimplemented!()
     }
 }
