@@ -3,11 +3,9 @@
 mod helpers;
 
 use std::collections::BTreeSet;
-use std::fmt::{Display, Formatter, Result as FmtResult};
 
+use literal::Literal;
 use symbol::Symbol;
-
-use heap::{Heap, HeapCell};
 
 /// An error converting values to an AST.
 #[derive(Debug, Fail)]
@@ -75,8 +73,11 @@ impl Decl {
                 return Err(Error::InvalidDecl(lit));
             }
             let expr = Expr::from_value(l.pop().unwrap())?;
-            let name = l.pop().unwrap();
-            let name = unimplemented!("Decl::from_value {} {:?}", name, expr);
+            let name = if let Literal::Symbol(name) = l.pop().unwrap() {
+                name
+            } else {
+                return Err(Error::InvalidDecl(lit));
+            };
             Ok(Decl::Def(name, Box::new(expr)))
         } else if helpers::is_shl("defn".into(), &lit) {
             let mut l = helpers::as_list(&lit).unwrap();
@@ -87,10 +88,18 @@ impl Decl {
             let body = l.drain(3..)
                 .map(Expr::from_value)
                 .collect::<Result<_, _>>()?;
-            let args = l.pop().unwrap();
-            let name = l.pop().unwrap();
-            let (name, args) =
-                unimplemented!("Decl::from_value {} {}", name, args);
+            let args = if let Some(args) =
+                helpers::as_symbol_list(&l.pop().unwrap())
+            {
+                args
+            } else {
+                return Err(Error::InvalidDecl(lit));
+            };
+            let name = if let Literal::Symbol(name) = l.pop().unwrap() {
+                name
+            } else {
+                return Err(Error::InvalidDecl(lit));
+            };
             Ok(Decl::Defn(name, args, body, Box::new(tail)))
         } else {
             Err(Error::InvalidDecl(lit))
@@ -103,113 +112,50 @@ impl Decl {
 pub enum Expr {
     Call(Box<Expr>, Vec<Expr>),
     Decl(Decl),
+    If(Box<Expr>, Box<Expr>, Box<Expr>),
     Literal(Literal),
+    Progn(Vec<Expr>, Box<Expr>),
     Var(Symbol),
     // TODO
 }
 
 impl Expr {
     /// Creates an expression from a literal.
-    pub fn from_value(l: Literal) -> Result<Expr, Error> {
-        unimplemented!("Expr::from_value {}", l)
-    }
-}
-
-/// Literal values.
-#[derive(Clone, Debug, PartialEq)]
-pub enum Literal {
-    Byte(u8),
-    Bytes(Vec<u8>),
-    Cons(Box<Literal>, Box<Literal>),
-    Fixnum(usize),
-    Nil,
-    String(String),
-    Symbol(Symbol),
-    Vector(Vec<Literal>),
-}
-
-impl Literal {
-    /// Builds a literal onto the heap, returning its address.
-    pub fn build_onto(self, heap: &mut Heap) -> usize {
-        let cell = match self {
-            Literal::Byte(n) => HeapCell::Byte(n),
-            Literal::Bytes(bs) => HeapCell::Bytes(bs),
+    pub fn from_value(lit: Literal) -> Result<Expr, Error> {
+        match lit {
             Literal::Cons(h, t) => {
-                let h = h.build_onto(heap);
-                let t = t.build_onto(heap);
-                HeapCell::Cons(h, t)
-            }
-            Literal::Fixnum(n) => HeapCell::Fixnum(n),
-            Literal::Nil => HeapCell::Nil,
-            Literal::String(s) => HeapCell::String(s),
-            Literal::Symbol(s) => HeapCell::Symbol(s),
-            Literal::Vector(vs) => HeapCell::Vector(
-                vs.into_iter().map(|v| v.build_onto(heap)).collect(),
-            ),
-        };
-        heap.alloc_cell(cell)
-    }
-}
-
-impl Display for Literal {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        match *self {
-            Literal::Byte(n) => write!(fmt, "{}", n),
-            Literal::Bytes(ref bs) => {
-                write!(fmt, "b\"")?;
-                for b in bs {
-                    write!(fmt, "\\x{:02x}", b)?;
-                }
-                write!(fmt, "\"")
-            }
-            Literal::Cons(ref h, ref t) => {
-                write!(fmt, "({}", h)?;
-                let mut l = t;
-                loop {
-                    match **l {
-                        Literal::Cons(ref h, ref t) => {
-                            write!(fmt, " {}", h)?;
-                            l = t;
-                        }
-                        Literal::Nil => break,
-                        _ => {
-                            write!(fmt, " | {}", l)?;
-                            break;
-                        }
+                let t = match helpers::as_list(&t) {
+                    Some(t) => t,
+                    None => return Err(Error::InvalidExpr(Literal::Cons(h, t))),
+                };
+                match *h {
+                    Literal::Symbol(s)
+                        if s.as_str() == "def" || s.as_str() == "defn" =>
+                    {
+                        unimplemented!()
+                    }
+                    Literal::Symbol(s) if s.as_str() == "if" => {
+                        unimplemented!()
+                    }
+                    Literal::Symbol(s) if s.as_str() == "quote" => {
+                        unimplemented!()
+                    }
+                    Literal::Symbol(s) if s.as_str() == "progn" => {
+                        unimplemented!()
+                    }
+                    _ => {
+                        let func = Expr::from_value(*h)?;
+                        let args = t.into_iter()
+                            .map(Expr::from_value)
+                            .collect::<Result<_, _>>()?;
+                        Ok(Expr::Call(Box::new(func), args))
                     }
                 }
-                write!(fmt, ")")
             }
-            Literal::Fixnum(n) => write!(fmt, "{}", n),
-            Literal::Nil => write!(fmt, "()"),
-            Literal::String(ref s) => {
-                write!(fmt, "\"")?;
-                for ch in s.chars() {
-                    match ch {
-                        '\n' => write!(fmt, "\\n")?,
-                        '\r' => write!(fmt, "\\r")?,
-                        '\t' => write!(fmt, "\\t")?,
-                        '\\' => write!(fmt, "\\\\")?,
-                        '\"' => write!(fmt, "\\\"")?,
-                        _ => write!(fmt, "{}", ch)?,
-                    }
-                }
-                write!(fmt, "\"")
-            }
-            Literal::Symbol(s) => write!(fmt, "{}", s),
-            Literal::Vector(ref vs) => {
-                write!(fmt, "[")?;
-                let mut first = true;
-                for v in vs {
-                    if first {
-                        first = false;
-                    } else {
-                        write!(fmt, " ")?;
-                    }
-                    write!(fmt, "{}", v)?;
-                }
-                write!(fmt, "]")
-            }
+            Literal::Nil => Err(Error::InvalidExpr(Literal::Nil)),
+            Literal::Symbol(s) => Ok(Expr::Var(s)),
+            Literal::Vector(vs) => unimplemented!(),
+            lit => Ok(Expr::Literal(lit)),
         }
     }
 }

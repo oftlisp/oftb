@@ -3,7 +3,7 @@ use symbol::Symbol;
 use ast::Literal;
 
 /// Converts a list of symbols to a `Vec<Symbol>`.
-fn as_symbol_list(mut lit: &Literal) -> Option<Vec<Symbol>> {
+pub fn as_symbol_list(mut lit: &Literal) -> Option<Vec<Symbol>> {
     let mut out = Vec::new();
     loop {
         match *lit {

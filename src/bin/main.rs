@@ -10,7 +10,9 @@ mod options;
 
 use failure::Error;
 use oftb::parse_file;
-use oftb::ast::Module;
+use oftb::anf::Module as AnfModule;
+use oftb::ast::Module as AstModule;
+use oftb::flatanf::Program;
 use structopt::StructOpt;
 
 use options::Options;
@@ -31,8 +33,23 @@ fn run(options: Options) -> Result<(), Error> {
         info!("{}", l);
     }
 
-    let ast = Module::from_values(literals)?;
+    let ast = AstModule::from_values(literals)?;
+    println!();
+    info!("AST Module:");
     info!("{:?}", ast);
+
+    let anf = AnfModule::from(ast);
+    println!();
+    info!("ANF Module:");
+    info!("{:?}", anf);
+
+    // TODO: Resolve dependencies.
+    let modules = vec![anf];
+
+    let program = Program::from_modules(modules, Default::default());
+    println!();
+    info!("FlatANF Program:");
+    info!("{:?}", program);
 
     Ok(())
 }

@@ -6,8 +6,8 @@ use pest::Parser;
 use pest::iterators::Pairs;
 use symbol::Symbol;
 
-use ast::Literal;
 use error::Error;
+use literal::Literal;
 
 #[derive(Parser)]
 #[grammar = "oftlisp.pest"]

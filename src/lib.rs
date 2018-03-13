@@ -7,9 +7,9 @@
 //! |Source|--->|Values|--->|AST|--->|ANF|--->|Flat ANF|
 //! +------+ ^  +------+ ^  +---+ ^  +---+ ^  +--------+
 //!          |           |        |        |
-//!  parser--+           +-----+  |        +--flatanf::Program::flatten
+//!  parser--+           +-----+  |        +--flatanf::Program::from_modules
 //!                            |  |
-//!  ast::Module::from_values--+  +---anf::Module::convert
+//!  ast::Module::from_values--+  +---anf::Module::from
 //! ```
 //!
 //! The Flat ANF form of the code is then interpreted by the `cesk` module.
@@ -24,12 +24,16 @@ extern crate pest;
 extern crate pest_derive;
 extern crate symbol;
 
+pub mod anf;
 pub mod ast;
 mod error;
+pub mod flatanf;
+mod gensym;
 mod heap;
+mod literal;
 mod parser;
 mod util;
 
 pub use error::Error;
-pub use heap::{Heap, HeapRef};
+pub use literal::Literal;
 pub use parser::parse_file;
