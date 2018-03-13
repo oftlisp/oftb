@@ -24,6 +24,16 @@ pub enum Decl {
     Defn(Symbol, Vec<Symbol>, Expr),
 }
 
+impl Decl {
+    /// Returns the name of the Decl.
+    pub fn name(&self) -> Symbol {
+        match *self {
+            Decl::Def(name, _) => name,
+            Decl::Defn(name, _, _) => name,
+        }
+    }
+}
+
 /// The root expression type, which may perform arbitrary continuation stack
 /// manipulation.
 #[derive(Clone, Debug, PartialEq)]

@@ -3,6 +3,7 @@
 //! global variables.
 
 mod convert;
+mod util;
 
 use symbol::Symbol;
 
@@ -17,6 +18,16 @@ pub struct Program(pub Vec<Decl>);
 pub enum Decl {
     Def(Symbol, Expr),
     Defn(Symbol, Vec<Symbol>, Expr),
+}
+
+impl Decl {
+    /// Returns the name of the Decl.
+    pub fn name(&self) -> Symbol {
+        match *self {
+            Decl::Def(name, _) => name,
+            Decl::Defn(name, _, _) => name,
+        }
+    }
 }
 
 /// The root expression type, which may perform arbitrary continuation stack
@@ -42,7 +53,8 @@ pub enum CExpr {
 /// side effects, popping from the continuation stack.
 #[derive(Clone, Debug, PartialEq)]
 pub enum AExpr {
+    Global(Symbol),
     Lambda(Vec<Symbol>, Box<Expr>),
     Literal(Literal),
-    Var(Symbol),
+    Local(usize),
 }

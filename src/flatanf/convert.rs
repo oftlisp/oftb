@@ -1,70 +1,103 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{HashMap, HashSet};
 
 use symbol::Symbol;
 
 use anf::{AExpr as AnfAExpr, CExpr as AnfCExpr, Decl as AnfDecl,
-          Expr as AnfExpr, Module as AnfModule};
+          Expr as AnfExpr, Module};
 use error::Error;
 use flatanf::{AExpr, CExpr, Decl, Expr, Program};
+use flatanf::util::{toposort_mods, Context};
 use literal::Literal;
 
 impl Program {
     /// Creates a flat `Program` from a bunch of `anf::Module`s.
     pub fn from_modules(
-        mods: Vec<AnfModule>,
-        builtins: BTreeMap<Symbol, BTreeSet<Symbol>>,
+        mods: Vec<Module>,
+        builtins: HashMap<Symbol, HashSet<Symbol>>,
     ) -> Result<Program, Error> {
-        println!();
-        toposort_mods(mods, builtins.keys().cloned().collect(), |m| {
-            info!("{:?}", m);
+        let mut code = Vec::new();
+        let builtin_modules = builtins.keys().cloned().collect();
+        let mut globals = builtins
+            .into_iter()
+            .flat_map(|(m, ds)| ds.into_iter().map(move |d| global(m, d)))
+            .collect();
+
+        toposort_mods(mods, builtin_modules, |m| {
+            code.extend(compile_module(&mut globals, m)?);
+            Ok(())
         })?;
-        let mut known = builtins;
-        unimplemented!("known = {:?}", known)
+        Ok(Program(code))
     }
 }
 
-/// A topological sort implemented as a traversal. `f` is called once for each
-/// module in `mods`. If there is a circular dependency, an error will be
-/// returned.
-fn toposort_mods<F: FnMut(AnfModule)>(
-    mut mods: Vec<AnfModule>,
-    builtins: BTreeSet<Symbol>,
-    mut f: F,
-) -> Result<(), Error> {
-    fn traverse<F: FnMut(AnfModule)>(
-        m: AnfModule,
-        mods: &mut Vec<AnfModule>,
-        open: &mut BTreeSet<Symbol>,
-        closed: &mut BTreeSet<Symbol>,
-        f: &mut F,
-    ) -> Result<(), Error> {
-        if closed.contains(&m.name) {
-            return Ok(());
-        } else if !open.insert(m.name) {
-            return Err(Error::DependencyLoop(m.name));
+fn compile_module(
+    globals: &mut HashSet<Symbol>,
+    m: Module,
+) -> Result<Vec<Decl>, Error> {
+    warn!("Compiling {:#?}", m);
+    let Module {
+        name: module_name,
+        imports,
+        exports,
+        body,
+    } = m;
+
+    let mut context = {
+        let mut ctx = imports
+            .into_iter()
+            .map(|(m, d)| (d, global(m, d)))
+            .collect::<HashMap<_, _>>();
+        for (_, g) in ctx.iter() {
+            if !globals.contains(g) {
+                return Err(Error::NonexistentImport(module_name, *g));
+            }
         }
-        for &(name, _) in &m.imports {
-            let i = mods.binary_search_by_key(&name, |m| m.name)
-                .map_err(|_| Error::NonexistentModule(name))?;
-            let m = mods.remove(i);
-            traverse(m, mods, open, closed, f)?;
+        ctx.extend(
+            body.iter()
+                .map(|decl| decl.name())
+                .map(|name| (name, global(module_name, name))),
+        );
+        Context::from(ctx)
+    };
+
+    let decls = body.into_iter()
+        .map(|d| compile_decl(&mut context, d))
+        .collect::<Result<Vec<_>, _>>()?;
+
+    let decl_names = decls.iter().map(|d| d.name()).collect::<HashSet<_>>();
+    for e in exports {
+        if !decl_names.contains(&e) {
+            return Err(Error::MissingExport(module_name, e));
         }
-        closed.insert(m.name);
-        f(m);
-        Ok(())
+        globals.insert(global(m.name, e));
     }
+    Ok(decls)
+}
 
-    let mut open = BTreeSet::new();
-    let mut closed = builtins;
-
-    mods.sort_by_key(|m| m.name);
-    loop {
-        let next = if let Some(next) = mods.pop() {
-            next
-        } else {
-            return Ok(());
-        };
-
-        traverse(next, &mut mods, &mut open, &mut closed, &mut f)?;
+fn compile_decl(context: &mut Context, decl: AnfDecl) -> Result<Decl, Error> {
+    match decl {
+        _ => unimplemented!(),
     }
+}
+
+fn compile_expr(context: &mut Context, expr: AnfExpr) -> Result<Expr, Error> {
+    unimplemented!("{:#?}", expr)
+}
+
+fn compile_cexpr(
+    context: &mut Context,
+    expr: AnfCExpr,
+) -> Result<CExpr, Error> {
+    unimplemented!("{:#?}", expr)
+}
+
+fn compile_aexpr(
+    context: &mut Context,
+    expr: AnfAExpr,
+) -> Result<AExpr, Error> {
+    unimplemented!("{:#?}", expr)
+}
+
+fn global(m: Symbol, d: Symbol) -> Symbol {
+    format!("{}:{}", m, d).into()
 }
