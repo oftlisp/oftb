@@ -17,7 +17,7 @@ vector = { "[" ~ value* ~ "]" }
 
 // Reader Macros
 rmacro = { rmacro_ch ~ value }
-rmacro_ch = { "'" | "`" | ",@" | "," | "\\" | "!" | "%" }
+rmacro_ch = { "'" | "`" | ",@" | "," | "\\" | "%" }
 
 // Symbols and Numbers
 symbolish = @{ symbolish_ch+ }

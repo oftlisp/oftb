@@ -3,7 +3,7 @@ use std::io::Read;
 use std::path::Path;
 
 use pest::Parser;
-use pest::iterators::Pairs;
+use pest::iterators::{Pair, Pairs};
 use symbol::Symbol;
 
 use error::Error;
@@ -58,7 +58,13 @@ fn convert_value(mut pairs: Pairs<Rule>) -> Literal {
     match pair.as_rule() {
         Rule::bytes => unimplemented!(),
         Rule::list => convert_list(pair.into_inner()),
-        Rule::rmacro => unimplemented!(),
+        Rule::rmacro => {
+            let mut pairs = pair.into_inner();
+            let rmacro = pairs.next().unwrap();
+            let value = convert_value(pairs.next().unwrap().into_inner());
+            assert!(pairs.next().is_none());
+            convert_rmacro(rmacro, value)
+        }
         Rule::string => convert_string(pair.into_inner()),
         Rule::symbolish => Literal::Symbol(Symbol::from(pair.as_str())),
         Rule::vector => unimplemented!(),
@@ -89,8 +95,36 @@ fn convert_list(pairs: Pairs<Rule>) -> Literal {
 //list = { "(" ~ value* ~ ("|" ~ value)? ~ ")" }
 //vector = { "[" ~ value* ~ "]" }
 
-//rmacro = { rmacro_ch ~ value }
-//rmacro_ch = { "'" | "`" | ",@" | "," | "\\" | "!" | "%" }
+fn convert_rmacro(pair: Pair<Rule>, value: Literal) -> Literal {
+    fn simple_macro(name: &'static str, value: Literal) -> Literal {
+        Literal::Cons(
+            Box::new(Literal::Symbol(name.into())),
+            Box::new(Literal::Cons(Box::new(value), Box::new(Literal::Nil))),
+        )
+    }
+
+    match pair.as_str() {
+        "'" => simple_macro("quote", value),
+        "`" => simple_macro("quasiquote", value),
+        ",@" => simple_macro("unquote-splicing", value),
+        "," => simple_macro("unquote", value),
+        "\\" => Literal::Cons(
+            Box::new(Literal::Symbol("fn".into())),
+            Box::new(Literal::Cons(
+                Box::new(Literal::Cons(
+                    Box::new(Literal::Symbol("$".into())),
+                    Box::new(Literal::Nil),
+                )),
+                Box::new(Literal::Cons(
+                    Box::new(value),
+                    Box::new(Literal::Nil),
+                )),
+            )),
+        ),
+        "%" => simple_macro("debug-trace", value),
+        rm => panic!("Invalid reader macro: {:?}", rm),
+    }
+}
 
 fn convert_string(pairs: Pairs<Rule>) -> Literal {
     let mut s = String::new();

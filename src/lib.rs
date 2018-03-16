@@ -9,7 +9,7 @@
 //!          |           |        |        |
 //!  parser--+           +-----+  |        +--flatanf::Program::from_modules
 //!                            |  |
-//!  ast::Module::from_values--+  +---anf::Module::from
+//!  ast::Module::from_values--+  +---anf::Module::convert
 //! ```
 //!
 //! The Flat ANF form of the code is then interpreted by the `cesk` module.
