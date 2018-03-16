@@ -154,6 +154,13 @@ fn compile_aexpr(
         }
         AnfAExpr::Literal(lit) => Ok(AExpr::Literal(lit)),
         AnfAExpr::Var(var) => context.get(var),
+        AnfAExpr::Vector(exprs) => {
+            let exprs = exprs
+                .into_iter()
+                .map(|e| compile_aexpr(context, e))
+                .collect::<Result<_, _>>()?;
+            Ok(AExpr::Vector(exprs))
+        }
     }
 }
 

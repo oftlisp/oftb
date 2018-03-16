@@ -57,4 +57,5 @@ pub enum AExpr {
     Lambda(Vec<Symbol>, Box<Expr>),
     Literal(Literal),
     Local(usize),
+    Vector(Vec<AExpr>),
 }

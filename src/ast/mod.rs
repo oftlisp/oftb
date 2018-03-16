@@ -113,10 +113,11 @@ pub enum Expr {
     Call(Box<Expr>, Vec<Expr>),
     Decl(Box<Decl>),
     If(Box<Expr>, Box<Expr>, Box<Expr>),
+    Lambda(Vec<Symbol>, Vec<Expr>, Box<Expr>),
     Literal(Literal),
     Progn(Vec<Expr>, Box<Expr>),
     Var(Symbol),
-    // TODO
+    Vector(Vec<Expr>),
 }
 
 impl Expr {
@@ -154,7 +155,10 @@ impl Expr {
             }
             Literal::Nil => Err(Error::InvalidExpr(Literal::Nil)),
             Literal::Symbol(s) => Ok(Expr::Var(s)),
-            Literal::Vector(vs) => unimplemented!(),
+            Literal::Vector(vs) => vs.into_iter()
+                .map(Expr::from_value)
+                .collect::<Result<_, _>>()
+                .map(Expr::Vector),
             lit => Ok(Expr::Literal(lit)),
         }
     }

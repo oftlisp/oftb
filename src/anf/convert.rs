@@ -51,7 +51,7 @@ impl From<AstExpr> for Expr {
             AstExpr::Decl(decl) => match *decl {
                 // A def in the tail position can have no effect besides that
                 // of evaluating its expr.
-                AstDecl::Def(name, expr) => Expr::Seq(
+                AstDecl::Def(_, expr) => Expr::Seq(
                     Box::new(expr.into()),
                     Box::new(Expr::AExpr(AExpr::Literal(Literal::Nil))),
                 ),
@@ -73,9 +73,21 @@ impl From<AstExpr> for Expr {
                     context,
                 )
             }
+            AstExpr::Lambda(args, body, tail) => {
+                let body = Box::new(convert_block(body, *tail));
+                Expr::AExpr(AExpr::Lambda(args, body))
+            }
             AstExpr::Literal(lit) => Expr::AExpr(AExpr::Literal(lit)),
             AstExpr::Progn(body, tail) => convert_block(body, *tail),
             AstExpr::Var(n) => Expr::AExpr(AExpr::Var(n)),
+            AstExpr::Vector(exprs) => {
+                let mut context = Vec::new();
+                let args = exprs
+                    .into_iter()
+                    .map(|e| into_aexpr(e, &mut context))
+                    .collect();
+                apply_context(Expr::AExpr(AExpr::Vector(args)), context)
+            }
         }
     }
 }
@@ -92,7 +104,7 @@ fn apply_context(mut expr: Expr, mut context: Vec<(Symbol, Expr)>) -> Expr {
 /// `ast::Expr` back if it's not possible.
 fn convert_aexpr(expr: AstExpr) -> Result<AExpr, AstExpr> {
     match expr {
-        // TODO: AExpr::Lambda(args, body),
+        AstExpr::Lambda(args, body, tail) => unimplemented!(),
         AstExpr::Literal(l) => Ok(AExpr::Literal(l)),
         AstExpr::Var(n) => Ok(AExpr::Var(n)),
         expr => Err(expr),
