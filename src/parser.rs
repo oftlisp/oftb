@@ -67,7 +67,14 @@ fn convert_value(mut pairs: Pairs<Rule>) -> Literal {
         }
         Rule::string => convert_string(pair.into_inner()),
         Rule::symbolish => Literal::Symbol(Symbol::from(pair.as_str())),
-        Rule::vector => unimplemented!(),
+        Rule::vector => {
+            let mut vals = Vec::new();
+            for pair in pair.into_inner() {
+                assert_eq!(pair.as_rule(), Rule::value);
+                vals.push(convert_value(pair.into_inner()));
+            }
+            Literal::Vector(vals)
+        }
         r => panic!("Invalid rule: {:?}", r),
     }
 }
@@ -84,16 +91,13 @@ fn convert_list(pairs: Pairs<Rule>) -> Literal {
     head
 }
 
-//hex_esc = { "x" ~ hex_digit{2} }
-//hex_digit = { '0'..'9' | 'a'..'f' | 'A'..'F' }
-//predef_esc = { "n" | "r" | "t" | "\\" | "\"" | "'" }
+// hex_esc = { "x" ~ hex_digit{2} }
+// hex_digit = { '0'..'9' | 'a'..'f' | 'A'..'F' }
+// predef_esc = { "n" | "r" | "t" | "\\" | "\"" | "'" }
 
-//bytes = ${ "b\"" ~ (bytes_raw_ch | bytes_esc_ch)* ~ "\"" }
-//bytes_raw_ch = { !("\\" | "\"") ~ ' '..'~' }
-//bytes_esc_ch = { "\\" ~ (hex_esc | predef_esc) }
-
-//list = { "(" ~ value* ~ ("|" ~ value)? ~ ")" }
-//vector = { "[" ~ value* ~ "]" }
+// bytes = ${ "b\"" ~ (bytes_raw_ch | bytes_esc_ch)* ~ "\"" }
+// bytes_raw_ch = { !("\\" | "\"") ~ ' '..'~' }
+// bytes_esc_ch = { "\\" ~ (hex_esc | predef_esc) }
 
 fn convert_rmacro(pair: Pair<Rule>, value: Literal) -> Literal {
     fn simple_macro(name: &'static str, value: Literal) -> Literal {
