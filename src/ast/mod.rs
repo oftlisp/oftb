@@ -60,8 +60,8 @@ impl Module {
 /// A declaration.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Decl {
-    Def(Symbol, Box<Expr>),
-    Defn(Symbol, Vec<Symbol>, Vec<Expr>, Box<Expr>),
+    Def(Symbol, Expr),
+    Defn(Symbol, Vec<Symbol>, Vec<Expr>, Expr),
 }
 
 impl Decl {
@@ -78,7 +78,7 @@ impl Decl {
             } else {
                 return Err(Error::InvalidDecl(lit));
             };
-            Ok(Decl::Def(name, Box::new(expr)))
+            Ok(Decl::Def(name, expr))
         } else if helpers::is_shl("defn".into(), &lit) {
             let mut l = helpers::as_list(&lit).unwrap();
             if l.len() < 4 {
@@ -100,7 +100,7 @@ impl Decl {
             } else {
                 return Err(Error::InvalidDecl(lit));
             };
-            Ok(Decl::Defn(name, args, body, Box::new(tail)))
+            Ok(Decl::Defn(name, args, body, tail))
         } else {
             Err(Error::InvalidDecl(lit))
         }
@@ -111,7 +111,7 @@ impl Decl {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Expr {
     Call(Box<Expr>, Vec<Expr>),
-    Decl(Decl),
+    Decl(Box<Decl>),
     If(Box<Expr>, Box<Expr>, Box<Expr>),
     Literal(Literal),
     Progn(Vec<Expr>, Box<Expr>),

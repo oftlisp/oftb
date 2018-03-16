@@ -2,26 +2,36 @@ use symbol::Symbol;
 
 use anf::{AExpr, CExpr, Decl, Expr, Module};
 use ast::{Decl as AstDecl, Expr as AstExpr, Module as AstModule};
+use failure::Error;
 use gensym::gensym;
 use literal::Literal;
 
-impl From<AstModule> for Module {
-    fn from(m: AstModule) -> Module {
-        Module {
+impl Module {
+    /// Tries to convert an `ast::Module` to an `anf::Module`.
+    pub fn convert(m: AstModule) -> Result<Module, Error> {
+        let body = m.body
+            .into_iter()
+            .map(Decl::convert)
+            .collect::<Result<_, _>>()?;
+        Ok(Module {
             name: m.name,
             exports: m.exports,
             imports: m.imports,
-            body: m.body.into_iter().map(Decl::from).collect(),
-        }
+            body: body,
+        })
     }
 }
 
-impl From<AstDecl> for Decl {
-    fn from(decl: AstDecl) -> Decl {
+impl Decl {
+    /// Tries to convert an `ast::Decl` to an `anf::Decl`.
+    pub fn convert(decl: AstDecl) -> Result<Decl, Error> {
         match decl {
-            AstDecl::Def(name, expr) => Decl::Def(name, (*expr).into()),
+            AstDecl::Def(name, AstExpr::Literal(lit)) => {
+                Ok(Decl::Def(name, lit))
+            }
+            AstDecl::Def(_, expr) => Err(unimplemented!()),
             AstDecl::Defn(name, args, body, tail) => {
-                Decl::Defn(name, args, convert_block(body, *tail))
+                Ok(Decl::Defn(name, args, convert_block(body, tail)))
             }
         }
     }
@@ -41,11 +51,11 @@ impl From<AstExpr> for Expr {
                     context,
                 )
             }
-            AstExpr::Decl(decl) => match decl {
+            AstExpr::Decl(decl) => match *decl {
                 // A def in the tail position can have no effect besides that
                 // of evaluating its expr.
                 AstDecl::Def(name, expr) => Expr::Seq(
-                    Box::new((*expr).into()),
+                    Box::new(expr.into()),
                     Box::new(Expr::AExpr(AExpr::Literal(Literal::Nil))),
                 ),
 
@@ -97,24 +107,29 @@ fn convert_block(body: Vec<AstExpr>, tail: AstExpr) -> Expr {
     let mut anf = tail.into();
     let mut lambdas = Vec::new();
     for expr in body.into_iter().rev() {
-        match expr {
-            AstExpr::Decl(AstDecl::Def(name, expr)) => {
-                anf = Expr::Let(name, Box::new((*expr).into()), Box::new(anf));
-            }
-            AstExpr::Decl(AstDecl::Defn(name, args, body, tail)) => {
-                lambdas.push((
-                    name,
-                    AExpr::Lambda(args, Box::new(convert_block(body, *tail))),
-                ));
-            }
-            expr => {
-                if !lambdas.is_empty() {
-                    anf = Expr::CExpr(CExpr::LetRec(lambdas, Box::new(anf)));
-                    lambdas = Vec::new();
+        if let AstExpr::Decl(decl) = expr {
+            match *decl {
+                AstDecl::Def(name, expr) => {
+                    anf = Expr::Let(name, Box::new(expr.into()), Box::new(anf));
                 }
-                anf = Expr::Seq(Box::new(expr.into()), Box::new(anf));
+                AstDecl::Defn(name, args, body, tail) => {
+                    let (name, args, body, tail) = (name, args, body, tail);
+                    lambdas.push((
+                        name,
+                        AExpr::Lambda(
+                            args,
+                            Box::new(convert_block(body, tail)),
+                        ),
+                    ));
+                }
             }
-        };
+        } else {
+            if !lambdas.is_empty() {
+                anf = Expr::CExpr(CExpr::LetRec(lambdas, Box::new(anf)));
+                lambdas = Vec::new();
+            }
+            anf = Expr::Seq(Box::new(expr.into()), Box::new(anf));
+        }
     }
     anf
 }
