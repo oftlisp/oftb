@@ -31,7 +31,8 @@ pub fn parse_file<P: AsRef<Path>>(path: P) -> Result<Vec<Literal>, Error> {
     })
 }
 
-fn parse_program<'src>(
+/// Parses OftLisp source code.
+pub fn parse_program<'src>(
     src: &'src str,
 ) -> Result<Vec<Literal>, ::pest::Error<'src, Rule>> {
     OftLispParser::parse(Rule::program, src).map(|pairs| convert_program(pairs))

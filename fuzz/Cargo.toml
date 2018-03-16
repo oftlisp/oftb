@@ -1,0 +1,19 @@
+[workspace]
+members = ["."]
+
+[package]
+name = "oftb-fuzz"
+version = "0.0.1"
+authors = ["Automatically generated"]
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+oftb = { path = ".."}
+libfuzzer-sys = { git = "https://github.com/rust-fuzz/libfuzzer-sys.git" }
+
+[[bin]]
+name = "parse_program"
+path = "fuzz_targets/parse_program.rs"

@@ -36,4 +36,4 @@ mod util;
 
 pub use error::Error;
 pub use literal::Literal;
-pub use parser::parse_file;
+pub use parser::{parse_file, parse_program};
