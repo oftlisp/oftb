@@ -12,6 +12,9 @@ stderrlog = { version = "0.3.1-pre", git = "https://github.com/remexre/stderrlog
 structopt = "0.2.5"
 symbol = "0.1.1"
 
+[dev-dependencies]
+proptest = "0.5.1"
+
 [[bin]]
 doc = false
 name = "oftb"

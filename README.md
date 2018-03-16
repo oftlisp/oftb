@@ -1,6 +1,7 @@
 # oftb
 
 [![Build Status](https://travis-ci.org/oftlisp/oftb.svg?branch=master)](https://travis-ci.org/oftlisp/oftb)
+[![Dependency Status](https://deps.rs/repo/github/oftlisp/oftb/status.svg)](https://deps.rs/repo/github/oftlisp/oftb)
 
 The OftLisp bootstrapper.
 

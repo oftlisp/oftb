@@ -1,5 +1,5 @@
 program = { soi ~ value* ~ eoi }
-value = { rmacro | symbolish | list | vector | bytes | string }
+value = { rmacro | bytes | symbolish | list | vector | string }
 
 // Common rules for byteStrings and strings.
 hex_esc = { "x" ~ hex_digit{2} }
@@ -20,7 +20,7 @@ rmacro = { rmacro_ch ~ value }
 rmacro_ch = { "'" | "`" | ",@" | "," | "\\" | "%" }
 
 // Symbols and Numbers
-symbolish = @{ symbolish_ch+ }
+symbolish = @{ !"b\"" ~ symbolish_ch+ }
 symbolish_ch = { 'a'..'z' | 'A'..'Z' | '0'..'9' | "+" | "-" | "." | "/" | "$" |
 	"?" | "*" | "=" | "<" | ">" | "_" }
 
