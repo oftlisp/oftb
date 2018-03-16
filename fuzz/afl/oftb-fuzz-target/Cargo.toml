@@ -1,0 +1,11 @@
+[workspace]
+members = ["."]
+
+[package]
+name = "oftb-fuzz-target"
+version = "0.1.0"
+authors = ["Nathan Ringo <remexre@gmail.com>"]
+
+[dependencies]
+afl = "0.3.2"
+oftb = { path = "../../.." }
