@@ -60,8 +60,8 @@ impl Module {
 /// A declaration.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Decl {
-    Def(Symbol, Box<Expr>),
-    Defn(Symbol, Vec<Symbol>, Vec<Expr>, Box<Expr>),
+    Def(Symbol, Expr),
+    Defn(Symbol, Vec<Symbol>, Vec<Expr>, Expr),
 }
 
 impl Decl {

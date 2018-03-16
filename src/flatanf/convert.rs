@@ -76,7 +76,8 @@ fn compile_module(
 
 fn compile_decl(context: &mut Context, decl: AnfDecl) -> Result<Decl, Error> {
     match decl {
-        _ => unimplemented!(),
+        AnfDecl::Def(name, expr) => unimplemented!(),
+        AnfDecl::Defn(name, args, body) => unimplemented!(),
     }
 }
 

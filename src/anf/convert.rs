@@ -19,7 +19,7 @@ impl From<AstModule> for Module {
 impl From<AstDecl> for Decl {
     fn from(decl: AstDecl) -> Decl {
         match decl {
-            AstDecl::Def(name, expr) => Decl::Def(name, (*expr).into()),
+            AstDecl::Def(name, AstExpr::Literal(lit)) => Decl::Def(name, lit),
             AstDecl::Defn(name, args, body, tail) => {
                 Decl::Defn(name, args, convert_block(body, *tail))
             }
