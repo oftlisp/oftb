@@ -137,16 +137,41 @@ fn convert_string(pairs: Pairs<Rule>) -> Literal {
             Rule::string_raw_ch => {
                 s += pair.as_str();
             }
-            Rule::string_4_esc => unimplemented!("{}", pair.as_str()),
-            Rule::string_8_esc => unimplemented!("{}", pair.as_str()),
-            Rule::string_esc_ch => unimplemented!("{}", pair.as_str()),
+            Rule::string_esc_ch => {
+                s.push(convert_string_escape(pair));
+            }
             r => panic!("Invalid rule: {:?}", r),
         }
     }
-    //string = ${ "\"" ~ (string_raw_ch | string_esc_ch)* ~ "\"" }
-    //string_raw_ch = { !("\\" | "\"") ~ any }
-    //string_4_esc = { "u" ~ hex_digit{4} }
-    //string_8_esc = { "U" ~ hex_digit{8} }
-    //string_esc_ch = { "\\" ~ (hex_esc | string_4_esc | string_8_esc | predef_esc) }
     Literal::String(s)
+}
+
+fn convert_string_escape(pair: Pair<Rule>) -> char {
+    let pair = pair.into_inner().next().unwrap();
+    info!("{:?}", pair);
+    info!("{}", pair.as_str());
+    match pair.as_rule() {
+        // string_4_esc = { "u" ~ hex_digit{4} }
+        Rule::string_4_esc => unimplemented!("{}", pair.as_str()),
+        // string_8_esc = { "U" ~ hex_digit{8} }
+        Rule::string_8_esc => unimplemented!("{}", pair.as_str()),
+        Rule::hex_esc | Rule::predef_esc => convert_byte_escape(pair) as char,
+        r => panic!("Invalid rule: {:?}", r),
+    }
+}
+
+fn convert_byte_escape(pair: Pair<Rule>) -> u8 {
+    match pair.as_rule() {
+        // hex_esc = { "x" ~ hex_digit{2} }
+        Rule::predef_esc => match pair.as_str() {
+            "n" => b'\n',
+            "r" => b'\r',
+            "t" => b'\t',
+            "\\" => b'\\',
+            "\"" => b'"',
+            "'" => b'\'',
+            e => panic!("Invalid escape: '\\{}'", e),
+        },
+        r => panic!("Invalid rule: {:?}", r),
+    }
 }

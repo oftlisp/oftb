@@ -6,9 +6,8 @@ all:
 watch:
 	watchexec -cre rs,pest,toml just
 
-fuzz-afl:
-	cd fuzz/afl/oftb-fuzz-target
-	cargo afl build
-	cargo afl fuzz -i in -o -out target/debug/oftb-fuzz-target
-fuzz-libfuzzer:
+afl:
+	cd fuzz/afl/oftb-fuzz-target && cargo afl build
+	cd fuzz/afl/oftb-fuzz-target && cargo afl fuzz -i in -o out target/debug/oftb-fuzz-target
+fuzz:
 	cargo +nightly fuzz run parse_program
