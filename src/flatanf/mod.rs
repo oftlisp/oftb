@@ -16,7 +16,7 @@ pub struct Program(pub Vec<Decl>);
 /// A declaration.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Decl {
-    Def(Symbol, Expr),
+    Def(Symbol, Literal),
     Defn(Symbol, Vec<Symbol>, Expr),
 }
 
@@ -44,8 +44,8 @@ pub enum Expr {
 /// side effects, but may not push to or pop from the continuation stack.
 #[derive(Clone, Debug, PartialEq)]
 pub enum CExpr {
-    Call(Box<AExpr>, Vec<AExpr>),
-    If(Box<AExpr>, Box<Expr>, Box<Expr>),
+    Call(AExpr, Vec<AExpr>),
+    If(AExpr, Box<Expr>, Box<Expr>),
     LetRec(Vec<(Symbol, AExpr)>, Box<Expr>),
 }
 

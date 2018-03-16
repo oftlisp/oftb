@@ -19,6 +19,14 @@ pub enum Error {
     #[fail(display = "Dependency loop involving the {} module", _0)]
     DependencyLoop(Symbol),
 
+    /// Two different decls have the same name.
+    #[fail(display = "There are two decls named {}",_0)]
+    DuplicateDeclName(Symbol),
+
+    /// Two different variables in a letrec have the same name.
+    #[fail(display = "There are two variables in the same letrec named {}", _0)]
+    DuplicateLetrecName(Symbol),
+
     /// An error from the interpreter.
     #[fail(display = "Evaluation error: {}", _0)]
     Eval(String),
@@ -26,6 +34,10 @@ pub enum Error {
     /// A variable that was exported wasn't defined.
     #[fail(display = "{} should have exported {}, but it wasn't defined", _0, _1)]
     MissingExport(Symbol, Symbol),
+
+    /// An expression appeared in a def that was not a literal.
+    #[fail(display = "defs' expressions must be literals")]
+    NonLiteralDef,
 
     /// A variable was used that doesn't exist.
     #[fail(display = "No such variable: {}", _0)]
@@ -42,4 +54,8 @@ pub enum Error {
     /// A nonexistent module was imported from.
     #[fail(display = "Nonexistent module: {}", _0)]
     NonexistentModule(Symbol),
+
+    /// The right-hand side of a letrec binding can't be a variable.
+    #[fail(display = "The right-hand side of a letrec binding can't be a variable")]
+    VarInLetrec,
 }

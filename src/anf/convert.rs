@@ -2,7 +2,7 @@ use symbol::Symbol;
 
 use anf::{AExpr, CExpr, Decl, Expr, Module};
 use ast::{Decl as AstDecl, Expr as AstExpr, Module as AstModule};
-use failure::Error;
+use error::Error;
 use gensym::gensym;
 use literal::Literal;
 
@@ -29,7 +29,7 @@ impl Decl {
             AstDecl::Def(name, AstExpr::Literal(lit)) => {
                 Ok(Decl::Def(name, lit))
             }
-            AstDecl::Def(_, expr) => Err(unimplemented!()),
+            AstDecl::Def(_, _expr) => Err(Error::NonLiteralDef),
             AstDecl::Defn(name, args, body, tail) => {
                 Ok(Decl::Defn(name, args, convert_block(body, tail)))
             }
@@ -46,10 +46,7 @@ impl From<AstExpr> for Expr {
                 let args = args.into_iter()
                     .map(|e| into_aexpr(e, &mut context))
                     .collect();
-                apply_context(
-                    Expr::CExpr(CExpr::Call(Box::new(func), args)),
-                    context,
-                )
+                apply_context(Expr::CExpr(CExpr::Call(func, args)), context)
             }
             AstExpr::Decl(decl) => match *decl {
                 // A def in the tail position can have no effect besides that
@@ -69,7 +66,7 @@ impl From<AstExpr> for Expr {
                 let c = into_aexpr(*c, &mut context);
                 apply_context(
                     Expr::CExpr(CExpr::If(
-                        Box::new(c),
+                        c,
                         Box::new((*t).into()),
                         Box::new((*e).into()),
                     )),
@@ -108,7 +105,8 @@ fn convert_block(body: Vec<AstExpr>, tail: AstExpr) -> Expr {
     let mut lambdas = Vec::new();
     for expr in body.into_iter().rev() {
         if let AstExpr::Decl(decl) = expr {
-            match *decl {
+            let decl = *decl;
+            match decl {
                 AstDecl::Def(name, expr) => {
                     anf = Expr::Let(name, Box::new(expr.into()), Box::new(anf));
                 }

@@ -34,20 +34,21 @@ fn run(options: Options) -> Result<(), Error> {
     }
 
     let ast = AstModule::from_values(literals)?;
-    println!();
+    info!("");
     info!("AST Module:");
     info!("{:?}", ast);
 
-    let anf = AnfModule::from(ast);
-    println!();
+    let anf = AnfModule::convert(ast)?;
+    info!("");
     info!("ANF Module:");
     info!("{:?}", anf);
 
     // TODO: Resolve dependencies.
+    // TODO: Add prelude.
     let modules = vec![anf];
 
-    let program = Program::from_modules(modules, Default::default());
-    println!();
+    let program = Program::from_modules(modules, Default::default())?;
+    info!("");
     info!("FlatANF Program:");
     info!("{:?}", program);
 
