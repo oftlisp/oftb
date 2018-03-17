@@ -31,6 +31,7 @@ fn convert_value(mut pairs: Pairs<Rule>) -> Result<Literal, Error<Rule>> {
             convert_rmacro(rmacro, value)
         }
         Rule::string => convert_string(pair.into_inner()),
+        // TODO Support numbers.
         Rule::symbolish => Ok(Literal::Symbol(Symbol::from(pair.as_str()))),
         Rule::vector => pair.into_inner()
             .map(|pair| {

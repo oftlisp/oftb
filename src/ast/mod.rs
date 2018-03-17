@@ -67,8 +67,8 @@ pub enum Decl {
 impl Decl {
     /// Creates a declaration from a literal.
     pub fn from_value(lit: Literal) -> Result<Decl, Error> {
-        if helpers::is_shl("def".into(), &lit) {
-            let mut l = helpers::as_list(&lit).unwrap();
+        if lit.is_shl("def".into()) {
+            let mut l = lit.as_list().unwrap();
             if l.len() != 3 {
                 return Err(Error::InvalidDecl(lit));
             }
@@ -79,8 +79,8 @@ impl Decl {
                 return Err(Error::InvalidDecl(lit));
             };
             Ok(Decl::Def(name, expr))
-        } else if helpers::is_shl("defn".into(), &lit) {
-            let mut l = helpers::as_list(&lit).unwrap();
+        } else if lit.is_shl("defn".into()) {
+            let mut l = lit.as_list().unwrap();
             if l.len() < 4 {
                 return Err(Error::InvalidDecl(lit));
             }
@@ -88,9 +88,7 @@ impl Decl {
             let body = l.drain(3..)
                 .map(Expr::from_value)
                 .collect::<Result<_, _>>()?;
-            let args = if let Some(args) =
-                helpers::as_symbol_list(&l.pop().unwrap())
-            {
+            let args = if let Some(args) = l.pop().unwrap().as_symbol_list() {
                 args
             } else {
                 return Err(Error::InvalidDecl(lit));
@@ -125,7 +123,7 @@ impl Expr {
     pub fn from_value(lit: Literal) -> Result<Expr, Error> {
         match lit {
             Literal::Cons(h, t) => {
-                let t = match helpers::as_list(&t) {
+                let t = match t.as_list() {
                     Some(t) => t,
                     None => return Err(Error::InvalidExpr(Literal::Cons(h, t))),
                 };

@@ -15,6 +15,7 @@
 //! The Flat ANF form of the code is then interpreted by the `cesk` module.
 //! See [here](https://remexre.xyz/oftlisp-2018-03-12-update/) for more info.
 
+extern crate either;
 #[macro_use]
 extern crate failure;
 #[macro_use]
@@ -22,6 +23,7 @@ extern crate log;
 extern crate pest;
 #[macro_use]
 extern crate pest_derive;
+extern crate semver;
 extern crate symbol;
 
 pub mod anf;
@@ -31,6 +33,7 @@ pub mod flatanf;
 mod gensym;
 mod heap;
 mod literal;
+pub mod modules;
 mod parser;
 mod util;
 

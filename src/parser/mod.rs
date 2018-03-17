@@ -28,6 +28,7 @@ pub fn parse_file<P: AsRef<Path>>(path: P) -> Result<Vec<Literal>, Error> {
         .map_err(|err| {
             Error::CouldntOpenSource(path.display().to_string(), err)
         })?;
+    debug!("Parsing `{}'...", path.display());
     parse_program(&src).map_err(|err| {
         Error::Parse(path.display().to_string(), err.to_string())
     })
@@ -37,5 +38,7 @@ pub fn parse_file<P: AsRef<Path>>(path: P) -> Result<Vec<Literal>, Error> {
 pub fn parse_program<'src>(
     src: &'src str,
 ) -> Result<Vec<Literal>, ::pest::Error<'src, Rule>> {
-    OftLispParser::parse(Rule::program, src).and_then(convert::convert_program)
+    let pairs = OftLispParser::parse(Rule::program, src)?;
+    debug!("Finished parsing, converting to Literals");
+    convert::convert_program(pairs)
 }

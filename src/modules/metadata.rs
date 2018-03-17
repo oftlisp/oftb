@@ -1,0 +1,481 @@
+use std::collections::BTreeMap;
+
+use semver::{ReqParseError, SemVerError, Version, VersionReq};
+use symbol::Symbol;
+
+use literal::Literal;
+
+/// An error converting metadata.
+#[derive(Debug, Fail)]
+pub enum Error {
+    /// A field was duplicated.
+    #[fail(display = "Duplicate field: {}", _0)]
+    DuplicateField(Symbol),
+
+    /// A given package version number was invalid.
+    #[fail(display = "Bad package version: {}", _0)]
+    IllegalPackageVersion(SemVerError),
+
+    /// A given dependency version was invalid.
+    #[fail(display = "Bad dependency version: {}", _0)]
+    IllegalDependencyVersion(ReqParseError),
+
+    /// A required field was missing.
+    #[fail(display = "Missing field: {}", _0)]
+    MissingField(Symbol),
+
+    /// A value with an unexpected type was found.
+    #[fail(display = "Expected {}, found {}", _0, _1)]
+    Unexpected(&'static str, Literal),
+}
+
+/// Package metadata, stored in `package.oftd` files.
+#[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
+pub struct PackageMetadata {
+    /// The authors of the package.
+    pub authors: Vec<String>,
+
+    /// The package's components.
+    pub components: ComponentsMetadata,
+
+    /// The package's dependencies.
+    pub dependencies: BTreeMap<Symbol, DependencyMetadata>,
+
+    /// The SPDX identifier for the license the package is under.
+    ///
+    /// For example,
+    ///
+    ///  - `Apache-2.0`
+    ///  - `GPL-3.0-or-later`
+    ///  - `LGPL-3.0-or-later`
+    ///  - `MIT`
+    pub license: Option<String>,
+
+    /// The name of the package. Required.
+    pub name: Symbol,
+
+    /// The version of the package. Required.
+    pub version: Version,
+}
+
+impl PackageMetadata {
+    /// Converts from `Literal`s.
+    pub fn from_literals(lits: Vec<Literal>) -> Result<PackageMetadata, Error> {
+        let mut authors = None;
+        let mut components = None;
+        let mut dependencies = None;
+        let mut license = None;
+        let mut name = None;
+        let mut version = None;
+
+        for lit in lits {
+            let (s, l) = if let Some(val) = lit.as_shl() {
+                val
+            } else {
+                return Err(Error::Unexpected("a metadata item", lit));
+            };
+            match s.as_str() {
+                "authors" => {
+                    if authors.is_some() {
+                        return Err(Error::DuplicateField(s));
+                    }
+
+                    let v = l.into_iter()
+                        .map(|lit| match lit {
+                            Literal::String(s) => Ok(s),
+                            _ => Err(Error::Unexpected("an author", lit)),
+                        })
+                        .collect::<Result<_, _>>()?;
+                    authors = Some(v);
+                }
+                "components" => {
+                    if components.is_some() {
+                        return Err(Error::DuplicateField(s));
+                    }
+
+                    let v = ComponentsMetadata::from_literals(l)?;
+                    components = Some(v);
+                }
+                "dependencies" => {
+                    if dependencies.is_some() {
+                        return Err(Error::DuplicateField(s));
+                    }
+
+                    let deps = l.into_iter()
+                        .map(|lit| {
+                            if let Some((name, lits)) = lit.as_shl() {
+                                Ok((
+                                    name,
+                                    DependencyMetadata::from_literals(lits)?,
+                                ))
+                            } else {
+                                Err(Error::Unexpected("a dependency", lit))
+                            }
+                        })
+                        .collect::<Result<_, _>>()?;
+                    dependencies = Some(deps);
+                }
+                "license" => {
+                    if license.is_some() {
+                        return Err(Error::DuplicateField(s));
+                    }
+
+                    if l.len() != 1 {
+                        return Err(Error::Unexpected(
+                            "a license",
+                            Literal::list(l),
+                        ));
+                    }
+                    let l = l.into_iter().next().unwrap();
+                    if let Literal::String(l) = l {
+                        license = Some(l);
+                    } else {
+                        return Err(Error::Unexpected("a license", l));
+                    }
+                }
+                "name" => {
+                    if name.is_some() {
+                        return Err(Error::DuplicateField(s));
+                    }
+
+                    if l.len() != 1 {
+                        return Err(Error::Unexpected(
+                            "the package name",
+                            Literal::list(l),
+                        ));
+                    }
+                    let n = l.into_iter().next().unwrap();
+                    if let Literal::Symbol(n) = n {
+                        name = Some(n);
+                    } else {
+                        return Err(Error::Unexpected("the package name", n));
+                    }
+                }
+                "version" => {
+                    if version.is_some() {
+                        return Err(Error::DuplicateField(s));
+                    }
+
+                    if l.len() != 1 {
+                        return Err(Error::Unexpected(
+                            "the package version",
+                            Literal::list(l),
+                        ));
+                    }
+                    let v = l.into_iter().next().unwrap();
+                    if let Literal::String(v) = v {
+                        let v =
+                            v.parse().map_err(Error::IllegalPackageVersion)?;
+                        version = Some(v);
+                    } else {
+                        return Err(Error::Unexpected("the package version", v));
+                    }
+                }
+                s => return Err(Error::Unexpected("a metadata item", lit)),
+            }
+        }
+
+        Ok(PackageMetadata {
+            authors: authors.unwrap_or_default(),
+            components: components
+                .ok_or(Error::MissingField("components".into()))?,
+            dependencies: dependencies.unwrap_or_default(),
+            license,
+            name: name.ok_or(Error::MissingField("name".into()))?,
+            version: version.ok_or(Error::MissingField("version".into()))?,
+        })
+    }
+
+    /// Converts to `Literal`s.
+    pub fn to_literals(self) -> Vec<Literal> {
+        let mut l = Vec::new();
+        if self.authors.len() != 0 {
+            let mut authors = vec![Literal::Symbol("authors".into())];
+            authors.extend(self.authors.into_iter().map(Literal::String));
+            l.push(Literal::list(authors));
+        }
+        if let Some(license) = self.license {
+            l.push(Literal::list(vec![
+                Literal::Symbol("license".into()),
+                Literal::String(license),
+            ]));
+        }
+        l.push(Literal::list(vec![
+            Literal::Symbol("name".into()),
+            Literal::Symbol(self.name.into()),
+        ]));
+        l.push(Literal::list(vec![
+            Literal::Symbol("version".into()),
+            Literal::String(self.version.to_string()),
+        ]));
+
+        l.push(Literal::Cons(
+            Box::new(Literal::Symbol("components".into())),
+            Box::new(self.components.to_literal()),
+        ));
+
+        if self.dependencies.len() != 0 {
+            let mut deps = self.dependencies.into_iter().collect::<Vec<_>>();
+            deps.sort_by_key(|&(n, _)| n.as_str());
+            let mut dep_lit = vec![Literal::Symbol("dependencies".into())];
+            dep_lit.extend(deps.into_iter().map(|(name, dep)| {
+                Literal::Cons(
+                    Box::new(Literal::Symbol(name.into())),
+                    Box::new(dep.to_literal()),
+                )
+            }));
+            l.push(Literal::list(dep_lit));
+        }
+
+        l
+    }
+}
+
+/// The metadata associated with the `components` field of `PackageMetadata`.
+#[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
+pub struct ComponentsMetadata {
+    /// The library component, if one exists.
+    pub library: Option<LibraryComponentMetadata>,
+
+    /// The binary components, if any, associated with the package.
+    pub binaries: Vec<BinaryComponentMetadata>,
+}
+
+impl ComponentsMetadata {
+    /// Converts from `Literal`s.
+    pub fn from_literals(
+        lits: Vec<Literal>,
+    ) -> Result<ComponentsMetadata, Error> {
+        let mut library = None;
+        let mut binaries = Vec::new();
+
+        for lit in lits {
+            let (s, l) = if let Some(val) = lit.as_shl() {
+                val
+            } else {
+                return Err(Error::Unexpected("a component", lit));
+            };
+            match s.as_str() {
+                "library" => {
+                    if library.is_some() {
+                        return Err(Error::DuplicateField(s));
+                    }
+
+                    let lib = LibraryComponentMetadata::from_literals(l)?;
+                    library = Some(lib);
+                }
+                "binary" => {
+                    let bin = BinaryComponentMetadata::from_literals(l)?;
+                    binaries.push(bin);
+                }
+                s => return Err(Error::Unexpected("a component", lit)),
+            }
+        }
+
+        Ok(ComponentsMetadata { library, binaries })
+    }
+
+    /// Converts to a `Literal`.
+    pub fn to_literal(self) -> Literal {
+        let mut l = Vec::new();
+        if let Some(library) = self.library {
+            l.push(Literal::Cons(
+                Box::new(Literal::Symbol("library".into())),
+                Box::new(library.to_literal()),
+            ));
+        }
+        l.extend(self.binaries.into_iter().map(|b| {
+            Literal::Cons(
+                Box::new(Literal::Symbol("binary".into())),
+                Box::new(b.to_literal()),
+            )
+        }));
+        Literal::list(l)
+    }
+}
+
+/// The metadata associated with the `components.library` field of
+/// `PackageMetadata`.
+///
+/// Since a library (currently) has no metadata other than that of the package
+/// itself, this is a unit struct.
+#[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
+pub struct LibraryComponentMetadata;
+
+impl LibraryComponentMetadata {
+    /// Converts from a `Literal`.
+    pub fn from_literals(
+        mut lits: Vec<Literal>,
+    ) -> Result<LibraryComponentMetadata, Error> {
+        if let Some(lit) = lits.pop() {
+            Err(Error::Unexpected("a library component", lit))
+        } else {
+            Ok(LibraryComponentMetadata)
+        }
+    }
+
+    /// Converts to a `Literal`.
+    pub fn to_literal(self) -> Literal {
+        Literal::Nil
+    }
+}
+
+/// The metadata associated with the `components.binaries` field of
+/// `PackageMetadata`.
+#[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
+pub struct BinaryComponentMetadata {
+    /// The name of the binary. Required.
+    pub name: String,
+
+    /// The path of the main file of the binary. Required.
+    pub path: String,
+}
+
+impl BinaryComponentMetadata {
+    /// Converts from a `Literal`.
+    pub fn from_literals(
+        lits: Vec<Literal>,
+    ) -> Result<BinaryComponentMetadata, Error> {
+        let mut name = None;
+        let mut path = None;
+
+        for lit in lits {
+            let (s, lit) = if let Some(val) = lit.as_shp() {
+                val
+            } else {
+                return Err(Error::Unexpected(
+                    "a binary component metadata item",
+                    lit,
+                ));
+            };
+            match s.as_str() {
+                "name" => {
+                    if name.is_some() {
+                        return Err(Error::DuplicateField(s));
+                    } else if let Literal::String(n) = lit {
+                        name = Some(n);
+                    } else {
+                        return Err(Error::Unexpected("a binary name", lit));
+                    }
+                }
+                "path" => {
+                    if path.is_some() {
+                        return Err(Error::DuplicateField(s));
+                    } else if let Literal::String(p) = lit {
+                        path = Some(p);
+                    } else {
+                        return Err(Error::Unexpected("a path", lit));
+                    }
+                }
+                s => {
+                    return Err(Error::Unexpected(
+                        "a binary component metadata item",
+                        lit,
+                    ))
+                }
+            }
+        }
+
+        Ok(BinaryComponentMetadata {
+            name: name.ok_or(Error::MissingField("name".into()))?,
+            path: path.ok_or(Error::MissingField("path".into()))?,
+        })
+    }
+
+    /// Converts to a `Literal`.
+    pub fn to_literal(self) -> Literal {
+        Literal::list(vec![
+            Literal::list(vec![
+                Literal::Symbol("name".into()),
+                Literal::String(self.name),
+            ]),
+            Literal::list(vec![
+                Literal::Symbol("path".into()),
+                Literal::String(self.path),
+            ]),
+        ])
+    }
+}
+
+/// The metadata associated with the `dependencies` field of `PackageMetadata`.
+#[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
+pub struct DependencyMetadata {
+    /// The Git repo to get the dependency from, if any.
+    pub git: Option<String>,
+
+    /// The required version of the dependency.
+    pub version: VersionReq,
+}
+
+impl DependencyMetadata {
+    /// Converts from `Literal`s.
+    pub fn from_literals(
+        lits: Vec<Literal>,
+    ) -> Result<DependencyMetadata, Error> {
+        let mut git = None;
+        let mut version = None;
+
+        for lit in lits {
+            let (s, lit) = if let Some(val) = lit.as_shp() {
+                val
+            } else {
+                return Err(Error::Unexpected(
+                    "a binary component metadata item",
+                    lit,
+                ));
+            };
+            match s.as_str() {
+                "git" => {
+                    if git.is_some() {
+                        return Err(Error::DuplicateField(s));
+                    } else if let Literal::String(url) = lit {
+                        git = Some(url);
+                    } else {
+                        return Err(Error::Unexpected("a Git clone URL", lit));
+                    }
+                }
+                "version" => {
+                    if version.is_some() {
+                        return Err(Error::DuplicateField(s));
+                    } else if let Literal::String(v) = lit {
+                        let v =
+                            v.parse().map_err(Error::IllegalDependencyVersion)?;
+                        version = Some(v);
+                    } else {
+                        return Err(Error::Unexpected(
+                            "a dependency version",
+                            lit,
+                        ));
+                    }
+                }
+                s => {
+                    return Err(Error::Unexpected(
+                        "a dependency metadata item",
+                        lit,
+                    ))
+                }
+            }
+        }
+
+        Ok(DependencyMetadata {
+            git,
+            version: version.ok_or(Error::MissingField("version".into()))?,
+        })
+    }
+
+    /// Converts to a `Literal`.
+    pub fn to_literal(self) -> Literal {
+        let mut l = Vec::new();
+        if let Some(git) = self.git {
+            l.push(Literal::list(vec![
+                Literal::Symbol("git".into()),
+                Literal::String(git),
+            ]));
+        }
+        l.push(Literal::list(vec![
+            Literal::Symbol("version".into()),
+            Literal::String(self.version.to_string()),
+        ]));
+        Literal::list(l)
+    }
+}
