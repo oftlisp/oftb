@@ -15,7 +15,6 @@
 //! The Flat ANF form of the code is then interpreted by the `cesk` module.
 //! See [here](https://remexre.xyz/oftlisp-2018-03-12-update/) for more info.
 
-extern crate either;
 #[macro_use]
 extern crate failure;
 #[macro_use]

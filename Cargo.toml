@@ -6,7 +6,6 @@ name = "oftb"
 version = "0.1.0"
 
 [dependencies]
-either = "1.4.0"
 failure = "0.1.1"
 log = "0.4.1"
 pest = "1.0.6"

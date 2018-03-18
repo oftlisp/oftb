@@ -9,7 +9,7 @@ extern crate structopt;
 mod options;
 
 use failure::Error;
-use oftb::modules::Modules;
+use oftb::modules::Packages;
 use structopt::StructOpt;
 
 use options::Options;
@@ -24,10 +24,12 @@ fn main() {
 }
 
 fn run(options: Options) -> Result<(), Error> {
-    let mut modules = Modules::new();
-    modules.add_modules_from(options.path)?;
+    let mut pkgs = Packages::new();
+    let meta = pkgs.load_metadata_from(&options.path)?;
+    debug!("Compiling {:#?}", meta);
+    pkgs.add_modules_from(options.path)?;
 
-    let program = modules.compile()?;
+    let program = pkgs.compile(meta.name.into(), &options.binary)?;
     info!("{:#?}", program);
 
     Ok(())

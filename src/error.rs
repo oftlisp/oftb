@@ -13,12 +13,20 @@ pub enum Error {
     Ast(AstError),
 
     /// An error opening a source file.
-    #[fail(display = "Couldn't open `{:?}': {}", _0, _1)]
+    #[fail(display = "Couldn't open `{}': {}", _0, _1)]
     CouldntOpenSource(String, IoError),
 
-    /// A dependency loop was detected.
+    /// A dependency loop was detected between modules.
     #[fail(display = "Dependency loop involving the {} module", _0)]
-    DependencyLoop(Symbol),
+    DependencyLoopInModule(Symbol),
+
+    /// A dependency loop was detected between packages.
+    #[fail(display = "Dependency loop involving the {} package", _0)]
+    DependencyLoopInPackage(Symbol),
+
+    /// It's impossible to depend on a package that doesn't export a library.
+    #[fail(display = "The `{}' package must export a library to be depended on.", _0)]
+    DependencyMustExportLib(Symbol),
 
     /// Two different decls have the same name.
     #[fail(display = "There are two decls named {}",_0)]
@@ -32,9 +40,21 @@ pub enum Error {
     #[fail(display = "Evaluation error: {}", _0)]
     Eval(String),
 
+    /// A generic I/O error.
+    #[fail(display = "{}", _0)]
+    Io(IoError),
+
     /// An error dealing with package metadata.
     #[fail(display = "{}", _0)]
     Metadata(MetadataError),
+
+    /// A mismatch between expected and found package names.
+    #[fail(display = "Expected a package named `{}', found `{}'.", _0, _1)]
+    MisnamedPackage(Symbol, Symbol),
+
+    /// A mismatch between expected and found module names.
+    #[fail(display = "Expected a module named `{}', found `{}'.", _0, _1)]
+    MisnamedModule(Symbol, Symbol),
 
     /// A variable that was exported wasn't defined.
     #[fail(display = "{} should have exported {}, but it wasn't defined", _0, _1)]
@@ -43,6 +63,10 @@ pub enum Error {
     /// An expression appeared in a def that was not a literal.
     #[fail(display = "defs' expressions must be literals")]
     NonLiteralDef,
+
+    /// A binary doesn't exist (or the package containing it wasn't loaded).
+    #[fail(display="No such binary `{}' (from the `{}' package)", _1, _0)]
+    NoSuchBinary(Symbol, String),
 
     /// A variable was used that doesn't exist.
     #[fail(display = "No such variable: {}", _0)]
@@ -68,6 +92,12 @@ pub enum Error {
 impl From<AstError> for Error {
     fn from(err: AstError) -> Error {
         Error::Ast(err)
+    }
+}
+
+impl From<IoError> for Error {
+    fn from(err: IoError) -> Error {
+        Error::Io(err)
     }
 }
 

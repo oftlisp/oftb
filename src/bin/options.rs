@@ -7,6 +7,10 @@ pub struct Options {
     #[structopt(name = "FILE", parse(from_os_str))]
     pub path: PathBuf,
 
+    /// The binary to compile.
+    #[structopt(name = "BINARY")]
+    pub binary: String,
+
     /// Turns off message output.
     #[structopt(short = "q", long = "quiet")]
     pub quiet: bool,

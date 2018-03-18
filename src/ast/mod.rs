@@ -122,10 +122,12 @@ impl Expr {
     /// Creates an expression from a literal.
     pub fn from_value(lit: Literal) -> Result<Expr, Error> {
         match lit {
-            Literal::Cons(h, t) => {
-                let t = match t.as_list() {
+            Literal::Cons(h, t_lit) => {
+                let mut t = match t_lit.as_list() {
                     Some(t) => t,
-                    None => return Err(Error::InvalidExpr(Literal::Cons(h, t))),
+                    None => {
+                        return Err(Error::InvalidExpr(Literal::Cons(h, t_lit)))
+                    }
                 };
                 match *h {
                     Literal::Symbol(s)
@@ -137,7 +139,14 @@ impl Expr {
                         unimplemented!()
                     }
                     Literal::Symbol(s) if s.as_str() == "quote" => {
-                        unimplemented!()
+                        if t.len() != 1 {
+                            return Err(Error::InvalidExpr(Literal::Cons(
+                                h,
+                                t_lit,
+                            )));
+                        }
+
+                        Ok(Expr::Literal(t.pop().unwrap()))
                     }
                     Literal::Symbol(s) if s.as_str() == "progn" => {
                         unimplemented!()

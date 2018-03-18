@@ -8,4 +8,4 @@
   (library)
   (binary
     (name "oftb-macro-expander")
-    (path "src/main.oft")))
+    (path "bin/oftb-macro-expander.oft")))

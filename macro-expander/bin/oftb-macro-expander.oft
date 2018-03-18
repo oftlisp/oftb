@@ -1,0 +1,13 @@
+(module main)
+
+(import oftb-macro-expander
+  say-hello)
+(import oftb-macro-expander/sub/mod
+  say-hello-from-sub-mod)
+
+(defn main (args)
+  (todo)
+  (println 'todo)
+
+  (say-hello)
+  (say-hello-from-sub-mod))

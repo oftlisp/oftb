@@ -24,7 +24,7 @@ pub fn toposort_mods<F: FnMut(Module) -> Result<(), Error>>(
         if closed.contains(&m.name) {
             return Ok(());
         } else if !open.insert(m.name) {
-            return Err(Error::DependencyLoop(m.name));
+            return Err(Error::DependencyLoopInModule(m.name));
         }
         for &(name, _) in &m.imports {
             let i = mods.binary_search_by_key(&name, |m| m.name)
@@ -90,10 +90,12 @@ impl Context {
     /// Retrieves a value from the context, wrapping it into a
     /// `flatanf::AExpr`.
     pub fn get(&self, name: Symbol) -> Result<AExpr, Error> {
-        let off = self.locals.len() - 1;
-        for n in 0..self.locals.len() {
-            if self.locals[off - n] == name {
-                return Ok(AExpr::Local(n));
+        if !self.locals.is_empty() {
+            let off = self.locals.len() - 1;
+            for n in 0..self.locals.len() {
+                if self.locals[off - n] == name {
+                    return Ok(AExpr::Local(n));
+                }
             }
         }
         if let Some(&global) = self.globals.get(&name) {
