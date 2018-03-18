@@ -2,9 +2,9 @@ all:
 	cargo check --all
 	cargo doc --all
 	cargo test --all
-	cargo run ~/oftlisp/src/std/internal/examples/hello-world.oft
+	cargo run macro-expander
 watch:
-	watchexec -cre rs,pest,toml just
+	watchexec -cre rs,oft,oftd,pest,toml just
 
 afl:
 	cd fuzz/afl/oftb-fuzz-target && cargo afl build

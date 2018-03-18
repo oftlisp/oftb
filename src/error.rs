@@ -3,6 +3,7 @@ use std::io::Error as IoError;
 use symbol::Symbol;
 
 use ast::Error as AstError;
+use modules::MetadataError;
 
 /// An error from `oftb`.
 #[derive(Debug, Fail)]
@@ -31,6 +32,10 @@ pub enum Error {
     #[fail(display = "Evaluation error: {}", _0)]
     Eval(String),
 
+    /// An error dealing with package metadata.
+    #[fail(display = "{}", _0)]
+    Metadata(MetadataError),
+
     /// A variable that was exported wasn't defined.
     #[fail(display = "{} should have exported {}, but it wasn't defined", _0, _1)]
     MissingExport(Symbol, Symbol),
@@ -58,4 +63,16 @@ pub enum Error {
     /// The right-hand side of a letrec binding can't be a variable.
     #[fail(display = "The right-hand side of a letrec binding can't be a variable")]
     VarInLetrec,
+}
+
+impl From<AstError> for Error {
+    fn from(err: AstError) -> Error {
+        Error::Ast(err)
+    }
+}
+
+impl From<MetadataError> for Error {
+    fn from(err: MetadataError) -> Error {
+        Error::Metadata(err)
+    }
 }
