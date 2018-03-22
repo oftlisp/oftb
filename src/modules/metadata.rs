@@ -1,33 +1,10 @@
 use std::collections::BTreeMap;
 
-use semver::{ReqParseError, SemVerError, Version, VersionReq};
+use semver::{Version, VersionReq};
 use symbol::Symbol;
 
+use error::{Error, ErrorKind};
 use literal::Literal;
-
-/// An error converting metadata.
-#[derive(Debug, Fail)]
-pub enum Error {
-    /// A field was duplicated.
-    #[fail(display = "Duplicate field: {}", _0)]
-    DuplicateField(Symbol),
-
-    /// A given package version number was invalid.
-    #[fail(display = "Bad package version: {}", _0)]
-    IllegalPackageVersion(SemVerError),
-
-    /// A given dependency version was invalid.
-    #[fail(display = "Bad dependency version: {}", _0)]
-    IllegalDependencyVersion(ReqParseError),
-
-    /// A required field was missing.
-    #[fail(display = "Missing field: {}", _0)]
-    MissingField(Symbol),
-
-    /// A value with an unexpected type was found.
-    #[fail(display = "Expected {}, found {}", _0, _1)]
-    Unexpected(&'static str, Literal),
-}
 
 /// Package metadata, stored in `package.oftd` files.
 #[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
@@ -72,25 +49,29 @@ impl PackageMetadata {
             let (s, l) = if let Some(val) = lit.as_shl() {
                 val
             } else {
-                return Err(Error::Unexpected("a metadata item", lit));
+                return Err(ErrorKind::Unexpected("a metadata item", lit)
+                    .into());
             };
             match s.as_str() {
                 "authors" => {
                     if authors.is_some() {
-                        return Err(Error::DuplicateField(s));
+                        return Err(ErrorKind::DuplicateField(s).into());
                     }
 
                     let v = l.into_iter()
                         .map(|lit| match lit {
                             Literal::String(s) => Ok(s),
-                            _ => Err(Error::Unexpected("an author", lit)),
+                            _ => Err(Error::from(ErrorKind::Unexpected(
+                                "an author",
+                                lit,
+                            ))),
                         })
                         .collect::<Result<_, _>>()?;
                     authors = Some(v);
                 }
                 "components" => {
                     if components.is_some() {
-                        return Err(Error::DuplicateField(s));
+                        return Err(ErrorKind::DuplicateField(s).into());
                     }
 
                     let v = ComponentsMetadata::from_literals(l)?;
@@ -98,7 +79,7 @@ impl PackageMetadata {
                 }
                 "dependencies" => {
                     if dependencies.is_some() {
-                        return Err(Error::DuplicateField(s));
+                        return Err(ErrorKind::DuplicateField(s).into());
                     }
 
                     let deps = l.into_iter()
@@ -109,7 +90,10 @@ impl PackageMetadata {
                                     DependencyMetadata::from_literals(lits)?,
                                 ))
                             } else {
-                                Err(Error::Unexpected("a dependency", lit))
+                                Err(Error::from(ErrorKind::Unexpected(
+                                    "a dependency",
+                                    lit,
+                                )))
                             }
                         })
                         .collect::<Result<_, _>>()?;
@@ -117,72 +101,82 @@ impl PackageMetadata {
                 }
                 "license" => {
                     if license.is_some() {
-                        return Err(Error::DuplicateField(s));
+                        return Err(ErrorKind::DuplicateField(s).into());
                     }
 
                     if l.len() != 1 {
-                        return Err(Error::Unexpected(
+                        return Err(ErrorKind::Unexpected(
                             "a license",
                             Literal::list(l),
-                        ));
+                        ).into());
                     }
                     let l = l.into_iter().next().unwrap();
                     if let Literal::String(l) = l {
                         license = Some(l);
                     } else {
-                        return Err(Error::Unexpected("a license", l));
+                        return Err(ErrorKind::Unexpected("a license", l)
+                            .into());
                     }
                 }
                 "name" => {
                     if name.is_some() {
-                        return Err(Error::DuplicateField(s));
+                        return Err(ErrorKind::DuplicateField(s).into());
                     }
 
                     if l.len() != 1 {
-                        return Err(Error::Unexpected(
+                        return Err(ErrorKind::Unexpected(
                             "the package name",
                             Literal::list(l),
-                        ));
+                        ).into());
                     }
                     let n = l.into_iter().next().unwrap();
                     if let Literal::Symbol(n) = n {
                         name = Some(n);
                     } else {
-                        return Err(Error::Unexpected("the package name", n));
+                        return Err(ErrorKind::Unexpected(
+                            "the package name",
+                            n,
+                        ).into());
                     }
                 }
                 "version" => {
                     if version.is_some() {
-                        return Err(Error::DuplicateField(s));
+                        return Err(ErrorKind::DuplicateField(s).into());
                     }
 
                     if l.len() != 1 {
-                        return Err(Error::Unexpected(
+                        return Err(ErrorKind::Unexpected(
                             "the package version",
                             Literal::list(l),
-                        ));
+                        ).into());
                     }
                     let v = l.into_iter().next().unwrap();
                     if let Literal::String(v) = v {
-                        let v =
-                            v.parse().map_err(Error::IllegalPackageVersion)?;
+                        let v = v.parse()
+                            .map_err(ErrorKind::IllegalPackageVersion)?;
                         version = Some(v);
                     } else {
-                        return Err(Error::Unexpected("the package version", v));
+                        return Err(ErrorKind::Unexpected(
+                            "the package version",
+                            v,
+                        ).into());
                     }
                 }
-                s => return Err(Error::Unexpected("a metadata item", lit)),
+                s => {
+                    return Err(ErrorKind::Unexpected("a metadata item", lit)
+                        .into())
+                }
             }
         }
 
         Ok(PackageMetadata {
             authors: authors.unwrap_or_default(),
             components: components
-                .ok_or(Error::MissingField("components".into()))?,
+                .ok_or(ErrorKind::MissingField("components".into()))?,
             dependencies: dependencies.unwrap_or_default(),
             license,
-            name: name.ok_or(Error::MissingField("name".into()))?,
-            version: version.ok_or(Error::MissingField("version".into()))?,
+            name: name.ok_or(ErrorKind::MissingField("name".into()))?,
+            version: version.ok_or(ErrorKind::MissingField("version".into()))?,
         })
     }
 
@@ -253,12 +247,12 @@ impl ComponentsMetadata {
             let (s, l) = if let Some(val) = lit.as_shl() {
                 val
             } else {
-                return Err(Error::Unexpected("a component", lit));
+                return Err(ErrorKind::Unexpected("a component", lit).into());
             };
             match s.as_str() {
                 "library" => {
                     if library.is_some() {
-                        return Err(Error::DuplicateField(s));
+                        return Err(ErrorKind::DuplicateField(s).into());
                     }
 
                     let lib = LibraryComponentMetadata::from_literals(l)?;
@@ -268,7 +262,9 @@ impl ComponentsMetadata {
                     let bin = BinaryComponentMetadata::from_literals(l)?;
                     binaries.push(bin);
                 }
-                s => return Err(Error::Unexpected("a component", lit)),
+                s => {
+                    return Err(ErrorKind::Unexpected("a component", lit).into())
+                }
             }
         }
 
@@ -308,7 +304,7 @@ impl LibraryComponentMetadata {
         mut lits: Vec<Literal>,
     ) -> Result<LibraryComponentMetadata, Error> {
         if let Some(lit) = lits.pop() {
-            Err(Error::Unexpected("a library component", lit))
+            Err(ErrorKind::Unexpected("a library component", lit).into())
         } else {
             Ok(LibraryComponentMetadata)
         }
@@ -343,42 +339,43 @@ impl BinaryComponentMetadata {
             let (s, lit) = if let Some(val) = lit.as_shp() {
                 val
             } else {
-                return Err(Error::Unexpected(
+                return Err(ErrorKind::Unexpected(
                     "a binary component metadata item",
                     lit,
-                ));
+                ).into());
             };
             match s.as_str() {
                 "name" => {
                     if name.is_some() {
-                        return Err(Error::DuplicateField(s));
+                        return Err(ErrorKind::DuplicateField(s).into());
                     } else if let Literal::String(n) = lit {
                         name = Some(n);
                     } else {
-                        return Err(Error::Unexpected("a binary name", lit));
+                        return Err(ErrorKind::Unexpected("a binary name", lit)
+                            .into());
                     }
                 }
                 "path" => {
                     if path.is_some() {
-                        return Err(Error::DuplicateField(s));
+                        return Err(ErrorKind::DuplicateField(s).into());
                     } else if let Literal::String(p) = lit {
                         path = Some(p);
                     } else {
-                        return Err(Error::Unexpected("a path", lit));
+                        return Err(ErrorKind::Unexpected("a path", lit).into());
                     }
                 }
                 s => {
-                    return Err(Error::Unexpected(
+                    return Err(ErrorKind::Unexpected(
                         "a binary component metadata item",
                         lit,
-                    ))
+                    ).into())
                 }
             }
         }
 
         Ok(BinaryComponentMetadata {
-            name: name.ok_or(Error::MissingField("name".into()))?,
-            path: path.ok_or(Error::MissingField("path".into()))?,
+            name: name.ok_or(ErrorKind::MissingField("name".into()))?,
+            path: path.ok_or(ErrorKind::MissingField("path".into()))?,
         })
     }
 
@@ -419,47 +416,50 @@ impl DependencyMetadata {
             let (s, lit) = if let Some(val) = lit.as_shp() {
                 val
             } else {
-                return Err(Error::Unexpected(
+                return Err(ErrorKind::Unexpected(
                     "a binary component metadata item",
                     lit,
-                ));
+                ).into());
             };
             match s.as_str() {
                 "git" => {
                     if git.is_some() {
-                        return Err(Error::DuplicateField(s));
+                        return Err(ErrorKind::DuplicateField(s).into());
                     } else if let Literal::String(url) = lit {
                         git = Some(url);
                     } else {
-                        return Err(Error::Unexpected("a Git clone URL", lit));
+                        return Err(ErrorKind::Unexpected(
+                            "a Git clone URL",
+                            lit,
+                        ).into());
                     }
                 }
                 "version" => {
                     if version.is_some() {
-                        return Err(Error::DuplicateField(s));
+                        return Err(ErrorKind::DuplicateField(s).into());
                     } else if let Literal::String(v) = lit {
-                        let v =
-                            v.parse().map_err(Error::IllegalDependencyVersion)?;
+                        let v = v.parse()
+                            .map_err(ErrorKind::IllegalDependencyVersion)?;
                         version = Some(v);
                     } else {
-                        return Err(Error::Unexpected(
+                        return Err(ErrorKind::Unexpected(
                             "a dependency version",
                             lit,
-                        ));
+                        ).into());
                     }
                 }
                 s => {
-                    return Err(Error::Unexpected(
+                    return Err(ErrorKind::Unexpected(
                         "a dependency metadata item",
                         lit,
-                    ))
+                    ).into())
                 }
             }
         }
 
         Ok(DependencyMetadata {
             git,
-            version: version.ok_or(Error::MissingField("version".into()))?,
+            version: version.ok_or(ErrorKind::MissingField("version".into()))?,
         })
     }
 

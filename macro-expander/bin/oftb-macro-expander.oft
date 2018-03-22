@@ -1,4 +1,5 @@
-(module main)
+(module main
+  main)
 
 (import oftb-macro-expander
   say-hello)

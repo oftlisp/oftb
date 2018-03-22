@@ -4,7 +4,7 @@ use symbol::Symbol;
 
 use anf::{AExpr as AnfAExpr, CExpr as AnfCExpr, Decl as AnfDecl,
           Expr as AnfExpr, Module};
-use error::Error;
+use error::{Error, ErrorKind};
 use flatanf::{AExpr, CExpr, Decl, Expr, Program};
 use flatanf::util::{toposort_mods, Context};
 
@@ -33,7 +33,6 @@ fn compile_module(
     globals: &mut HashSet<Symbol>,
     m: Module,
 ) -> Result<Vec<Decl>, Error> {
-    warn!("Compiling {:#?}", m);
     let Module {
         name: module_name,
         imports,
@@ -48,7 +47,8 @@ fn compile_module(
             .collect::<HashMap<_, _>>();
         for (_, g) in ctx.iter() {
             if !globals.contains(g) {
-                return Err(Error::NonexistentImport(module_name, *g));
+                return Err(ErrorKind::NonexistentImport(module_name, *g)
+                    .into());
             }
         }
         ctx.extend(
@@ -60,26 +60,35 @@ fn compile_module(
     };
 
     let decls = body.into_iter()
-        .map(|d| compile_decl(&mut context, d))
+        .map(|d| compile_decl(module_name, &mut context, d))
         .collect::<Result<Vec<_>, _>>()?;
 
     let decl_names = decls.iter().map(|d| d.name()).collect::<HashSet<_>>();
     for e in exports {
+        let e = global(m.name, e);
         if !decl_names.contains(&e) {
-            return Err(Error::MissingExport(module_name, e));
+            return Err(ErrorKind::MissingExport(module_name, e).into());
         }
-        globals.insert(global(m.name, e));
+        globals.insert(e);
     }
     Ok(decls)
 }
 
-fn compile_decl(context: &mut Context, decl: AnfDecl) -> Result<Decl, Error> {
+fn compile_decl(
+    mod_name: Symbol,
+    context: &mut Context,
+    decl: AnfDecl,
+) -> Result<Decl, Error> {
     match decl {
-        AnfDecl::Def(name, lit) => Ok(Decl::Def(name, lit)),
+        AnfDecl::Def(name, lit) => {
+            let name = global(mod_name, name);
+            Ok(Decl::Def(name, lit))
+        }
         AnfDecl::Defn(name, args, body) => {
             let body = context.bracket_many(args.iter().cloned(), |context| {
                 compile_expr(context, body)
             })?;
+            let name = global(mod_name, name);
             Ok(Decl::Defn(name, args, body))
         }
     }
@@ -127,7 +136,9 @@ fn compile_cexpr(
                 let bindings = bindings
                     .into_iter()
                     .map(|(name, bound)| match bound {
-                        AnfAExpr::Var(_) => Err(Error::VarInLetrec),
+                        AnfAExpr::Var(var) => {
+                            Err(Error::from(ErrorKind::VarInLetrec(name, var)))
+                        }
                         bound => {
                             let bound = compile_aexpr(context, bound)?;
                             Ok((name, bound))
@@ -153,6 +164,10 @@ fn compile_aexpr(
             Ok(AExpr::Lambda(args, Box::new(body)))
         }
         AnfAExpr::Literal(lit) => Ok(AExpr::Literal(lit)),
+        AnfAExpr::Var(var) if var.contains(':') => {
+            // TODO Properly validate the var.
+            Ok(AExpr::Global(var))
+        }
         AnfAExpr::Var(var) => context.get(var),
         AnfAExpr::Vector(exprs) => {
             let exprs = exprs

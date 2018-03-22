@@ -4,24 +4,25 @@ mod metadata;
 #[cfg(test)]
 mod tests;
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::Write;
 use std::path::{Path, PathBuf};
 
+use failure::ResultExt;
 use symbol::Symbol;
 
 use anf::Module;
-use error::Error;
+use error::{Error, ErrorKind};
 use flatanf::Program;
 pub use modules::metadata::{BinaryComponentMetadata, ComponentsMetadata,
-                            DependencyMetadata, Error as MetadataError,
-                            LibraryComponentMetadata, PackageMetadata};
+                            DependencyMetadata, LibraryComponentMetadata,
+                            PackageMetadata};
 use parser::parse_file;
 
 #[derive(Clone, Debug)]
 enum Package {
-    Builtins(HashSet<Symbol>),
-    Filesystem(PackageMetadata, Vec<Module>),
+    Builtins(HashMap<Symbol, HashSet<Symbol>>),
+    Filesystem(PathBuf, PackageMetadata, Vec<Module>),
 }
 
 /// The module context.
@@ -41,13 +42,8 @@ impl Packages {
     ///
     /// This includes both the module declared in the directory and any
     /// dependencies.
-    pub fn add_modules_from<P>(&mut self, path: P) -> Result<(), Error>
-    where
-        P: AsRef<Path>,
-    {
-        let path = path.as_ref();
-
-        let root_meta = self.load_metadata_from(path)?;
+    pub fn add_modules_from(&mut self, path: PathBuf) -> Result<(), Error> {
+        let root_meta = self.load_metadata_from(&path)?;
         self.add_package_from(root_meta.name, path)
     }
 
@@ -58,29 +54,45 @@ impl Packages {
     pub fn add_package_from(
         &mut self,
         package_name: Symbol,
-        path: &Path,
+        path: PathBuf,
     ) -> Result<(), Error> {
-        let meta = self.load_metadata_from(path)?;
+        let meta = self.load_metadata_from(&path)?;
         if package_name != meta.name {
-            return Err(Error::MisnamedPackage(package_name, meta.name));
+            return Err(ErrorKind::MisnamedPackage(package_name, meta.name)
+                .into());
         } else if meta.components.library.is_none() {
-            return Err(Error::DependencyMustExportLib(package_name));
+            return Err(ErrorKind::DependencyMustExportLib(package_name).into());
         }
 
         let mut modules = Vec::new();
         let src_path = path.join("src");
-        println!("{}", src_path.display());
         let lib_oft_path = src_path.join("lib.oft");
 
         fn crawl(
+            package_name: Symbol,
             modules: &mut Vec<Module>,
             mod_stack: &mut Vec<Symbol>,
             base: PathBuf,
             lib_oft_path: &Path,
         ) -> Result<(), Error> {
-            for entry in base.read_dir()? {
-                let entry = entry?;
-                let file_type = entry.file_type()?;
+            for entry in base.read_dir().with_context(|_| {
+                ErrorKind::CouldntReadPackageDir(
+                    base.display().to_string(),
+                    package_name,
+                )
+            })? {
+                let entry = entry.with_context(|_| {
+                    ErrorKind::CouldntReadPackageDir(
+                        base.display().to_string(),
+                        package_name,
+                    )
+                })?;
+                let file_type = entry.file_type().with_context(|_| {
+                    ErrorKind::CouldntReadPackageDir(
+                        base.display().to_string(),
+                        package_name,
+                    )
+                })?;
                 if file_type.is_dir() {
                     let name = entry
                         .file_name()
@@ -88,7 +100,13 @@ impl Packages {
                         .expect("Non-Unicode source directory name...")
                         .into();
                     mod_stack.push(name);
-                    crawl(modules, mod_stack, entry.path(), lib_oft_path)?;
+                    crawl(
+                        package_name,
+                        modules,
+                        mod_stack,
+                        entry.path(),
+                        lib_oft_path,
+                    )?;
                     assert_eq!(mod_stack.pop(), Some(name));
                 } else if file_type.is_file() {
                     let file_name: PathBuf = entry.file_name().into();
@@ -113,7 +131,10 @@ impl Packages {
 
                     let module = Packages::load_module(&path)?;
                     if name != module.name {
-                        return Err(Error::MisnamedModule(name, module.name));
+                        return Err(ErrorKind::MisnamedModule(
+                            name,
+                            module.name,
+                        ).into());
                     }
 
                     modules.push(module);
@@ -127,6 +148,7 @@ impl Packages {
             Ok(())
         }
         crawl(
+            package_name,
             &mut modules,
             &mut vec![package_name],
             src_path,
@@ -135,7 +157,7 @@ impl Packages {
 
         self.0.insert(
             package_name,
-            Package::Filesystem(meta, modules.into_iter().collect()),
+            Package::Filesystem(path, meta, modules.into_iter().collect()),
         );
 
         Ok(())
@@ -148,31 +170,91 @@ impl Packages {
         binary: &str,
     ) -> Result<Program, Error> {
         let mut builtins = HashMap::new();
-        let mut root_meta = None;
+        let mut root_meta_path = None;
         let mut mods = Vec::new();
+
+        // Extract the prelude module's exports.
+        let prelude = "std/prelude".into();
+        let prelude_exports = self.exports_of("std".into(), prelude)?
+            .into_iter()
+            .map(|n| (prelude, n))
+            .collect::<Vec<_>>();
 
         // Bundle up the packages.
         for (package_name, package) in self.0 {
             match package {
                 Package::Builtins(mods) => {
-                    builtins.insert(package_name, mods);
+                    //builtins.insert(package_name, mods);
+                    unimplemented!();
                 }
-                Package::Filesystem(meta, m) => {
+                Package::Filesystem(path, meta, ms) => {
                     if root_package_name == package_name {
-                        root_meta = Some(meta);
+                        root_meta_path = Some((meta, path));
                     }
-                    mods.extend(m);
+                    mods.extend(ms.into_iter().map(|m| {
+                        if m.name != prelude
+                            && !m.imports.iter().any(|&(m, _)| m == prelude)
+                        {
+                            let mut m = m;
+                            m.imports.extend(prelude_exports.iter().cloned());
+                            m
+                        } else {
+                            m
+                        }
+                    }));
                 }
             }
         }
 
         // Add the binary.
-        let root_meta = root_meta.ok_or_else(|| {
-            Error::NoSuchBinary(root_package_name, binary.to_string())
-        })?;
+        let (root_meta, root_path) = match root_meta_path {
+            Some((meta, path)) => (meta, path),
+            None => {
+                return Err(ErrorKind::NoSuchBinary(
+                    root_package_name,
+                    binary.to_string(),
+                ).into());
+            }
+        };
+        let binary_rel_path = root_meta
+            .components
+            .binaries
+            .iter()
+            .find(|bin| bin.name == binary)
+            .map(|bin| &bin.path)
+            .ok_or_else(|| {
+                ErrorKind::NoSuchBinary(root_package_name, binary.to_string())
+            })?;
+        let binary_path = root_path.join(binary_rel_path);
+        let binary = Packages::load_module(binary_path)?;
+        mods.push(binary);
 
         // Create the `flatanf::Program`.
         Program::from_modules(mods, builtins)
+    }
+
+    /// Returns the exports of the given module.
+    pub fn exports_of(
+        &self,
+        package: Symbol,
+        module: Symbol,
+    ) -> Result<BTreeSet<Symbol>, Error> {
+        match self.0.get(&package) {
+            Some(&Package::Builtins(ref package)) => {
+                unimplemented!("{:?}", package);
+            }
+            Some(&Package::Filesystem(_, _, ref mods)) => {
+                match mods.iter().find(|m| m.name == module) {
+                    Some(m) => Ok(m.exports.clone()),
+                    None => {
+                        unimplemented!();
+                    }
+                }
+            }
+            None => {
+                unimplemented!();
+            }
+        }
     }
 
     /// Loads metadata from the module in the given directory.
@@ -181,11 +263,11 @@ impl Packages {
         path: &Path,
     ) -> Result<PackageMetadata, Error> {
         let lits = parse_file(path.join("package.oftd"))?;
-        PackageMetadata::from_literals(lits).map_err(Into::into)
+        PackageMetadata::from_literals(lits)
     }
 
     /// Loads an `anf::Module` from the given path.
-    pub fn load_module(path: &Path) -> Result<Module, Error> {
+    pub fn load_module<P: AsRef<Path>>(path: P) -> Result<Module, Error> {
         let lits = parse_file(path)?;
         let ast_mod = ::ast::Module::from_values(lits)?;
         Module::convert(ast_mod)

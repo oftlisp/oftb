@@ -2,7 +2,7 @@ all:
 	cargo check --all
 	cargo doc --all
 	cargo test --all
-	cargo run macro-expander oftb-macro-expander
+	cargo run -- -vvv macro-expander oftb-macro-expander --std ministd
 watch:
 	watchexec -cre rs,oft,oftd,pest,toml just
 

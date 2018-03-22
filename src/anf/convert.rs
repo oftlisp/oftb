@@ -2,7 +2,7 @@ use symbol::Symbol;
 
 use anf::{AExpr, CExpr, Decl, Expr, Module};
 use ast::{Decl as AstDecl, Expr as AstExpr, Module as AstModule};
-use error::Error;
+use error::{Error, ErrorKind};
 use gensym::gensym;
 use literal::Literal;
 
@@ -29,7 +29,7 @@ impl Decl {
             AstDecl::Def(name, AstExpr::Literal(lit)) => {
                 Ok(Decl::Def(name, lit))
             }
-            AstDecl::Def(_, _expr) => Err(Error::NonLiteralDef),
+            AstDecl::Def(_, _expr) => Err(ErrorKind::NonLiteralDef.into()),
             AstDecl::Defn(name, args, body, tail) => {
                 Ok(Decl::Defn(name, args, convert_block(body, tail)))
             }

@@ -5,6 +5,14 @@
 
 The OftLisp bootstrapper.
 
+## oftb-macro-expander
+
+There's also a macro expander written in OftLisp here, for bootstrapping.
+
+## ministd
+
+This repo also contains ministd, the trimmed-down version of the standard library used when bootstrapping.
+
 ## License
 
 Licensed under either of

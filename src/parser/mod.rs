@@ -2,9 +2,10 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
+use failure::{err_msg, ResultExt};
 use pest::Parser;
 
-use error::Error;
+use error::{Error, ErrorKind};
 use literal::Literal;
 
 mod convert;
@@ -25,13 +26,14 @@ pub fn parse_file<P: AsRef<Path>>(path: P) -> Result<Vec<Literal>, Error> {
             let mut src = String::new();
             file.read_to_string(&mut src).map(|_| src)
         })
-        .map_err(|err| {
-            Error::CouldntOpenSource(path.display().to_string(), err)
+        .with_context(|_| {
+            ErrorKind::CouldntOpenSource(path.display().to_string())
         })?;
     debug!("Parsing `{}'...", path.display());
-    parse_program(&src).map_err(|err| {
-        Error::Parse(path.display().to_string(), err.to_string())
-    })
+    parse_program(&src)
+        .map_err(|e| err_msg(e.to_string()))
+        .with_context(|_| ErrorKind::Parse(path.display().to_string()))
+        .map_err(|e| e.into())
 }
 
 /// Parses OftLisp source code.

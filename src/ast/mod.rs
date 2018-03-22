@@ -4,16 +4,9 @@ mod helpers;
 
 use std::collections::BTreeSet;
 
+use error::{Error, ErrorKind};
 use literal::Literal;
 use symbol::Symbol;
-
-/// An error converting values to an AST.
-#[derive(Debug, Fail)]
-pub enum Error {
-    #[fail(display = "Invalid declaration: {}", _0)] InvalidDecl(Literal),
-    #[fail(display = "Invalid expression: {}", _0)] InvalidExpr(Literal),
-    #[fail(display = "No module form was found.")] NoModuleForm,
-}
 
 /// A module.
 #[derive(Clone, Debug, PartialEq)]
@@ -28,12 +21,12 @@ impl Module {
     /// Creates a module from literals.
     pub fn from_values(mut l: Vec<Literal>) -> Result<Module, Error> {
         if l.len() == 0 {
-            return Err(Error::NoModuleForm);
+            return Err(ErrorKind::NoModuleForm.into());
         }
 
         let (name, exports) =
             helpers::convert_moduleish("module".into(), &l.remove(0))
-                .ok_or_else(|| unimplemented!())?;
+                .ok_or_else(|| ErrorKind::NoModuleForm)?;
         let imports = {
             let i = l.iter()
                 .position(|l| !helpers::is_moduleish("import".into(), l))
@@ -70,19 +63,19 @@ impl Decl {
         if lit.is_shl("def".into()) {
             let mut l = lit.as_list().unwrap();
             if l.len() != 3 {
-                return Err(Error::InvalidDecl(lit));
+                return Err(ErrorKind::InvalidDecl(lit).into());
             }
             let expr = Expr::from_value(l.pop().unwrap())?;
             let name = if let Literal::Symbol(name) = l.pop().unwrap() {
                 name
             } else {
-                return Err(Error::InvalidDecl(lit));
+                return Err(ErrorKind::InvalidDecl(lit).into());
             };
             Ok(Decl::Def(name, expr))
         } else if lit.is_shl("defn".into()) {
             let mut l = lit.as_list().unwrap();
             if l.len() < 4 {
-                return Err(Error::InvalidDecl(lit));
+                return Err(ErrorKind::InvalidDecl(lit).into());
             }
             let tail = Expr::from_value(l.pop().unwrap())?;
             let body = l.drain(3..)
@@ -91,16 +84,16 @@ impl Decl {
             let args = if let Some(args) = l.pop().unwrap().as_symbol_list() {
                 args
             } else {
-                return Err(Error::InvalidDecl(lit));
+                return Err(ErrorKind::InvalidDecl(lit).into());
             };
             let name = if let Literal::Symbol(name) = l.pop().unwrap() {
                 name
             } else {
-                return Err(Error::InvalidDecl(lit));
+                return Err(ErrorKind::InvalidDecl(lit).into());
             };
             Ok(Decl::Defn(name, args, body, tail))
         } else {
-            Err(Error::InvalidDecl(lit))
+            Err(ErrorKind::InvalidDecl(lit).into())
         }
     }
 }
@@ -119,6 +112,11 @@ pub enum Expr {
 }
 
 impl Expr {
+    /// Creates an expression representing the nil literal.
+    pub fn nil() -> Expr {
+        Expr::Literal(Literal::Nil)
+    }
+
     /// Creates an expression from a literal.
     pub fn from_value(lit: Literal) -> Result<Expr, Error> {
         match lit {
@@ -126,30 +124,62 @@ impl Expr {
                 let mut t = match t_lit.as_list() {
                     Some(t) => t,
                     None => {
-                        return Err(Error::InvalidExpr(Literal::Cons(h, t_lit)))
+                        return Err(ErrorKind::InvalidExpr(Literal::Cons(
+                            h,
+                            t_lit,
+                        )).into())
                     }
                 };
                 match *h {
                     Literal::Symbol(s)
                         if s.as_str() == "def" || s.as_str() == "defn" =>
                     {
-                        unimplemented!()
+                        let lit = Literal::Cons(h, t_lit);
+                        let decl = Decl::from_value(lit)?;
+                        Ok(Expr::Decl(Box::new(decl)))
                     }
                     Literal::Symbol(s) if s.as_str() == "if" => {
-                        unimplemented!()
+                        if t.len() < 2 || t.len() > 3 {
+                            return Err(ErrorKind::InvalidExpr(Literal::Cons(
+                                h,
+                                t_lit,
+                            )).into());
+                        }
+
+                        let else_expr = if t.len() == 3 {
+                            Expr::from_value(t.pop().unwrap())?
+                        } else {
+                            Expr::nil()
+                        };
+
+                        let then_expr = Expr::from_value(t.pop().unwrap())?;
+                        let cond_expr = Expr::from_value(t.pop().unwrap())?;
+                        Ok(Expr::If(
+                            Box::new(cond_expr),
+                            Box::new(then_expr),
+                            Box::new(else_expr),
+                        ))
                     }
                     Literal::Symbol(s) if s.as_str() == "quote" => {
                         if t.len() != 1 {
-                            return Err(Error::InvalidExpr(Literal::Cons(
+                            return Err(ErrorKind::InvalidExpr(Literal::Cons(
                                 h,
                                 t_lit,
-                            )));
+                            )).into());
                         }
 
                         Ok(Expr::Literal(t.pop().unwrap()))
                     }
                     Literal::Symbol(s) if s.as_str() == "progn" => {
-                        unimplemented!()
+                        if t.is_empty() {
+                            Ok(Expr::Progn(Vec::new(), Box::new(Expr::nil())))
+                        } else {
+                            let tail = Expr::from_value(t.pop().unwrap())?;
+                            let body = t.into_iter()
+                                .map(Expr::from_value)
+                                .collect::<Result<_, _>>()?;
+                            Ok(Expr::Progn(body, Box::new(tail)))
+                        }
                     }
                     _ => {
                         let func = Expr::from_value(*h)?;
@@ -160,7 +190,7 @@ impl Expr {
                     }
                 }
             }
-            Literal::Nil => Err(Error::InvalidExpr(Literal::Nil)),
+            Literal::Nil => Err(ErrorKind::InvalidExpr(Literal::Nil).into()),
             Literal::Symbol(s) => Ok(Expr::Var(s)),
             Literal::Vector(vs) => vs.into_iter()
                 .map(Expr::from_value)

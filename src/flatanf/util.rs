@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use symbol::Symbol;
 
 use anf::Module;
-use error::Error;
+use error::{Error, ErrorKind};
 use flatanf::AExpr;
 
 /// A topological sort implemented as a traversal. `f` is called once for each
@@ -24,13 +24,15 @@ pub fn toposort_mods<F: FnMut(Module) -> Result<(), Error>>(
         if closed.contains(&m.name) {
             return Ok(());
         } else if !open.insert(m.name) {
-            return Err(Error::DependencyLoopInModule(m.name));
+            return Err(ErrorKind::DependencyLoopInModule(m.name).into());
         }
         for &(name, _) in &m.imports {
-            let i = mods.binary_search_by_key(&name, |m| m.name)
-                .map_err(|_| Error::NonexistentModule(name))?;
-            let m = mods.remove(i);
-            traverse(m, mods, open, closed, f)?;
+            if !closed.contains(&name) {
+                let i = mods.binary_search_by_key(&name, |m| m.name)
+                    .map_err(|_| ErrorKind::NonexistentModule(name))?;
+                let m = mods.remove(i);
+                traverse(m, mods, open, closed, f)?;
+            }
         }
         closed.insert(m.name);
         f(m)
@@ -101,7 +103,7 @@ impl Context {
         if let Some(&global) = self.globals.get(&name) {
             Ok(AExpr::Global(global))
         } else {
-            Err(Error::NoSuchVar(name))
+            Err(ErrorKind::NoSuchVar(name).into())
         }
     }
 
