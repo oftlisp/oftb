@@ -1,10 +1,14 @@
-all:
+all: check doc test run
+check:
 	cargo check --all
+doc:
 	cargo doc --all
+test:
 	cargo test --all
+run:
 	cargo run -- -vvv macro-expander oftb-macro-expander --std ministd
-watch:
-	watchexec -cre rs,oft,oftd,pest,toml just
+watch TARGETS="all":
+	watchexec -cre rs,oft,oftd,pest,toml "just {{TARGETS}}"
 
 afl:
 	cd fuzz/afl/oftb-fuzz-target && cargo afl build

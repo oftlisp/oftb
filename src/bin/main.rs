@@ -27,15 +27,16 @@ fn run(options: Options) -> Result<(), Error> {
     let mut pkgs = Packages::new();
 
     // Load the stdlib.
-    pkgs.add_modules_from(options.std_path())?;
+    info!("Loading stdlib...");
+    pkgs.add_stdlib_from(options.std_path())?;
 
     // Load the package being compiled.
-    let meta = pkgs.load_metadata_from(&options.path)?;
-    debug!("Compiling {:#?}", meta);
-    pkgs.add_modules_from(options.path.clone())?;
+    info!("Loading main package...");
+    let name = pkgs.add_modules_from(options.path)?;
 
     // Compile the package.
-    let program = pkgs.compile(meta.name.into(), &options.binary)?;
+    info!("Compiling {}...", name);
+    let program = pkgs.compile(name, &options.binary)?;
     info!("{:#?}", program);
 
     Ok(())

@@ -14,6 +14,8 @@ pub fn toposort_mods<F: FnMut(Module) -> Result<(), Error>>(
     builtins: HashSet<Symbol>,
     mut f: F,
 ) -> Result<(), Error> {
+    // TODO: It ought to be possible to use a binary search here. For some
+    // reason, it doesn't work...
     fn traverse<F: FnMut(Module) -> Result<(), Error>>(
         m: Module,
         mods: &mut Vec<Module>,
@@ -28,8 +30,9 @@ pub fn toposort_mods<F: FnMut(Module) -> Result<(), Error>>(
         }
         for &(name, _) in &m.imports {
             if !closed.contains(&name) {
-                let i = mods.binary_search_by_key(&name, |m| m.name)
-                    .map_err(|_| ErrorKind::NonexistentModule(name))?;
+                let i = mods.iter()
+                    .position(|m| name == m.name)
+                    .ok_or_else(|| ErrorKind::NonexistentModule(name))?;
                 let m = mods.remove(i);
                 traverse(m, mods, open, closed, f)?;
             }
@@ -41,7 +44,6 @@ pub fn toposort_mods<F: FnMut(Module) -> Result<(), Error>>(
     let mut open = HashSet::with_capacity(mods.len());
     let mut closed = builtins;
 
-    mods.sort_by_key(|m| m.name);
     loop {
         let next = if let Some(next) = mods.pop() {
             next

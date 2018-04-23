@@ -56,7 +56,7 @@ pub enum ErrorKind {
     CouldntOpenSource(String),
 
     /// An error opening a source file.
-    #[fail(display = "Couldn't open directory {:?} in package `{}'", _1, _0)]
+    #[fail(display = "Couldn't open directory {} in package `{}'", _0, _1)]
     CouldntReadPackageDir(String, Symbol),
 
     /// A dependency loop was detected between modules.

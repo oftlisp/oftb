@@ -47,8 +47,7 @@ fn compile_module(
             .collect::<HashMap<_, _>>();
         for (_, g) in ctx.iter() {
             if !globals.contains(g) {
-                return Err(ErrorKind::NonexistentImport(module_name, *g)
-                    .into());
+                return Err(ErrorKind::NonexistentImport(module_name, *g).into());
             }
         }
         ctx.extend(
@@ -102,7 +101,7 @@ fn compile_expr(context: &mut Context, expr: AnfExpr) -> Result<Expr, Error> {
             let bound = compile_expr(context, *bound)?;
             let body =
                 context.bracket(name, |context| compile_expr(context, *body))?;
-            Ok(Expr::Let(name, Box::new(bound), Box::new(body)))
+            Ok(Expr::Let(Box::new(bound), Box::new(body)))
         }
         AnfExpr::Seq(e1, e2) => {
             let e1 = compile_expr(context, *e1)?;
@@ -139,10 +138,7 @@ fn compile_cexpr(
                         AnfAExpr::Var(var) => {
                             Err(Error::from(ErrorKind::VarInLetrec(name, var)))
                         }
-                        bound => {
-                            let bound = compile_aexpr(context, bound)?;
-                            Ok((name, bound))
-                        }
+                        bound => compile_aexpr(context, bound),
                     })
                     .collect::<Result<_, _>>()?;
                 let body = compile_expr(context, *body)?;
@@ -158,10 +154,10 @@ fn compile_aexpr(
 ) -> Result<AExpr, Error> {
     match expr {
         AnfAExpr::Lambda(args, body) => {
-            let body = context.bracket_many(args.iter().cloned(), |context| {
-                compile_expr(context, *body)
-            })?;
-            Ok(AExpr::Lambda(args, Box::new(body)))
+            let argn = args.len();
+            let body = context
+                .bracket_many(args, |context| compile_expr(context, *body))?;
+            Ok(AExpr::Lambda(argn, Box::new(body)))
         }
         AnfAExpr::Literal(lit) => Ok(AExpr::Literal(lit)),
         AnfAExpr::Var(var) if var.contains(':') => {

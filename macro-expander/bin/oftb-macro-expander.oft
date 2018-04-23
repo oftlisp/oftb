@@ -7,7 +7,7 @@
   say-hello-from-sub-mod)
 
 (defn main (args)
-  (todo)
+  ; (todo)
   (println 'todo)
 
   (say-hello)

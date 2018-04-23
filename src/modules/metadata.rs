@@ -49,8 +49,7 @@ impl PackageMetadata {
             let (s, l) = if let Some(val) = lit.as_shl() {
                 val
             } else {
-                return Err(ErrorKind::Unexpected("a metadata item", lit)
-                    .into());
+                return Err(ErrorKind::Unexpected("a metadata item", lit).into());
             };
             match s.as_str() {
                 "authors" => {
@@ -114,8 +113,7 @@ impl PackageMetadata {
                     if let Literal::String(l) = l {
                         license = Some(l);
                     } else {
-                        return Err(ErrorKind::Unexpected("a license", l)
-                            .into());
+                        return Err(ErrorKind::Unexpected("a license", l).into());
                     }
                 }
                 "name" => {
@@ -162,9 +160,8 @@ impl PackageMetadata {
                         ).into());
                     }
                 }
-                s => {
-                    return Err(ErrorKind::Unexpected("a metadata item", lit)
-                        .into())
+                _ => {
+                    return Err(ErrorKind::Unexpected("a metadata item", lit).into())
                 }
             }
         }
@@ -262,7 +259,7 @@ impl ComponentsMetadata {
                     let bin = BinaryComponentMetadata::from_literals(l)?;
                     binaries.push(bin);
                 }
-                s => {
+                _ => {
                     return Err(ErrorKind::Unexpected("a component", lit).into())
                 }
             }
@@ -351,8 +348,7 @@ impl BinaryComponentMetadata {
                     } else if let Literal::String(n) = lit {
                         name = Some(n);
                     } else {
-                        return Err(ErrorKind::Unexpected("a binary name", lit)
-                            .into());
+                        return Err(ErrorKind::Unexpected("a binary name", lit).into());
                     }
                 }
                 "path" => {
@@ -364,7 +360,7 @@ impl BinaryComponentMetadata {
                         return Err(ErrorKind::Unexpected("a path", lit).into());
                     }
                 }
-                s => {
+                _ => {
                     return Err(ErrorKind::Unexpected(
                         "a binary component metadata item",
                         lit,
@@ -448,7 +444,7 @@ impl DependencyMetadata {
                         ).into());
                     }
                 }
-                s => {
+                _ => {
                     return Err(ErrorKind::Unexpected(
                         "a dependency metadata item",
                         lit,

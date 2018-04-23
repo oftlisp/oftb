@@ -13,9 +13,8 @@ pub struct Options {
     #[structopt(name = "BINARY")]
     pub binary: String,
 
-    /// The path to the `std` package.
-    ///
-    /// If not present, defaults to `$OFTLISP_ROOT/std`.
+    /// The path to the `std` package. If not present, defaults to
+    /// `$OFTLISP_ROOT/std`.
     #[structopt(long = "std", name = "PATH", parse(from_os_str))]
     pub std_path: Option<PathBuf>,
 

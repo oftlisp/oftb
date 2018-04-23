@@ -22,6 +22,7 @@ extern crate log;
 extern crate pest;
 #[macro_use]
 extern crate pest_derive;
+extern crate podio;
 extern crate semver;
 extern crate symbol;
 

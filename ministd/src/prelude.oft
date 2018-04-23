@@ -1,0 +1,5 @@
+(module ministd/prelude
+  println)
+
+(defn println ()
+  "NYI")

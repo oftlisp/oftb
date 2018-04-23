@@ -30,27 +30,37 @@ enum Package {
 /// The `Left` alternative represents a builtin module, while the `Right`
 /// alternative is a loaded module.
 #[derive(Clone, Debug)]
-pub struct Packages(HashMap<Symbol, Package>);
+pub struct Packages {
+    pkgs: HashMap<Symbol, Package>,
+    std_name: Option<Symbol>,
+}
 
 impl Packages {
     /// Creates a new `Packages` instance.
     pub fn new() -> Packages {
-        Packages(HashMap::new())
+        Packages {
+            pkgs: HashMap::new(),
+            std_name: None,
+        }
     }
 
-    /// Loads the modules visible in the given directory.
+    /// Loads the modules in the package in the given directory, returning the
+    /// package's name.
     ///
-    /// This includes both the module declared in the directory and any
-    /// dependencies.
-    pub fn add_modules_from(&mut self, path: PathBuf) -> Result<(), Error> {
+    /// This includes both the modules declared by the package in the directory
+    /// and any dependencies.
+    pub fn add_modules_from(&mut self, path: PathBuf) -> Result<Symbol, Error> {
         let root_meta = self.load_metadata_from(&path)?;
-        self.add_package_from(root_meta.name, path)
+        for (dep_name, dep_meta) in &root_meta.dependencies {
+            warn!("TODO Load {} {:#?}", dep_name, dep_meta);
+            // TODO Load dependencies.
+        }
+        self.add_package_from(root_meta.name, path)?;
+        Ok(root_meta.name)
     }
 
     /// Loads a package from the given directory, without loading dependencies.
     /// However, this will panic if the dependencies are not already met.
-    ///
-    /// This is useful for loading, for example, the standard library.
     pub fn add_package_from(
         &mut self,
         package_name: Symbol,
@@ -58,8 +68,7 @@ impl Packages {
     ) -> Result<(), Error> {
         let meta = self.load_metadata_from(&path)?;
         if package_name != meta.name {
-            return Err(ErrorKind::MisnamedPackage(package_name, meta.name)
-                .into());
+            return Err(ErrorKind::MisnamedPackage(package_name, meta.name).into());
         } else if meta.components.library.is_none() {
             return Err(ErrorKind::DependencyMustExportLib(package_name).into());
         }
@@ -75,6 +84,7 @@ impl Packages {
             base: PathBuf,
             lib_oft_path: &Path,
         ) -> Result<(), Error> {
+            // TODO: This could use a good catch block...
             for entry in base.read_dir().with_context(|_| {
                 ErrorKind::CouldntReadPackageDir(
                     base.display().to_string(),
@@ -155,12 +165,21 @@ impl Packages {
             &lib_oft_path,
         )?;
 
-        self.0.insert(
+        self.pkgs.insert(
             package_name,
             Package::Filesystem(path, meta, modules.into_iter().collect()),
         );
 
         Ok(())
+    }
+
+    /// Loads the stdlib from the given directory. Will panic if any
+    /// dependencies are requested.
+    pub fn add_stdlib_from(&mut self, path: PathBuf) -> Result<(), Error> {
+        let root_meta = self.load_metadata_from(&path)?;
+        assert!(root_meta.dependencies.is_empty());
+        self.std_name = Some(root_meta.name);
+        self.add_package_from(root_meta.name, path)
     }
 
     /// Compiles a binary from a given module into a `flatanf::Program`.
@@ -174,14 +193,21 @@ impl Packages {
         let mut mods = Vec::new();
 
         // Extract the prelude module's exports.
-        let prelude = "std/prelude".into();
-        let prelude_exports = self.exports_of("std".into(), prelude)?
+        let prelude = format!("{}/prelude", self.std_name()).into();
+        let prelude_exports = self.exports_of(self.std_name(), prelude)?
             .into_iter()
             .map(|n| (prelude, n))
             .collect::<Vec<_>>();
+        let augment_module_imports = |m: &mut Module| {
+            if m.name != prelude
+                && !m.imports.iter().any(|&(m, _)| m == prelude)
+            {
+                m.imports.extend(prelude_exports.iter().cloned());
+            }
+        };
 
         // Bundle up the packages.
-        for (package_name, package) in self.0 {
+        for (package_name, package) in self.pkgs {
             match package {
                 Package::Builtins(mods) => {
                     //builtins.insert(package_name, mods);
@@ -191,16 +217,9 @@ impl Packages {
                     if root_package_name == package_name {
                         root_meta_path = Some((meta, path));
                     }
-                    mods.extend(ms.into_iter().map(|m| {
-                        if m.name != prelude
-                            && !m.imports.iter().any(|&(m, _)| m == prelude)
-                        {
-                            let mut m = m;
-                            m.imports.extend(prelude_exports.iter().cloned());
-                            m
-                        } else {
-                            m
-                        }
+                    mods.extend(ms.into_iter().map(|mut m| {
+                        augment_module_imports(&mut m);
+                        m
                     }));
                 }
             }
@@ -226,7 +245,8 @@ impl Packages {
                 ErrorKind::NoSuchBinary(root_package_name, binary.to_string())
             })?;
         let binary_path = root_path.join(binary_rel_path);
-        let binary = Packages::load_module(binary_path)?;
+        let mut binary = Packages::load_module(binary_path)?;
+        augment_module_imports(&mut binary);
         mods.push(binary);
 
         // Create the `flatanf::Program`.
@@ -239,20 +259,20 @@ impl Packages {
         package: Symbol,
         module: Symbol,
     ) -> Result<BTreeSet<Symbol>, Error> {
-        match self.0.get(&package) {
+        match self.pkgs.get(&package) {
             Some(&Package::Builtins(ref package)) => {
-                unimplemented!("{:?}", package);
+                unimplemented!("{:?} {:?}", package, module);
             }
             Some(&Package::Filesystem(_, _, ref mods)) => {
                 match mods.iter().find(|m| m.name == module) {
                     Some(m) => Ok(m.exports.clone()),
                     None => {
-                        unimplemented!();
+                        unimplemented!("{:?} {:?}", package, module);
                     }
                 }
             }
             None => {
-                unimplemented!();
+                unimplemented!("{:?} {:?}", package, module);
             }
         }
     }
@@ -271,5 +291,11 @@ impl Packages {
         let lits = parse_file(path)?;
         let ast_mod = ::ast::Module::from_values(lits)?;
         Module::convert(ast_mod)
+    }
+
+    /// Returns the name of the standard library package, panicing if none has
+    /// been loaded yet.
+    pub fn std_name(&self) -> Symbol {
+        self.std_name.expect("No std loaded yet!")
     }
 }

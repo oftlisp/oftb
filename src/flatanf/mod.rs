@@ -3,6 +3,7 @@
 //! global variables.
 
 mod convert;
+mod serialize;
 mod util;
 
 use symbol::Symbol;
@@ -36,7 +37,7 @@ impl Decl {
 pub enum Expr {
     AExpr(AExpr),
     CExpr(CExpr),
-    Let(Symbol, Box<Expr>, Box<Expr>),
+    Let(Box<Expr>, Box<Expr>),
     Seq(Box<Expr>, Box<Expr>),
 }
 
@@ -46,7 +47,7 @@ pub enum Expr {
 pub enum CExpr {
     Call(AExpr, Vec<AExpr>),
     If(AExpr, Box<Expr>, Box<Expr>),
-    LetRec(Vec<(Symbol, AExpr)>, Box<Expr>),
+    LetRec(Vec<AExpr>, Box<Expr>),
 }
 
 /// An atomic expression, which must immediately evaluate to a value without
@@ -54,7 +55,7 @@ pub enum CExpr {
 #[derive(Clone, Debug, PartialEq)]
 pub enum AExpr {
     Global(Symbol),
-    Lambda(Vec<Symbol>, Box<Expr>),
+    Lambda(usize, Box<Expr>),
     Literal(Literal),
     Local(usize),
     Vector(Vec<AExpr>),
