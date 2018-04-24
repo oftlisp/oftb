@@ -88,7 +88,7 @@ fn compile_decl(
                 compile_expr(context, body)
             })?;
             let name = global(mod_name, name);
-            Ok(Decl::Defn(name, args, body))
+            Ok(Decl::Defn(name, args.len(), body))
         }
     }
 }

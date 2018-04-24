@@ -18,7 +18,7 @@ pub struct Program(pub Vec<Decl>);
 #[derive(Clone, Debug, PartialEq)]
 pub enum Decl {
     Def(Symbol, Literal),
-    Defn(Symbol, Vec<Symbol>, Expr),
+    Defn(Symbol, usize, Expr),
 }
 
 impl Decl {
