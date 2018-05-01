@@ -5,13 +5,18 @@ use std::process::exit;
 #[derive(Debug, StructOpt)]
 #[structopt(raw(setting = "::structopt::clap::AppSettings::ColoredHelp"))]
 pub struct Options {
-    /// The source file path.
-    #[structopt(name = "FILE", parse(from_os_str))]
-    pub path: PathBuf,
+    /// The path to the main package.
+    #[structopt(name = "PACKAGE-PATH", parse(from_os_str))]
+    pub package_path: PathBuf,
 
     /// The binary to compile.
-    #[structopt(name = "BINARY")]
-    pub binary: String,
+    #[structopt(name = "BINARY-NAME")]
+    pub binary_name: String,
+
+    /// The path to write the output file to.
+    #[structopt(short = "o", long = "output", name = "OUTPUT-PATH",
+                parse(from_os_str))]
+    pub output_path: Option<PathBuf>,
 
     /// The path to the `std` package. If not present, defaults to
     /// `$OFTLISP_ROOT/std`.
@@ -35,6 +40,14 @@ impl Options {
             if let Err(err) = r {
                 error!("Warning: logging couldn't start: {}", err);
             }
+        }
+    }
+
+    /// Returns the path to write the output file to.
+    pub fn output_path(&self) -> PathBuf {
+        match self.output_path {
+            Some(ref path) => path.clone(),
+            None => PathBuf::from(format!("{}.ofta", self.binary_name)),
         }
     }
 
