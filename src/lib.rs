@@ -32,6 +32,7 @@ mod error;
 pub mod flatanf;
 mod gensym;
 mod heap;
+pub mod interpreter;
 mod literal;
 pub mod modules;
 mod parser;

@@ -32,10 +32,11 @@ fn main() {
 
 fn run(options: Options) -> Result<(), Error> {
     // Load the bytecode file.
-    let bc = {
+    let program = {
         let mut f = File::open(options.file)?;
         Program::deserialize_from(&mut f)
     };
 
+    let mut interpreter = Interpreter::new(&program);
     unimplemented!("{:#?}", bc)
 }

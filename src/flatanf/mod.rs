@@ -18,8 +18,15 @@ pub struct Program(pub Vec<Decl>);
 /// A declaration.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Decl {
-    // TODO: Literal should be an Expr?
+    /// A value definition.
+    ///
+    /// TODO: Literal should be an Expr?
     Def(Symbol, Literal),
+
+    /// A function definition. The difference between a Def containing a lambda
+    /// and a Defn is that the Defn gets itself as an implicit parameter.
+    ///
+    /// TODO: Actually implement the above.
     Defn(Symbol, usize, Expr),
 }
 
@@ -37,9 +44,17 @@ impl Decl {
 /// manipulation.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Expr {
+    /// An atomic expression.
     AExpr(AExpr),
+
+    /// A complex expression.
     CExpr(CExpr),
+
+    /// A let-binding. Evaluates the left expression, adds it to the
+    /// environment, then evaluates the right expression.
     Let(Box<Expr>, Box<Expr>),
+
+    /// A sequencing. Evaluates the left expression, then the right expression.
     Seq(Box<Expr>, Box<Expr>),
 }
 
@@ -47,8 +62,14 @@ pub enum Expr {
 /// side effects, but may not push to or pop from the continuation stack.
 #[derive(Clone, Debug, PartialEq)]
 pub enum CExpr {
+    /// A function call.
     Call(AExpr, Vec<AExpr>),
+
+    /// A conditional.
     If(AExpr, Box<Expr>, Box<Expr>),
+
+    /// A letrec. Adds the bindings to the environment, then evaluates each,
+    /// then evaluates the Expr.
     LetRec(Vec<AExpr>, Box<Expr>),
 }
 
@@ -56,9 +77,20 @@ pub enum CExpr {
 /// side effects, popping from the continuation stack.
 #[derive(Clone, Debug, PartialEq)]
 pub enum AExpr {
+    /// A reference to a global value.
     Global(Symbol),
+
+    /// A function abstraction.
     Lambda(usize, Box<Expr>),
+
+    /// A literal value.
     Literal(Literal),
+
+    /// A reference to a value in the environment.
     Local(usize),
+
+    /// A vector.
+    ///
+    /// TODO: Should this actually exist?
     Vector(Vec<AExpr>),
 }

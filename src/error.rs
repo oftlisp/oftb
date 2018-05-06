@@ -88,10 +88,6 @@ pub enum ErrorKind {
     #[fail(display = "Duplicate field: {}", _0)]
     DuplicateField(Symbol),
 
-    /// An error from the interpreter.
-    #[fail(display = "Evaluation error: {}", _0)]
-    Eval(String),
-
     /// A given dependency version was invalid.
     #[fail(display = "Bad dependency version: {}", _0)]
     IllegalDependencyVersion(ReqParseError),
