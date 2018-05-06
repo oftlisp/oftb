@@ -55,7 +55,7 @@ impl Packages {
             warn!("TODO Load {} {:#?}", dep_name, dep_meta);
             // TODO Load dependencies.
         }
-        self.add_package_from(root_meta.name, path)?;
+        self.add_package_from(root_meta.name, path, false)?;
         Ok(root_meta.name)
     }
 
@@ -65,12 +65,21 @@ impl Packages {
         &mut self,
         package_name: Symbol,
         path: PathBuf,
+        require_library: bool,
     ) -> Result<(), Error> {
         let meta = self.load_metadata_from(&path)?;
         if package_name != meta.name {
             return Err(ErrorKind::MisnamedPackage(package_name, meta.name).into());
         } else if meta.components.library.is_none() {
-            return Err(ErrorKind::DependencyMustExportLib(package_name).into());
+            if require_library {
+                return Err(ErrorKind::DependencyMustExportLib(package_name).into());
+            } else {
+                self.pkgs.insert(
+                    package_name,
+                    Package::Filesystem(path, meta, Vec::new()),
+                );
+                return Ok(());
+            };
         }
 
         let mut modules = Vec::new();
@@ -179,7 +188,7 @@ impl Packages {
         let root_meta = self.load_metadata_from(&path)?;
         assert!(root_meta.dependencies.is_empty());
         self.std_name = Some(root_meta.name);
-        self.add_package_from(root_meta.name, path)
+        self.add_package_from(root_meta.name, path, true)
     }
 
     /// Compiles a binary from a given module into a `flatanf::Program`.
@@ -246,6 +255,9 @@ impl Packages {
             })?;
         let binary_path = root_path.join(binary_rel_path);
         let mut binary = Packages::load_module(binary_path)?;
+        if binary.name != "main".into() {
+            return Err(ErrorKind::BadBinaryName(binary.name).into());
+        }
         augment_module_imports(&mut binary);
         mods.push(binary);
 

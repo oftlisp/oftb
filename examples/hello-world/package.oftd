@@ -1,0 +1,10 @@
+(authors
+  "Nathan Ringo <remexre@gmail.com>")
+(license "CC0-1.0")
+(name hello-world)
+(version "0.1.0")
+
+(components
+  (binary
+    (name "hello-world")
+    (path "src/main.oft")))

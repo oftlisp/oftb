@@ -51,6 +51,10 @@ impl From<Context<ErrorKind>> for Error {
 /// The kind of an error from `oftb`.
 #[derive(Clone, Debug, Fail)]
 pub enum ErrorKind {
+    /// An invalid name was given for a binary.
+    #[fail(display = "Bad name for binary module: `{}' (expected `main')", _0)]
+    BadBinaryName(Symbol),
+
     /// An error opening a source file.
     #[fail(display = "Couldn't open `{}'", _0)]
     CouldntOpenSource(String),

@@ -3,6 +3,7 @@
 //! global variables.
 
 mod convert;
+mod deserialize;
 mod serialize;
 mod util;
 
@@ -17,6 +18,7 @@ pub struct Program(pub Vec<Decl>);
 /// A declaration.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Decl {
+    // TODO: Literal should be an Expr?
     Def(Symbol, Literal),
     Defn(Symbol, usize, Expr),
 }

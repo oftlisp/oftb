@@ -4,13 +4,12 @@ use podio::{LittleEndian, WritePodExt};
 
 use flatanf::{AExpr, CExpr, Decl, Expr, Literal, Program};
 
-fn serialize_as_u32<W: Write>(n: usize, w: &mut W) -> IoResult<()> {
-    assert!(n <= ::std::u32::MAX as usize);
-    w.write_u32::<LittleEndian>(n as u32)
+fn serialize_usize_as_u64<W: Write>(n: usize, w: &mut W) -> IoResult<()> {
+    w.write_u64::<LittleEndian>(n as u64)
 }
 
 fn serialize_str<W: Write>(s: &str, w: &mut W) -> IoResult<()> {
-    serialize_as_u32(s.len(), w)?;
+    serialize_usize_as_u64(s.len(), w)?;
     w.write_all(s.as_bytes())
 }
 
@@ -18,7 +17,7 @@ impl Program {
     /// Writes the program out to the given Write.
     pub fn serialize_to<W: Write>(&self, w: &mut W) -> IoResult<()> {
         w.write_all(b"ofta")?;
-        serialize_as_u32(self.0.len(), w)?;
+        serialize_usize_as_u64(self.0.len(), w)?;
         for decl in &self.0 {
             decl.serialize_to(w)?;
         }
@@ -31,12 +30,13 @@ impl Decl {
         match *self {
             Decl::Def(name, ref val) => {
                 serialize_str(name.as_str(), w)?;
-                w.write_u32::<LittleEndian>(0)?;
+                w.write_u8(0x00)?;
                 val.serialize_to(w)
             }
             Decl::Defn(name, argn, ref body) => {
                 serialize_str(name.as_str(), w)?;
-                serialize_as_u32(argn, w)?;
+                w.write_u8(0x01)?;
+                serialize_usize_as_u64(argn, w)?;
                 body.serialize_to(w)
             }
         }
@@ -68,7 +68,7 @@ impl CExpr {
             CExpr::Call(ref func, ref args) => {
                 w.write_u8(0x02)?;
                 func.serialize_to(w)?;
-                serialize_as_u32(args.len(), w)?;
+                serialize_usize_as_u64(args.len(), w)?;
                 for a in args {
                     a.serialize_to(w)?;
                 }
@@ -82,7 +82,7 @@ impl CExpr {
             }
             CExpr::LetRec(ref bound, ref body) => {
                 w.write_u8(0x04)?;
-                serialize_as_u32(bound.len(), w)?;
+                serialize_usize_as_u64(bound.len(), w)?;
                 for e in bound {
                     e.serialize_to(w)?;
                 }
@@ -101,7 +101,7 @@ impl AExpr {
             }
             AExpr::Lambda(argn, ref body) => {
                 w.write_u8(0x06)?;
-                serialize_as_u32(argn, w)?;
+                serialize_usize_as_u64(argn, w)?;
                 body.serialize_to(w)
             }
             AExpr::Literal(ref lit) => {
@@ -110,11 +110,11 @@ impl AExpr {
             }
             AExpr::Local(n) => {
                 w.write_u8(0x08)?;
-                serialize_as_u32(n, w)
+                serialize_usize_as_u64(n, w)
             }
             AExpr::Vector(ref vec) => {
                 w.write_u8(0x09)?;
-                serialize_as_u32(vec.len(), w)?;
+                serialize_usize_as_u64(vec.len(), w)?;
                 for val in vec {
                     val.serialize_to(w)?;
                 }
@@ -133,7 +133,7 @@ impl Literal {
             }
             Literal::Bytes(ref bs) => {
                 w.write_u8(0x01)?;
-                serialize_as_u32(bs.len(), w)?;
+                serialize_usize_as_u64(bs.len(), w)?;
                 w.write_all(bs)
             }
             Literal::Cons(ref hd, ref tl) => {
@@ -143,7 +143,7 @@ impl Literal {
             }
             Literal::Fixnum(n) => {
                 w.write_u8(0x03)?;
-                unimplemented!()
+                serialize_usize_as_u64(n, w)
             }
             Literal::Nil => w.write_u8(0x04),
             Literal::String(ref s) => {
@@ -156,7 +156,7 @@ impl Literal {
             }
             Literal::Vector(ref v) => {
                 w.write_u8(0x07)?;
-                serialize_as_u32(v.len(), w)?;
+                serialize_usize_as_u64(v.len(), w)?;
                 for val in v {
                     val.serialize_to(w)?;
                 }
