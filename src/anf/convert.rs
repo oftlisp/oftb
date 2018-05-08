@@ -2,36 +2,27 @@ use symbol::Symbol;
 
 use anf::{AExpr, CExpr, Decl, Expr, Module};
 use ast::{Decl as AstDecl, Expr as AstExpr, Module as AstModule};
-use error::{Error, ErrorKind};
 use gensym::gensym;
 use literal::Literal;
 
-impl Module {
-    /// Tries to convert an `ast::Module` to an `anf::Module`.
-    pub fn convert(m: AstModule) -> Result<Module, Error> {
-        let body = m.body
-            .into_iter()
-            .map(Decl::convert)
-            .collect::<Result<_, _>>()?;
-        Ok(Module {
+impl From<AstModule> for Module {
+    fn from(m: AstModule) -> Module {
+        let body = m.body.into_iter().map(Decl::from).collect();
+        Module {
             name: m.name,
             exports: m.exports,
             imports: m.imports,
-            body: body,
-        })
+            body,
+        }
     }
 }
 
-impl Decl {
-    /// Tries to convert an `ast::Decl` to an `anf::Decl`.
-    pub fn convert(decl: AstDecl) -> Result<Decl, Error> {
+impl From<AstDecl> for Decl {
+    fn from(decl: AstDecl) -> Decl {
         match decl {
-            AstDecl::Def(name, AstExpr::Literal(lit)) => {
-                Ok(Decl::Def(name, lit))
-            }
-            AstDecl::Def(_, _expr) => Err(ErrorKind::NonLiteralDef.into()),
+            AstDecl::Def(name, expr) => Decl::Def(name, expr.into()),
             AstDecl::Defn(name, args, body, tail) => {
-                Ok(Decl::Defn(name, args, convert_block(body, tail)))
+                Decl::Defn(name, args, convert_block(body, tail))
             }
         }
     }

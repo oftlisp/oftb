@@ -13,30 +13,28 @@ use literal::Literal;
 
 /// A complete program.
 #[derive(Clone, Debug, PartialEq)]
-pub struct Program(pub Vec<Decl>);
+pub struct Program(pub Vec<(Symbol, Expr)>);
 
-/// A declaration.
-#[derive(Clone, Debug, PartialEq)]
-pub enum Decl {
-    /// A value definition.
-    ///
-    /// TODO: Literal should be an Expr?
-    Def(Symbol, Literal),
-
-    /// A function definition. The difference between a Def containing a lambda
-    /// and a Defn is that the Defn gets itself as an implicit parameter.
-    ///
-    /// TODO: Actually implement the above.
-    Defn(Symbol, usize, Expr),
+impl Program {
+    /// Returns the number of declarations in the program.
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
 }
 
-impl Decl {
-    /// Returns the name of the Decl.
-    pub fn name(&self) -> Symbol {
-        match *self {
-            Decl::Def(name, _) => name,
-            Decl::Defn(name, _, _) => name,
-        }
+impl IntoIterator for Program {
+    type Item = (Symbol, Expr);
+    type IntoIter = ::std::vec::IntoIter<(Symbol, Expr)>;
+    fn into_iter(self) -> ::std::vec::IntoIter<(Symbol, Expr)> {
+        self.0.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a Program {
+    type Item = &'a (Symbol, Expr);
+    type IntoIter = ::std::slice::Iter<'a, (Symbol, Expr)>;
+    fn into_iter(self) -> ::std::slice::Iter<'a, (Symbol, Expr)> {
+        self.0.iter()
     }
 }
 

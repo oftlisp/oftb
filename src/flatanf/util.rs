@@ -59,7 +59,7 @@ pub fn toposort_mods<F: FnMut(Module) -> Result<(), Error>>(
 #[derive(Clone, Debug)]
 pub struct Context {
     globals: HashMap<Symbol, Symbol>,
-    locals: Vec<Symbol>,
+    locals: Vec<Option<Symbol>>,
 }
 
 impl Context {
@@ -69,6 +69,17 @@ impl Context {
         F: FnOnce(&mut Context) -> T,
     {
         self.push(name);
+        let out = f(self);
+        self.pop();
+        out
+    }
+
+    /// Brackets a function call with an anonymous push and a pop.
+    pub fn bracket_anon<F, T>(&mut self, f: F) -> T
+    where
+        F: FnOnce(&mut Context) -> T,
+    {
+        self.push_anon();
         let out = f(self);
         self.pop();
         out
@@ -97,7 +108,7 @@ impl Context {
         if !self.locals.is_empty() {
             let off = self.locals.len() - 1;
             for n in 0..self.locals.len() {
-                if self.locals[off - n] == name {
+                if self.locals[off - n] == Some(name) {
                     return Ok(AExpr::Local(n));
                 }
             }
@@ -109,12 +120,17 @@ impl Context {
         }
     }
 
-    /// Adds a value to the context.
+    /// Adds a binding to the context.
     fn push(&mut self, name: Symbol) {
-        self.locals.push(name);
+        self.locals.push(Some(name));
     }
 
-    /// Adds several values to the context.
+    /// Adds an anonymous binding to the context.
+    fn push_anon(&mut self) {
+        self.locals.push(None);
+    }
+
+    /// Adds several bindings to the context.
     fn push_many<I, T>(&mut self, names: I)
     where
         I: IntoIterator<Item = T>,
@@ -125,14 +141,14 @@ impl Context {
         }
     }
 
-    /// Removes the most recently defined value from the context.
+    /// Removes the most recently defined binding from the context.
     fn pop(&mut self) {
         if self.locals.pop().is_none() {
             panic!("Popped from empty context");
         }
     }
 
-    /// Removes the *n* most recently defined values from the context.
+    /// Removes the *n* most recently defined bindings from the context.
     fn pop_many(&mut self, n: usize) {
         for _ in 0..n {
             self.pop();

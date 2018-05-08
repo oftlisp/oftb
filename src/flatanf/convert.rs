@@ -5,7 +5,7 @@ use symbol::Symbol;
 use anf::{AExpr as AnfAExpr, CExpr as AnfCExpr, Decl as AnfDecl,
           Expr as AnfExpr, Module};
 use error::{Error, ErrorKind};
-use flatanf::{AExpr, CExpr, Decl, Expr, Program};
+use flatanf::{AExpr, CExpr, Expr, Program};
 use flatanf::util::{toposort_mods, Context};
 
 impl Program {
@@ -32,7 +32,7 @@ impl Program {
 fn compile_module(
     globals: &mut HashSet<Symbol>,
     m: Module,
-) -> Result<Vec<Decl>, Error> {
+) -> Result<Vec<(Symbol, Expr)>, Error> {
     let Module {
         name: module_name,
         imports,
@@ -62,7 +62,8 @@ fn compile_module(
         .map(|d| compile_decl(module_name, &mut context, d))
         .collect::<Result<Vec<_>, _>>()?;
 
-    let decl_names = decls.iter().map(|d| d.name()).collect::<HashSet<_>>();
+    let decl_names =
+        decls.iter().map(|&(name, _)| name).collect::<HashSet<_>>();
     for e in exports {
         let e = global(m.name, e);
         if !decl_names.contains(&e) {
@@ -77,18 +78,22 @@ fn compile_decl(
     mod_name: Symbol,
     context: &mut Context,
     decl: AnfDecl,
-) -> Result<Decl, Error> {
+) -> Result<(Symbol, Expr), Error> {
     match decl {
-        AnfDecl::Def(name, lit) => {
+        AnfDecl::Def(name, expr) => {
             let name = global(mod_name, name);
-            Ok(Decl::Def(name, lit))
+            let expr = compile_expr(context, expr)?;
+            Ok((name, expr))
         }
         AnfDecl::Defn(name, args, body) => {
-            let body = context.bracket_many(args.iter().cloned(), |context| {
-                compile_expr(context, body)
+            let body = context.bracket(name, |context| {
+                context.bracket_many(args.iter().cloned(), |context| {
+                    compile_expr(context, body)
+                })
             })?;
             let name = global(mod_name, name);
-            Ok(Decl::Defn(name, args.len(), body))
+            let expr = Expr::AExpr(AExpr::Lambda(args.len(), Box::new(body)));
+            Ok((name, expr))
         }
     }
 }
@@ -155,8 +160,10 @@ fn compile_aexpr(
     match expr {
         AnfAExpr::Lambda(args, body) => {
             let argn = args.len();
-            let body = context
-                .bracket_many(args, |context| compile_expr(context, *body))?;
+            let body = context.bracket_anon(|context| {
+                context
+                    .bracket_many(args, |context| compile_expr(context, *body))
+            })?;
             Ok(AExpr::Lambda(argn, Box::new(body)))
         }
         AnfAExpr::Literal(lit) => Ok(AExpr::Literal(lit)),

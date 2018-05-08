@@ -20,7 +20,7 @@ pub struct Module {
 /// A declaration.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Decl {
-    Def(Symbol, Literal),
+    Def(Symbol, Expr),
     Defn(Symbol, Vec<Symbol>, Expr),
 }
 

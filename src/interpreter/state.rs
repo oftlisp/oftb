@@ -1,4 +1,4 @@
-use interpreter::{Store, Value};
+use interpreter::Value;
 use interpreter::control::Control;
 use interpreter::env::Env;
 use interpreter::kont::Kont;
@@ -7,13 +7,8 @@ use interpreter::kont::Kont;
 #[derive(Debug)]
 pub enum State<'program> {
     /// A running CESK machine.
-    Running(
-        Control<'program>,
-        Env<'program>,
-        Store<'program>,
-        Vec<Kont<'program>>,
-    ),
+    Running(Control<'program>, Env, Vec<Kont<'program>>),
 
     /// A halted state, where the evaluation has proceeded to the value.
-    Halted(Value<'program>),
+    Halted(Value),
 }

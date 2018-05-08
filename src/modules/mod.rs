@@ -302,7 +302,7 @@ impl Packages {
     pub fn load_module<P: AsRef<Path>>(path: P) -> Result<Module, Error> {
         let lits = parse_file(path)?;
         let ast_mod = ::ast::Module::from_values(lits)?;
-        Module::convert(ast_mod)
+        Ok(Module::from(ast_mod))
     }
 
     /// Returns the name of the standard library package, panicing if none has

@@ -127,10 +127,6 @@ pub enum ErrorKind {
     #[fail(display = "No module form was found.")]
     NoModuleForm,
 
-    /// An expression appeared in a def that was not a literal.
-    #[fail(display = "defs' expressions must be literals")]
-    NonLiteralDef,
-
     /// A binary doesn't exist (or the package containing it wasn't loaded).
     #[fail(display = "No such binary `{}' (from the `{}' package)", _1, _0)]
     NoSuchBinary(Symbol, String),

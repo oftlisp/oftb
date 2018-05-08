@@ -2,7 +2,7 @@ use std::io::{Result as IoResult, Write};
 
 use podio::{LittleEndian, WritePodExt};
 
-use flatanf::{AExpr, CExpr, Decl, Expr, Literal, Program};
+use flatanf::{AExpr, CExpr, Expr, Literal, Program};
 
 fn serialize_usize_as_u64<W: Write>(n: usize, w: &mut W) -> IoResult<()> {
     w.write_u64::<LittleEndian>(n as u64)
@@ -18,28 +18,11 @@ impl Program {
     pub fn serialize_to<W: Write>(&self, w: &mut W) -> IoResult<()> {
         w.write_all(b"ofta")?;
         serialize_usize_as_u64(self.0.len(), w)?;
-        for decl in &self.0 {
-            decl.serialize_to(w)?;
+        for &(name, ref expr) in self {
+            serialize_str(name.as_str(), w)?;
+            expr.serialize_to(w)?;
         }
         Ok(())
-    }
-}
-
-impl Decl {
-    fn serialize_to<W: Write>(&self, w: &mut W) -> IoResult<()> {
-        match *self {
-            Decl::Def(name, ref val) => {
-                serialize_str(name.as_str(), w)?;
-                w.write_u8(0x00)?;
-                val.serialize_to(w)
-            }
-            Decl::Defn(name, argn, ref body) => {
-                serialize_str(name.as_str(), w)?;
-                w.write_u8(0x01)?;
-                serialize_usize_as_u64(argn, w)?;
-                body.serialize_to(w)
-            }
-        }
     }
 }
 

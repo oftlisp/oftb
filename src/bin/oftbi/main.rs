@@ -7,6 +7,7 @@ extern crate oftb;
 extern crate stderrlog;
 #[macro_use]
 extern crate structopt;
+extern crate symbol;
 
 mod options;
 
@@ -14,6 +15,7 @@ use std::fs::File;
 
 use failure::Error;
 use oftb::flatanf::Program;
+use oftb::interpreter::Interpreter;
 use structopt::StructOpt;
 
 use options::Options;
@@ -34,9 +36,24 @@ fn run(options: Options) -> Result<(), Error> {
     // Load the bytecode file.
     let program = {
         let mut f = File::open(options.file)?;
-        Program::deserialize_from(&mut f)
+        Program::deserialize_from(&mut f)?
     };
 
-    let mut interpreter = Interpreter::new(&program);
-    unimplemented!("{:#?}", bc)
+    // Create the interpreter.
+    let mut interpreter = Interpreter::new();
+
+    // Start interpreting global decls.
+    info!("Initializing program...");
+    for &(name, ref expr) in &program {
+        debug!("{} = {:?}", name, expr);
+        interpreter.load_expr(expr);
+        let val = interpreter.eval();
+        interpreter.globals.insert(name, val);
+    }
+
+    // Interpret the main program.
+    // TODO
+
+    println!("{:#?}", interpreter);
+    Ok(())
 }

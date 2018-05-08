@@ -1,30 +1,25 @@
-use std::collections::HashMap;
-
-use symbol::Symbol;
-
 use interpreter::store::Value;
 
-/// The global stack and environment stack.
-#[derive(Debug)]
-pub struct Env<'program> {
-    global: HashMap<Symbol, Value<'program>>,
-    local: Vec<Value<'program>>,
+/// The (local) environment stack.
+#[derive(Clone, Debug)]
+pub struct Env {
+    stack: Vec<Value>,
 }
 
-impl<'program> Env<'program> {
-    /// Gets a global variable.
-    pub fn global(&self, name: Symbol) -> Value<'program> {
-        self.global[&name]
+impl Env {
+    /// Creates a new, empty environment.
+    pub fn new() -> Env {
+        Env { stack: Vec::new() }
     }
 
     /// Gets a local variable.
-    pub fn local(&self, depth: usize) -> Value<'program> {
-        assert!(depth <= self.local.len());
-        self.local[self.local.len() - depth]
+    pub fn local(&self, depth: usize) -> Value {
+        assert!(depth <= self.stack.len());
+        self.stack[self.stack.len() - depth]
     }
 
     /// Adds a local variable.
-    pub fn push(&mut self, val: Value<'program>) {
-        self.local.push(val);
+    pub fn push(&mut self, val: Value) {
+        self.stack.push(val);
     }
 }

@@ -3,7 +3,7 @@ use std::io::Read;
 use failure::Error;
 use podio::{LittleEndian, ReadPodExt};
 
-use flatanf::{AExpr, CExpr, Decl, Expr, Literal, Program};
+use flatanf::{AExpr, CExpr, Expr, Literal, Program};
 
 type Result<T> = ::std::result::Result<T, Error>;
 
@@ -37,30 +37,13 @@ impl Program {
         }
 
         let len = deserialize_u64_as_usize(r)?;
-        let mut decls = Vec::with_capacity(len);
+        let mut program = Vec::with_capacity(len);
         for _ in 0..len {
-            decls.push(Decl::deserialize_from(r)?);
+            let name = deserialize_string(r)?;
+            let expr = Expr::deserialize_from(r)?;
+            program.push((name.into(), expr));
         }
-        Ok(Program(decls))
-    }
-}
-
-impl Decl {
-    fn deserialize_from<R: Read>(r: &mut R) -> Result<Decl> {
-        let name = deserialize_string(r)?.into();
-        let discrim = r.read_u8()?;
-        match discrim {
-            0x00 => {
-                let val = Literal::deserialize_from(r)?;
-                Ok(Decl::Def(name, val))
-            }
-            0x01 => {
-                let argn = deserialize_u64_as_usize(r)?;
-                let body = Expr::deserialize_from(r)?;
-                Ok(Decl::Defn(name, argn, body))
-            }
-            _ => bail!("Unknown discriminant for Decl: {}", discrim),
-        }
+        Ok(Program(program))
     }
 }
 
