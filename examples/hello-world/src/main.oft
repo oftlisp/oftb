@@ -7,7 +7,9 @@
     (odd (1- x))))
 
 (defn odd (x)
-  (even (1- x)))
+  (if (= x 0)
+    false
+    (even (1- x))))
 
 (defn main (args)
   (println "Hello, world!"))

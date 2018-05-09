@@ -1,5 +1,6 @@
 use pest::{Error as PestError, Position};
 
+use literal::Literal;
 use parser::{parse_program, Rule};
 
 #[test]
@@ -29,5 +30,19 @@ fn invalid_unicode_escape() {
                 .unwrap()
                 .span(&Position::from_start(src).skip(14).unwrap()),
         })
+    );
+}
+
+#[test]
+fn numbers() {
+    let r = parse_program("35 -35 0x23 -0x23");
+    assert_eq!(
+        r,
+        Ok(vec![
+            Literal::Fixnum(35),
+            Literal::Fixnum(-35),
+            Literal::Fixnum(0x23),
+            Literal::Fixnum(-0x23),
+        ])
     );
 }

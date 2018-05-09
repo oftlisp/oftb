@@ -1,0 +1,20 @@
+// A grammar for OftLisp symbolishes.
+
+root = { soi ~ symbolish ~ eoi }
+// symbolish = { byte | float | fixnum }
+symbolish = { float | fixnum }
+
+// byte = { unsigned ~ "B" }
+fixnum = { sign ~ unsigned }
+float = { sign ~ dec_digit+ ~ "." ~ dec_digit* }
+
+sign = { "-"? }
+unsigned = { bin_num | hex_num | dec_num }
+
+bin_num = { "0b" ~ bin_digit+ }
+dec_num = { dec_digit+ }
+hex_num = { "0x" ~ hex_digit+ }
+
+bin_digit = { "0" | "1" }
+dec_digit = { '0'..'9' }
+hex_digit = { '0'..'9' | 'a'..'f' | 'A'..'F' }

@@ -1,5 +1,29 @@
 use std::fmt::{Formatter, Result as FmtResult};
 
+/// Converts a string containing a single hex digit to that digit, panicking if
+/// the string does not contain exactly one hex digit.
+pub fn convert_hex_digit(s: &str) -> u8 {
+    match s {
+        "0" => 0,
+        "1" => 1,
+        "2" => 2,
+        "3" => 3,
+        "4" => 4,
+        "5" => 5,
+        "6" => 6,
+        "7" => 7,
+        "8" => 8,
+        "9" => 9,
+        "a" | "A" => 10,
+        "b" | "B" => 11,
+        "c" | "C" => 12,
+        "d" | "D" => 13,
+        "e" | "E" => 14,
+        "f" | "F" => 15,
+        _ => panic!("Invalid hex digit: {:?}", s),
+    }
+}
+
 /// Writes an escaped bytes literal to the given Formatter.
 pub fn escape_bytes(bs: &[u8], fmt: &mut Formatter) -> FmtResult {
     write!(fmt, "b\"")?;

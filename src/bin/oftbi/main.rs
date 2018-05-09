@@ -17,7 +17,7 @@ use std::process::exit;
 use failure::Error;
 use oftb::Literal;
 use oftb::flatanf::{AExpr, CExpr, Expr, Program};
-use oftb::interpreter::Interpreter;
+use oftb::interpreter::{Interpreter, Value};
 use oftb::intrinsics::Intrinsics;
 use structopt::StructOpt;
 
@@ -64,7 +64,9 @@ fn run(options: Options) -> Result<(), Error> {
     // Call main.
     debug!("Running program...");
     let retval = interpreter.eval(&main);
-    println!("{:#?}", retval);
+    if retval != Value::Nil {
+        println!("{}", retval.display(&interpreter.store));
+    }
 
     Ok(())
 }

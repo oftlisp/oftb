@@ -1,9 +1,10 @@
 use pest::Error;
 use pest::iterators::{Pair, Pairs};
-use symbol::Symbol;
 
 use literal::Literal;
 use parser::Rule;
+use parser::symbolish::parse_symbolish;
+use util::convert_hex_digit;
 
 pub fn convert_program(
     mut pairs: Pairs<Rule>,
@@ -31,8 +32,12 @@ fn convert_value(mut pairs: Pairs<Rule>) -> Result<Literal, Error<Rule>> {
             convert_rmacro(rmacro, value)
         }
         Rule::string => convert_string(pair.into_inner()),
-        // TODO Support numbers.
-        Rule::symbolish => Ok(Literal::Symbol(Symbol::from(pair.as_str()))),
+        Rule::symbolish => parse_symbolish(pair.as_str()).map_err(|err| {
+            Error::CustomErrorSpan {
+                message: err,
+                span: pair.into_span(),
+            }
+        }),
         Rule::vector => pair.into_inner()
             .map(|pair| {
                 assert_eq!(pair.as_rule(), Rule::value);
@@ -166,25 +171,7 @@ fn convert_hex_escape(pairs: Pairs<Rule>) -> u32 {
     let mut n = 0;
     for pair in pairs {
         assert_eq!(pair.as_rule(), Rule::hex_digit);
-        n = (n << 4) + match pair.as_str() {
-            "0" => 0,
-            "1" => 1,
-            "2" => 2,
-            "3" => 3,
-            "4" => 4,
-            "5" => 5,
-            "6" => 6,
-            "7" => 7,
-            "8" => 8,
-            "9" => 9,
-            "a" | "A" => 10,
-            "b" | "B" => 11,
-            "c" | "C" => 12,
-            "d" | "D" => 13,
-            "e" | "E" => 14,
-            "f" | "F" => 15,
-            d => panic!("Invalid hex digit: {:?}", d),
-        };
+        n = (n << 4) + (convert_hex_digit(pair.as_str()) as u32);
     }
     n
 }

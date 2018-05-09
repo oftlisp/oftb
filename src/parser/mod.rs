@@ -9,8 +9,13 @@ use error::{Error, ErrorKind};
 use literal::Literal;
 
 mod convert;
+mod symbolish;
+
 #[cfg(test)]
 mod tests;
+
+#[cfg(debug_assertions)]
+const _GRAMMAR: &'static str = include_str!("../oftlisp.pest");
 
 #[derive(Parser)]
 #[grammar = "oftlisp.pest"]

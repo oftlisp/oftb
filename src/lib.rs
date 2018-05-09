@@ -22,6 +22,7 @@ extern crate failure;
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
+extern crate num;
 extern crate pest;
 #[macro_use]
 extern crate pest_derive;

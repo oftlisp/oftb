@@ -1,3 +1,5 @@
+// A grammar for OftLisp code or data.
+
 program = { soi ~ value* ~ eoi }
 value = { rmacro | bytes | symbolish | list | vector | string }
 
@@ -31,6 +33,6 @@ string_4_esc = { "u" ~ hex_digit{4} }
 string_8_esc = { "U" ~ hex_digit{8} }
 string_esc_ch = { "\\" ~ (hex_esc | string_4_esc | string_8_esc | predef_esc) }
 
-whitespace = _{ " " | "\t" | line_break }
 line_break = _{ "\n" | "\r" }
 comment = _{ ";" ~ (!line_break ~ any)* ~ line_break }
+whitespace = _{ " " | "\t" | line_break }

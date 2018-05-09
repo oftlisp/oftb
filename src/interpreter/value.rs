@@ -39,7 +39,7 @@ pub enum Value {
     Bytes(Addr<Bytes>, usize),
     Closure(Addr<Closure>),
     Cons(Addr<Value>, Addr<Value>),
-    Fixnum(usize),
+    Fixnum(isize),
     Intrinsic(Intrinsic),
     Nil,
     String(Addr<String>, usize),

@@ -176,7 +176,7 @@ impl Literal {
             }
             0x03 => {
                 let n = deserialize_u64_as_usize(r)?;
-                Ok(Literal::Fixnum(n))
+                Ok(Literal::Fixnum(n as isize))
             }
             0x04 => Ok(Literal::Nil),
             0x05 => {

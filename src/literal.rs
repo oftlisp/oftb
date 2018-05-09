@@ -10,7 +10,7 @@ pub enum Literal {
     Byte(u8),
     Bytes(Vec<u8>),
     Cons(Box<Literal>, Box<Literal>),
-    Fixnum(usize),
+    Fixnum(isize),
     Nil,
     String(String),
     Symbol(Symbol),

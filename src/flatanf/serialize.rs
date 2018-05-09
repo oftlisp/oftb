@@ -133,7 +133,7 @@ impl Literal {
             }
             Literal::Fixnum(n) => {
                 w.write_u8(0x03)?;
-                serialize_usize_as_u64(n, w)
+                serialize_usize_as_u64(n as usize, w)
             }
             Literal::Nil => w.write_u8(0x04),
             Literal::String(ref s) => {
