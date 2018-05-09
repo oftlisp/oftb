@@ -24,4 +24,4 @@ fuzz:
 outdated-deps:
 	cargo outdated -R
 todos:
-	rg 'TODO|unimplemented'
+	@rg 'TODO|unimplemented' -g '!Justfile'
