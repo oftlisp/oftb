@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::io::Read;
 
 use failure::Error;
@@ -36,14 +37,21 @@ impl Program {
             bail!("Invalid signature: {:?}", sig)
         }
 
-        let len = deserialize_u64_as_usize(r)?;
-        let mut program = Vec::with_capacity(len);
-        for _ in 0..len {
+        let intrinsics_len = deserialize_u64_as_usize(r)?;
+        let mut intrinsics = HashSet::with_capacity(intrinsics_len);
+        for _ in 0..intrinsics_len {
+            intrinsics.insert(deserialize_string(r)?.into());
+        }
+
+        let decls_len = deserialize_u64_as_usize(r)?;
+        let mut decls = Vec::with_capacity(decls_len);
+        for _ in 0..decls_len {
             let name = deserialize_string(r)?;
             let expr = Expr::deserialize_from(r)?;
-            program.push((name.into(), expr));
+            decls.push((name.into(), expr));
         }
-        Ok(Program(program))
+
+        Ok(Program { decls, intrinsics })
     }
 }
 

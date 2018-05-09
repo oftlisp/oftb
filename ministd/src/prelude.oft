@@ -1,5 +1,16 @@
 (module ministd/prelude
+  apply
+  print
   println)
 
-(defn println ()
-  "NYI")
+(def apply oftb-intrinsics#apply)
+
+(defn newline ()
+  "TODO")
+
+(defn print (... args)
+  "TODO")
+
+(defn println (... args)
+  (apply print args)
+  (newline))

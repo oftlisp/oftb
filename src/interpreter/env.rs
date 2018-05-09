@@ -1,25 +1,44 @@
+use std::rc::Rc;
+
 use interpreter::store::Value;
 
 /// The (local) environment stack.
 #[derive(Clone, Debug)]
 pub struct Env {
-    stack: Vec<Value>,
+    inner: Rc<EnvInner>,
+}
+
+#[derive(Clone, Debug)]
+enum EnvInner {
+    Cons(Value, Rc<EnvInner>),
+    Nil,
 }
 
 impl Env {
     /// Creates a new, empty environment.
     pub fn new() -> Env {
-        Env { stack: Vec::new() }
+        Env {
+            inner: Rc::new(EnvInner::Nil),
+        }
     }
 
     /// Gets a local variable.
-    pub fn local(&self, depth: usize) -> Value {
-        assert!(depth <= self.stack.len());
-        self.stack[self.stack.len() - depth]
+    pub fn local(&self, mut depth: usize) -> Value {
+        let mut e = &*self.inner;
+        while let EnvInner::Cons(h, ref t) = *e {
+            if depth == 0 {
+                return h;
+            }
+            depth -= 1;
+            e = &*t;
+        }
+        panic!("Environment stack underflow");
     }
 
     /// Adds a local variable.
-    pub fn push(&mut self, val: Value) {
-        self.stack.push(val);
+    pub fn push(self, val: Value) -> Env {
+        Env {
+            inner: Rc::new(EnvInner::Cons(val, self.inner)),
+        }
     }
 }

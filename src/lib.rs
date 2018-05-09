@@ -12,11 +12,14 @@
 //!  ast::Module::from_values--+  +---anf::Module::from
 //! ```
 //!
-//! The Flat ANF form of the code is then interpreted by the `cesk` module.
-//! See [here](https://remexre.xyz/oftlisp-2018-03-12-update/) for more info.
+//! The Flat ANF form of the code is then interpreted by the `interpreter`
+//! module. See [here](https://remexre.xyz/oftlisp-2018-03-12-update/) for
+//! more info.
 
 #[macro_use]
 extern crate failure;
+#[macro_use]
+extern crate lazy_static;
 #[macro_use]
 extern crate log;
 extern crate pest;
@@ -31,12 +34,12 @@ pub mod ast;
 mod error;
 pub mod flatanf;
 mod gensym;
-mod heap;
 pub mod interpreter;
+mod intrinsics;
 mod literal;
 pub mod modules;
 mod parser;
-mod util;
+mod sanity;
 
 pub use error::Error;
 pub use literal::Literal;

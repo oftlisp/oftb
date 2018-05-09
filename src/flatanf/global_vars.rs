@@ -1,0 +1,65 @@
+use std::collections::BTreeSet;
+
+use symbol::Symbol;
+
+use flatanf::{AExpr, CExpr, Expr};
+
+impl Expr {
+    /// Returns the global variables used by the given expression or its
+    /// subexpressions.
+    pub fn global_vars(&self) -> BTreeSet<Symbol> {
+        match *self {
+            Expr::AExpr(ref e) => e.global_vars(),
+            Expr::CExpr(ref e) => e.global_vars(),
+            Expr::Let(ref a, ref b) => {
+                a.global_vars().into_iter().chain(b.global_vars()).collect()
+            }
+            Expr::Seq(ref a, ref b) => {
+                a.global_vars().into_iter().chain(b.global_vars()).collect()
+            }
+        }
+    }
+}
+
+impl CExpr {
+    /// Returns the global variables used by the given expression or its
+    /// subexpressions.
+    pub fn global_vars(&self) -> BTreeSet<Symbol> {
+        match *self {
+            CExpr::Call(ref func, ref args) => args.iter()
+                .flat_map(|a| a.global_vars())
+                .chain(func.global_vars())
+                .collect(),
+            CExpr::If(ref c, ref t, ref e) => c.global_vars()
+                .into_iter()
+                .chain(t.global_vars())
+                .chain(e.global_vars())
+                .collect(),
+            CExpr::LetRec(ref bound, ref body) => bound
+                .iter()
+                .flat_map(|b| b.global_vars())
+                .chain(body.global_vars())
+                .collect(),
+        }
+    }
+}
+
+impl AExpr {
+    /// Returns the global variables used by the given expression or its
+    /// subexpressions.
+    pub fn global_vars(&self) -> BTreeSet<Symbol> {
+        match *self {
+            AExpr::Global(name) => {
+                let mut s = BTreeSet::new();
+                s.insert(name);
+                s
+            }
+            AExpr::Lambda(argn, ref body) => body.global_vars(),
+            AExpr::Literal(ref lit) => BTreeSet::new(),
+            AExpr::Local(n) => BTreeSet::new(),
+            AExpr::Vector(ref vec) => {
+                vec.iter().flat_map(|e| e.global_vars()).collect()
+            }
+        }
+    }
+}

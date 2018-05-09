@@ -2,7 +2,7 @@
 
 mod control;
 mod env;
-mod eval;
+pub mod eval;
 mod state;
 mod store;
 mod kont;
@@ -12,9 +12,10 @@ use std::collections::HashMap;
 use symbol::Symbol;
 
 use flatanf::Expr;
-use interpreter::control::Control;
+pub use interpreter::control::Control;
 use interpreter::env::Env;
-use interpreter::state::State;
+pub use interpreter::kont::Kont;
+pub use interpreter::state::State;
 pub use interpreter::store::{Addr, Store, Value};
 
 /// The interpreter.
@@ -52,7 +53,8 @@ impl<'program> Interpreter<'program> {
     }
 
     /// Evaluates an expression to a value.
-    pub fn eval(&mut self) -> Value {
+    pub fn eval(&mut self, expr: &'program Expr) -> Value {
+        self.load_expr(expr);
         loop {
             if let Some(value) = self.eval_step() {
                 return value;
@@ -63,7 +65,14 @@ impl<'program> Interpreter<'program> {
     /// Makes an evaluation step, returning a value if evaluation halted.
     pub fn eval_step(&mut self) -> Option<Value> {
         let state = self.state.take().unwrap();
-        self.state = Some(eval::step(state, &self.globals, &mut self.store));
+        let next = match state {
+            State::Running(c, e, k) => {
+                eval::step(c, e, k, &self.globals, &mut self.store)
+            }
+            State::Halted(val) => State::Halted(val),
+        };
+        self.state = Some(next);
+
         if let Some(State::Halted(val)) = self.state {
             Some(val)
         } else {

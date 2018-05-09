@@ -41,6 +41,6 @@ pub fn parse_program<'src>(
     src: &'src str,
 ) -> Result<Vec<Literal>, ::pest::Error<'src, Rule>> {
     let pairs = OftLispParser::parse(Rule::program, src)?;
-    debug!("Finished parsing, converting to Literals");
+    debug!("Finished parsing, converting to Literals...");
     convert::convert_program(pairs)
 }

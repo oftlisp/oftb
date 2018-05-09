@@ -12,9 +12,11 @@ extern crate symbol;
 mod options;
 
 use std::fs::File;
+use std::process::exit;
 
 use failure::Error;
-use oftb::flatanf::Program;
+use oftb::Literal;
+use oftb::flatanf::{AExpr, CExpr, Expr, Program};
 use oftb::interpreter::Interpreter;
 use structopt::StructOpt;
 
@@ -28,7 +30,8 @@ fn main() {
     }
 
     if let Err(err) = run(options) {
-        error!("{}", err)
+        error!("{}", err);
+        exit(1);
     }
 }
 
@@ -39,21 +42,27 @@ fn run(options: Options) -> Result<(), Error> {
         Program::deserialize_from(&mut f)?
     };
 
+    // Create the expression for the call to main.
+    let args = options.args.into_iter().map(Literal::String).collect();
+    let args = AExpr::Literal(Literal::list(args));
+    let main =
+        Expr::CExpr(CExpr::Call(AExpr::Global("main#main".into()), vec![args]));
+
     // Create the interpreter.
     let mut interpreter = Interpreter::new();
 
     // Start interpreting global decls.
-    info!("Initializing program...");
-    for &(name, ref expr) in &program {
+    debug!("Initializing program...");
+    for &(name, ref expr) in &program.decls {
         debug!("{} = {:?}", name, expr);
-        interpreter.load_expr(expr);
-        let val = interpreter.eval();
+        let val = interpreter.eval(expr);
         interpreter.globals.insert(name, val);
     }
 
-    // Interpret the main program.
-    // TODO
+    // Call main.
+    debug!("Running program...");
+    let retval = interpreter.eval(&main);
+    println!("{:#?}", retval);
 
-    println!("{:#?}", interpreter);
     Ok(())
 }

@@ -8,8 +8,8 @@ check:
 doc:
 	cargo doc --all
 run-hello-world: build
-	cargo run --bin oftbc -- examples/hello-world hello-world --std ministd
-	cargo run --bin oftbi -- hello-world.ofta -v
+	cargo run --bin oftbc -- examples/hello-world hello-world --std ministd -v
+	cargo run --bin oftbi -- hello-world.ofta -vvvv
 test:
 	cargo test --all
 watch TARGETS="all":

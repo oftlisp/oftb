@@ -144,6 +144,8 @@ pub enum ErrorKind {
     NonexistentModule(Symbol),
 
     /// A parse error.
+    ///
+    /// TODO: Display this better.
     #[fail(display = "Syntax error in {}", _0)]
     Parse(String),
 

@@ -261,8 +261,10 @@ impl Packages {
         augment_module_imports(&mut binary);
         mods.push(binary);
 
-        // Create the `flatanf::Program`.
-        Program::from_modules(mods, builtins)
+        // Create the `flatanf::Program`, run sanity checks, and return it.
+        let program = Program::from_modules(mods, builtins)?;
+        ::sanity::check(&program)?;
+        Ok(program)
     }
 
     /// Returns the exports of the given module.

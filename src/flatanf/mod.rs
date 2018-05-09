@@ -4,8 +4,11 @@
 
 mod convert;
 mod deserialize;
+mod global_vars;
 mod serialize;
 mod util;
+
+use std::collections::HashSet;
 
 use symbol::Symbol;
 
@@ -13,29 +16,12 @@ use literal::Literal;
 
 /// A complete program.
 #[derive(Clone, Debug, PartialEq)]
-pub struct Program(pub Vec<(Symbol, Expr)>);
+pub struct Program {
+    /// The required intrinsics.
+    pub intrinsics: HashSet<Symbol>,
 
-impl Program {
-    /// Returns the number of declarations in the program.
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-}
-
-impl IntoIterator for Program {
-    type Item = (Symbol, Expr);
-    type IntoIter = ::std::vec::IntoIter<(Symbol, Expr)>;
-    fn into_iter(self) -> ::std::vec::IntoIter<(Symbol, Expr)> {
-        self.0.into_iter()
-    }
-}
-
-impl<'a> IntoIterator for &'a Program {
-    type Item = &'a (Symbol, Expr);
-    type IntoIter = ::std::slice::Iter<'a, (Symbol, Expr)>;
-    fn into_iter(self) -> ::std::slice::Iter<'a, (Symbol, Expr)> {
-        self.0.iter()
-    }
+    /// The declarations in the program.
+    pub decls: Vec<(Symbol, Expr)>,
 }
 
 /// The root expression type, which may perform arbitrary continuation stack
@@ -57,7 +43,7 @@ pub enum Expr {
 }
 
 /// A "complex" expression, which may replace the current continuation and have
-/// side effects, but may not push to or pop from the continuation stack.
+/// side effects, but may not (net) push to or pop from the continuation stack.
 #[derive(Clone, Debug, PartialEq)]
 pub enum CExpr {
     /// A function call.
@@ -87,7 +73,7 @@ pub enum AExpr {
     /// A reference to a value in the environment.
     Local(usize),
 
-    /// A vector.
+    /// A vector creation.
     ///
     /// TODO: Should this actually exist?
     Vector(Vec<AExpr>),

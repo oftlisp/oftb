@@ -17,11 +17,18 @@ impl Program {
     /// Writes the program out to the given Write.
     pub fn serialize_to<W: Write>(&self, w: &mut W) -> IoResult<()> {
         w.write_all(b"ofta")?;
-        serialize_usize_as_u64(self.0.len(), w)?;
-        for &(name, ref expr) in self {
+
+        serialize_usize_as_u64(self.intrinsics.len(), w)?;
+        for name in &self.intrinsics {
+            serialize_str(name.as_str(), w)?;
+        }
+
+        serialize_usize_as_u64(self.decls.len(), w)?;
+        for &(name, ref expr) in &self.decls {
             serialize_str(name.as_str(), w)?;
             expr.serialize_to(w)?;
         }
+
         Ok(())
     }
 }

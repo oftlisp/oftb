@@ -11,6 +11,7 @@ extern crate structopt;
 mod options;
 
 use std::fs::File;
+use std::process::exit;
 
 use failure::Error;
 use oftb::modules::Packages;
@@ -26,7 +27,8 @@ fn main() {
     }
 
     if let Err(err) = run(options) {
-        error!("{}", err)
+        error!("{}", err);
+        exit(1);
     }
 }
 

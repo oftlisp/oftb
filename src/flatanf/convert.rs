@@ -9,12 +9,12 @@ use flatanf::{AExpr, CExpr, Expr, Program};
 use flatanf::util::{toposort_mods, Context};
 
 impl Program {
-    /// Creates a flat `Program` from a bunch of `anf::Module`s.
+    /// Creates a `Program` from a bunch of `anf::Module`s.
     pub fn from_modules(
         mods: Vec<Module>,
         builtins: HashMap<Symbol, HashSet<Symbol>>,
     ) -> Result<Program, Error> {
-        let mut code = Vec::new();
+        let mut decls = Vec::new();
         let builtin_modules = builtins.keys().cloned().collect();
         let mut globals = builtins
             .into_iter()
@@ -22,10 +22,12 @@ impl Program {
             .collect();
 
         toposort_mods(mods, builtin_modules, |m| {
-            code.extend(compile_module(&mut globals, m)?);
+            decls.extend(compile_module(&mut globals, m)?);
             Ok(())
         })?;
-        Ok(Program(code))
+
+        let intrinsics = freevars(&decls);
+        Ok(Program { decls, intrinsics })
     }
 }
 
@@ -167,8 +169,8 @@ fn compile_aexpr(
             Ok(AExpr::Lambda(argn, Box::new(body)))
         }
         AnfAExpr::Literal(lit) => Ok(AExpr::Literal(lit)),
-        AnfAExpr::Var(var) if var.contains(':') => {
-            // TODO Properly validate the var.
+        AnfAExpr::Var(var) if var.contains('#') => {
+            // This is checked by the globals_exist sanity check.
             Ok(AExpr::Global(var))
         }
         AnfAExpr::Var(var) => context.get(var),
@@ -182,6 +184,16 @@ fn compile_aexpr(
     }
 }
 
+/// Returns the free variables of a set of decls.
+pub fn freevars(decls: &[(Symbol, Expr)]) -> HashSet<Symbol> {
+    let found = decls
+        .iter()
+        .flat_map(|&(_, ref expr)| expr.global_vars())
+        .collect::<HashSet<_>>();
+    let declared = decls.iter().map(|&(name, _)| name).collect();
+    found.difference(&declared).cloned().collect()
+}
+
 fn global(m: Symbol, d: Symbol) -> Symbol {
-    format!("{}:{}", m, d).into()
+    format!("{}#{}", m, d).into()
 }

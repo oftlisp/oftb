@@ -2,8 +2,6 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 
 use symbol::Symbol;
 
-use heap::{Heap, HeapCell};
-
 /// A literal value.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Literal {
@@ -88,27 +86,6 @@ impl Literal {
                 _ => return None,
             }
         }
-    }
-
-    /// Builds a literal onto the heap, returning its address.
-    pub fn build_onto(self, heap: &mut Heap) -> usize {
-        let cell = match self {
-            Literal::Byte(n) => HeapCell::Byte(n),
-            Literal::Bytes(bs) => HeapCell::Bytes(bs),
-            Literal::Cons(h, t) => {
-                let h = h.build_onto(heap);
-                let t = t.build_onto(heap);
-                HeapCell::Cons(h, t)
-            }
-            Literal::Fixnum(n) => HeapCell::Fixnum(n),
-            Literal::Nil => HeapCell::Nil,
-            Literal::String(s) => HeapCell::String(s),
-            Literal::Symbol(s) => HeapCell::Symbol(s),
-            Literal::Vector(vs) => HeapCell::Vector(
-                vs.into_iter().map(|v| v.build_onto(heap)).collect(),
-            ),
-        };
-        heap.alloc_cell(cell)
     }
 
     /// Checks if a literal represents a proper list.
