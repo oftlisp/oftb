@@ -2,6 +2,8 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 
 use symbol::Symbol;
 
+use util::{escape_bytes, escape_str};
+
 /// A literal value.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Literal {
@@ -123,13 +125,7 @@ impl Display for Literal {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         match *self {
             Literal::Byte(n) => write!(fmt, "{}", n),
-            Literal::Bytes(ref bs) => {
-                write!(fmt, "b\"")?;
-                for b in bs {
-                    write!(fmt, "\\x{:02x}", b)?;
-                }
-                write!(fmt, "\"")
-            }
+            Literal::Bytes(ref bs) => escape_bytes(bs, fmt),
             Literal::Cons(ref h, ref t) => {
                 write!(fmt, "({}", h)?;
                 let mut l = t;
@@ -150,20 +146,7 @@ impl Display for Literal {
             }
             Literal::Fixnum(n) => write!(fmt, "{}", n),
             Literal::Nil => write!(fmt, "()"),
-            Literal::String(ref s) => {
-                write!(fmt, "\"")?;
-                for ch in s.chars() {
-                    match ch {
-                        '\n' => write!(fmt, "\\n")?,
-                        '\r' => write!(fmt, "\\r")?,
-                        '\t' => write!(fmt, "\\t")?,
-                        '\\' => write!(fmt, "\\\\")?,
-                        '\"' => write!(fmt, "\\\"")?,
-                        _ => write!(fmt, "{}", ch)?,
-                    }
-                }
-                write!(fmt, "\"")
-            }
+            Literal::String(ref s) => escape_str(s, fmt),
             Literal::Symbol(s) => write!(fmt, "{}", s),
             Literal::Vector(ref vs) => {
                 write!(fmt, "[")?;

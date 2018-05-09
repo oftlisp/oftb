@@ -35,12 +35,32 @@ mod error;
 pub mod flatanf;
 mod gensym;
 pub mod interpreter;
-mod intrinsics;
+pub mod intrinsics;
 mod literal;
 pub mod modules;
 mod parser;
 mod sanity;
+mod util;
 
-pub use error::Error;
+use std::collections::{HashMap, HashSet};
+
+use symbol::Symbol;
+
+pub use error::{Error, ErrorKind};
+use interpreter::Value;
 pub use literal::Literal;
 pub use parser::{parse_file, parse_program};
+
+/// A trait for a built-in package.
+pub trait BuiltinPackage {
+    /// Returns a mapping between module names (without the package part) and
+    /// the names of the values the modules declare.
+    fn decls() -> HashMap<Symbol, HashSet<Symbol>>;
+
+    /// Returns the name of the package.
+    fn name() -> Symbol;
+
+    /// Returns a mapping between fully qualified names (including the package
+    /// part) and values.
+    fn values() -> HashMap<Symbol, Value>;
+}

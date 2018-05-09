@@ -3,15 +3,18 @@
 
 mod globals_exist;
 mod locals_valid;
+mod main_exists;
 
 use Error;
 use flatanf::Program;
 use sanity::globals_exist::globals_exist;
 use sanity::locals_valid::locals_valid;
+use sanity::main_exists::main_exists;
 
 /// Runs all sanity checks on a program.
 pub fn check(program: &Program) -> Result<(), Error> {
     globals_exist(program)?;
-    locals_valid(program)?;
+    main_exists(program)?;
+    locals_valid(program);
     Ok(())
 }

@@ -16,17 +16,19 @@ impl Program {
     ) -> Result<Program, Error> {
         let mut decls = Vec::new();
         let builtin_modules = builtins.keys().cloned().collect();
-        let mut globals = builtins
+        let mut intrinsics = builtins
             .into_iter()
             .flat_map(|(m, ds)| ds.into_iter().map(move |d| global(m, d)))
-            .collect();
+            .collect::<HashSet<Symbol>>();
+        let mut globals = intrinsics.clone();
 
         toposort_mods(mods, builtin_modules, |m| {
             decls.extend(compile_module(&mut globals, m)?);
             Ok(())
         })?;
 
-        let intrinsics = freevars(&decls);
+        let free = freevars(&decls);
+        intrinsics.retain(|x| free.contains(x));
         Ok(Program { decls, intrinsics })
     }
 }
@@ -169,7 +171,7 @@ fn compile_aexpr(
             Ok(AExpr::Lambda(argn, Box::new(body)))
         }
         AnfAExpr::Literal(lit) => Ok(AExpr::Literal(lit)),
-        AnfAExpr::Var(var) if var.contains('#') => {
+        AnfAExpr::Var(var) if var.contains(':') => {
             // This is checked by the globals_exist sanity check.
             Ok(AExpr::Global(var))
         }
@@ -195,5 +197,5 @@ pub fn freevars(decls: &[(Symbol, Expr)]) -> HashSet<Symbol> {
 }
 
 fn global(m: Symbol, d: Symbol) -> Symbol {
-    format!("{}#{}", m, d).into()
+    format!("{}:{}", m, d).into()
 }

@@ -21,7 +21,7 @@ rmacro_ch = { "'" | "`" | ",@" | "," | "\\" | "%" }
 
 // Symbols and Numbers
 symbolish = @{ !"b\"" ~ symbolish_ch+ }
-symbolish_ch = { 'a'..'z' | 'A'..'Z' | '0'..'9' | "#" | "+" | "-" | "." | "/" |
+symbolish_ch = { 'a'..'z' | 'A'..'Z' | '0'..'9' | ":" | "+" | "-" | "." | "/" |
     "$" | "?" | "*" | "=" | "<" | ">" | "_" }
 
 // Strings

@@ -6,19 +6,15 @@ use symbol::Symbol;
 
 use Literal;
 use flatanf::{AExpr, CExpr, Expr};
-use interpreter::{State, Value};
-use interpreter::control::Control;
-use interpreter::env::Env;
-use interpreter::kont::Kont;
-use interpreter::store::Store;
+use interpreter::{Control, Env, Intrinsic, Kont, State, Store, Value};
 
 /// Evaluates by a single step.
 pub fn step<'program>(
     control: Control<'program>,
-    mut env: Env,
-    mut konts: Vec<Kont<'program>>,
+    env: Env,
     globals: &HashMap<Symbol, Value>,
     store: &mut Store<'program>,
+    mut konts: Vec<Kont<'program>>,
 ) -> State<'program> {
     trace!("running {:?}", control);
     match control {
@@ -58,7 +54,7 @@ pub fn step<'program>(
 pub fn apply<'program>(
     func: Value,
     args: Vec<Value>,
-    store: &Store<'program>,
+    store: &mut Store<'program>,
     konts: Vec<Kont<'program>>,
 ) -> State<'program> {
     match func {
@@ -73,6 +69,7 @@ pub fn apply<'program>(
             }
             State::Running(Control::Normal(body), env, konts)
         }
+        Value::Intrinsic(Intrinsic(f)) => f(args, store, konts),
         _ => unimplemented!("Not callable: {:?}", func),
     }
 }

@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 use failure::ResultExt;
 use symbol::Symbol;
 
+use BuiltinPackage;
 use anf::Module;
 use error::{Error, ErrorKind};
 use flatanf::Program;
@@ -42,6 +43,11 @@ impl Packages {
             pkgs: HashMap::new(),
             std_name: None,
         }
+    }
+
+    /// Adds a builtin package.
+    pub fn add_builtins<P: BuiltinPackage>(&mut self) {
+        self.pkgs.insert(P::name(), Package::Builtins(P::decls()));
     }
 
     /// Loads the modules in the package in the given directory, returning the
@@ -218,10 +224,14 @@ impl Packages {
         // Bundle up the packages.
         for (package_name, package) in self.pkgs {
             match package {
-                Package::Builtins(mods) => {
-                    //builtins.insert(package_name, mods);
-                    unimplemented!();
-                }
+                Package::Builtins(mods) => for (name, decls) in mods {
+                    let name = if name.as_str() == "" {
+                        package_name
+                    } else {
+                        format!("{}/{}", package_name, name).into()
+                    };
+                    builtins.insert(name, decls);
+                },
                 Package::Filesystem(path, meta, ms) => {
                     if root_package_name == package_name {
                         root_meta_path = Some((meta, path));

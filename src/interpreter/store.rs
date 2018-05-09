@@ -1,10 +1,8 @@
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::marker::PhantomData;
 
-use symbol::Symbol;
-
 use flatanf::Expr;
-use interpreter::env::Env;
+use interpreter::{Env, Value};
 
 /// A phantom type for `Addr<Bytes>`.
 pub enum Bytes {}
@@ -151,18 +149,4 @@ impl<T> PartialEq for Addr<T> {
     fn eq(&self, other: &Addr<T>) -> bool {
         self.0 == other.0
     }
-}
-
-/// A value stored in the store.
-#[derive(Clone, Copy, Debug)]
-pub enum Value {
-    Byte(u8),
-    Bytes(Addr<Bytes>, usize),
-    Closure(Addr<Closure>),
-    Cons(Addr<Value>, Addr<Value>),
-    Fixnum(usize),
-    Nil,
-    String(Addr<String>, usize),
-    Symbol(Symbol),
-    Vector(Addr<Vector>, usize),
 }

@@ -1,5 +1,13 @@
 (module main
   main)
 
+(defn even (x)
+  (if (= x 0)
+    true
+    (odd (1- x))))
+
+(defn odd (x)
+  (even (1- x)))
+
 (defn main (args)
   (println "Hello, world!"))

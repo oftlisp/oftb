@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use interpreter::store::Value;
+use interpreter::Value;
 
 /// The (local) environment stack.
 #[derive(Clone, Debug)]

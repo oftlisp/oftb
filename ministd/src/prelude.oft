@@ -1,16 +1,17 @@
 (module ministd/prelude
+  =
   apply
+  equals
+  list
   print
   println)
 
-(def apply oftb-intrinsics#apply)
+; Basic Functions
+(def =      oftb-intrinsics:eq)
+(def apply  oftb-intrinsics:apply)
+(def equals oftb-intrinsics:equals)
+(def list   oftb-intrinsics:list)
 
-(defn newline ()
-  "TODO")
-
-(defn print (... args)
-  "TODO")
-
-(defn println (... args)
-  (apply print args)
-  (newline))
+; I/O Functions
+(def print   oftb-intrinsics/io:print)
+(def println oftb-intrinsics/io:println)

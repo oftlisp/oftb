@@ -88,6 +88,12 @@ pub enum ErrorKind {
     #[fail(display = "Duplicate field: {}", _0)]
     DuplicateField(Symbol),
 
+    /// Globals exist that weren't defined.
+    ///
+    /// TODO: Nicer Display formatting.
+    #[fail(display = "Undefined globals: {:?}", _0)]
+    FreeVars(Vec<Symbol>),
+
     /// A given dependency version was invalid.
     #[fail(display = "Bad dependency version: {}", _0)]
     IllegalDependencyVersion(ReqParseError),
@@ -122,6 +128,10 @@ pub enum ErrorKind {
     /// A required field was missing.
     #[fail(display = "Missing field: {}", _0)]
     MissingField(Symbol),
+
+    /// The main function wasn't present.
+    #[fail(display = "No main function was found.")]
+    NoMainFunction,
 
     /// A module didn't have a module form.
     #[fail(display = "No module form was found.")]

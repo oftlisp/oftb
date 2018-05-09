@@ -54,9 +54,9 @@ impl AExpr {
                 s.insert(name);
                 s
             }
-            AExpr::Lambda(argn, ref body) => body.global_vars(),
-            AExpr::Literal(ref lit) => BTreeSet::new(),
-            AExpr::Local(n) => BTreeSet::new(),
+            AExpr::Lambda(_, ref body) => body.global_vars(),
+            AExpr::Literal(_) => BTreeSet::new(),
+            AExpr::Local(_) => BTreeSet::new(),
             AExpr::Vector(ref vec) => {
                 vec.iter().flat_map(|e| e.global_vars()).collect()
             }

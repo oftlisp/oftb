@@ -6,17 +6,20 @@ pub mod eval;
 mod state;
 mod store;
 mod kont;
+mod value;
 
 use std::collections::HashMap;
 
 use symbol::Symbol;
 
+use BuiltinPackage;
 use flatanf::Expr;
 pub use interpreter::control::Control;
 use interpreter::env::Env;
 pub use interpreter::kont::Kont;
 pub use interpreter::state::State;
-pub use interpreter::store::{Addr, Store, Value};
+pub use interpreter::store::{Addr, Bytes, Closure, Store, Vector};
+pub use interpreter::value::{Intrinsic, Value};
 
 /// The interpreter.
 #[derive(Debug)]
@@ -52,6 +55,13 @@ impl<'program> Interpreter<'program> {
         }
     }
 
+    /// Adds a builtin package.
+    pub fn add_builtins<P: BuiltinPackage>(&mut self) {
+        for (n, v) in P::values() {
+            self.globals.insert(n, v);
+        }
+    }
+
     /// Evaluates an expression to a value.
     pub fn eval(&mut self, expr: &'program Expr) -> Value {
         self.load_expr(expr);
@@ -67,7 +77,7 @@ impl<'program> Interpreter<'program> {
         let state = self.state.take().unwrap();
         let next = match state {
             State::Running(c, e, k) => {
-                eval::step(c, e, k, &self.globals, &mut self.store)
+                eval::step(c, e, &self.globals, &mut self.store, k)
             }
             State::Halted(val) => State::Halted(val),
         };

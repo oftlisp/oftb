@@ -14,6 +14,7 @@ use std::fs::File;
 use std::process::exit;
 
 use failure::Error;
+use oftb::intrinsics::Intrinsics;
 use oftb::modules::Packages;
 use structopt::StructOpt;
 
@@ -34,6 +35,7 @@ fn main() {
 
 fn run(options: Options) -> Result<(), Error> {
     let mut pkgs = Packages::new();
+    pkgs.add_builtins::<Intrinsics>();
 
     // Load the stdlib.
     info!("Loading stdlib...");

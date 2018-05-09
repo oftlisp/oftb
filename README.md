@@ -12,6 +12,7 @@ There's also a macro expander written in OftLisp here, for bootstrapping.
 ## ministd
 
 This repo also contains ministd, the trimmed-down version of the standard library used when bootstrapping.
+Notably, ministd does not provide any macros.
 
 ## License
 
