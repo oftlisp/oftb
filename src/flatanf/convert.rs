@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
+use failure::ResultExt;
 use symbol::Symbol;
 
 use anf::{AExpr as AnfAExpr, CExpr as AnfCExpr, Decl as AnfDecl,
@@ -23,7 +24,10 @@ impl Program {
         let mut globals = intrinsics.clone();
 
         toposort_mods(mods, builtin_modules, |m| {
-            decls.extend(compile_module(&mut globals, m)?);
+            let name = m.name;
+            let m = compile_module(&mut globals, m)
+                .context(ErrorKind::CouldntCompileModule(name))?;
+            decls.extend(m);
             Ok(())
         })?;
 
@@ -42,6 +46,7 @@ fn compile_module(
         imports,
         exports,
         body,
+        attrs: _,
     } = m;
 
     let mut context = {
@@ -54,22 +59,62 @@ fn compile_module(
                 return Err(ErrorKind::NonexistentImport(module_name, *g).into());
             }
         }
-        ctx.extend(
-            body.iter()
-                .map(|decl| decl.name())
-                .map(|name| (name, global(module_name, name))),
-        );
         Context::from(ctx)
     };
 
-    let decls = body.into_iter()
-        .map(|d| compile_decl(module_name, &mut context, d))
-        .collect::<Result<Vec<_>, _>>()?;
+    // So the logic here is a bit complex...
+    //
+    // We want to populate the context with all the defns, until we hit a def.
+    // Then we actually compile all the defns, then the def. Rinse & repeat.
+    let mut batched_defns = Vec::new();
+    let mut decls = Vec::new();
+    let compile_batched_defns = |batched_defns: &mut Vec<_>,
+                                 decls: &mut Vec<_>,
+                                 context: &mut Context|
+     -> Result<(), Error> {
+        batched_defns
+            .iter()
+            .map(|&(name, _, _)| name)
+            .for_each(|name| {
+                context.add_global(name, global(module_name, name))
+            });
+        let defns = batched_defns
+            .drain(..)
+            .map(|(n, a, b)| {
+                compile_decl(module_name, context, AnfDecl::Defn(n, a, b))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        decls.extend(defns);
+        Ok(())
+    };
+
+    for decl in body {
+        match decl {
+            AnfDecl::Defn(name, args, body) => {
+                batched_defns.push((name, args, body));
+            }
+            AnfDecl::Def(name, expr) => {
+                compile_batched_defns(
+                    &mut batched_defns,
+                    &mut decls,
+                    &mut context,
+                )?;
+                let (global_name, expr) = compile_decl(
+                    module_name,
+                    &mut context,
+                    AnfDecl::Def(name, expr),
+                )?;
+                decls.push((global_name, expr));
+                context.add_global(name, global_name);
+            }
+        }
+    }
+    compile_batched_defns(&mut batched_defns, &mut decls, &mut context)?;
 
     let decl_names =
         decls.iter().map(|&(name, _)| name).collect::<HashSet<_>>();
     for e in exports {
-        let e = global(m.name, e);
+        let e = global(module_name, e);
         if !decl_names.contains(&e) {
             return Err(ErrorKind::MissingExport(module_name, e).into());
         }

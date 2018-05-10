@@ -1,0 +1,38 @@
+(module ministd/internal/prelude/intrinsics
+  [* + - = byte? bytes? car cdr cons cons? equals false fixnum? function? list
+   nil nil? print println string? symbol? true vector?]
+  no-prelude)
+
+
+; Constants
+(def nil   '())
+(def false nil)
+(def true  'true)
+
+; Basic Functions
+(def =      oftb-intrinsics:eq)
+(def car    oftb-intrinsics:car)
+(def cdr    oftb-intrinsics:cdr)
+(def cons   oftb-intrinsics:cons)
+(def equals oftb-intrinsics:equals)
+(def list   oftb-intrinsics:list)
+
+; I/O Functions
+(def print   oftb-intrinsics/io:print)
+(def println oftb-intrinsics/io:println)
+
+; Math Functions
+(def * oftb-intrinsics/math:mul)
+(def + oftb-intrinsics/math:add)
+(def - oftb-intrinsics/math:sub)
+
+; Type-Test Functions
+(def byte?     oftb-intrinsics/types:is_byte)
+(def bytes?    oftb-intrinsics/types:is_bytes)
+(def cons?     oftb-intrinsics/types:is_cons)
+(def fixnum?   oftb-intrinsics/types:is_fixnum)
+(def function? oftb-intrinsics/types:is_function)
+(def nil?      oftb-intrinsics/types:is_nil)
+(def string?   oftb-intrinsics/types:is_string)
+(def symbol?   oftb-intrinsics/types:is_symbol)
+(def vector?   oftb-intrinsics/types:is_vector)

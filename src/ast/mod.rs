@@ -14,6 +14,7 @@ pub struct Module {
     pub name: Symbol,
     pub exports: BTreeSet<Symbol>,
     pub imports: BTreeSet<(Symbol, Symbol)>,
+    pub attrs: Vec<Attr>,
     pub body: Vec<Decl>,
 }
 
@@ -24,17 +25,26 @@ impl Module {
             return Err(ErrorKind::NoModuleForm.into());
         }
 
-        let (name, exports) =
-            helpers::convert_moduleish("module".into(), &l.remove(0))
-                .ok_or_else(|| ErrorKind::NoModuleForm)?;
-        let imports = {
-            let i = l.iter()
-                .position(|l| !helpers::is_moduleish("import".into(), l))
-                .unwrap_or(0);
-            l.drain(0..i)
-                .map(|l| {
-                    helpers::convert_moduleish("import".into(), &l).unwrap()
+        let (name, exports, attrs) = helpers::convert_module(&l.remove(0))
+            .ok_or_else(|| ErrorKind::NoModuleForm)?;
+        let attrs = attrs
+            .into_iter()
+            .map(|(n, v)| {
+                Attr::from_values(n, v.as_ref()).ok_or_else(|| {
+                    ErrorKind::UnknownAttr(
+                        name,
+                        Literal::Cons(
+                            Box::new(Literal::Symbol(n)),
+                            Box::new(v.unwrap_or(Literal::Nil)),
+                        ),
+                    )
                 })
+            })
+            .collect::<Result<_, _>>()?;
+        let imports = {
+            let i = l.iter().position(|l| !helpers::is_import(l)).unwrap_or(0);
+            l.drain(0..i)
+                .map(|l| helpers::convert_import(&l).unwrap())
                 .flat_map(|(m, vs)| vs.into_iter().map(move |v| (m, v)))
                 .collect()
         };
@@ -45,8 +55,26 @@ impl Module {
             name,
             imports,
             exports: exports.into_iter().collect(),
+            attrs,
             body,
         })
+    }
+}
+
+/// An attribute on a module.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Attr {
+    /// The prelude will not be injected.
+    NoPrelude,
+}
+
+impl Attr {
+    /// Creates an Attr from a symbol or a symbol-value pair.
+    pub fn from_values(name: Symbol, value: Option<&Literal>) -> Option<Attr> {
+        match (name.as_str(), value) {
+            ("no-prelude", None) => Some(Attr::NoPrelude),
+            _ => None,
+        }
     }
 }
 
@@ -137,6 +165,32 @@ impl Expr {
                         let lit = Literal::Cons(h, t_lit);
                         let decl = Decl::from_value(lit)?;
                         Ok(Expr::Decl(Box::new(decl)))
+                    }
+                    Literal::Symbol(s) if s.as_str() == "fn" => {
+                        if t.len() < 2 {
+                            return Err(ErrorKind::InvalidExpr(Literal::Cons(
+                                h,
+                                t_lit,
+                            )).into());
+                        }
+
+                        let tail = Expr::from_value(t.pop().unwrap())?;
+                        let body = t.drain(1..)
+                            .map(Expr::from_value)
+                            .collect::<Result<_, _>>()?;
+
+                        let args = if let Some(args) =
+                            t.pop().unwrap().as_symbol_list()
+                        {
+                            args
+                        } else {
+                            return Err(ErrorKind::InvalidExpr(Literal::Cons(
+                                h,
+                                t_lit,
+                            )).into());
+                        };
+
+                        Ok(Expr::Lambda(args, body, Box::new(tail)))
                     }
                     Literal::Symbol(s) if s.as_str() == "if" => {
                         if t.len() < 2 || t.len() > 3 {

@@ -1,5 +1,5 @@
 (module oftb-macro-expander/sub/mod
-  say-hello-from-sub-mod)
+  [say-hello-from-sub-mod])
 
 (defn say-hello-from-sub-mod ()
   (println "Hello from submodule"))

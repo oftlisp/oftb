@@ -6,6 +6,7 @@ use std::collections::BTreeSet;
 
 use symbol::Symbol;
 
+use ast::Attr;
 use literal::Literal;
 
 /// A module.
@@ -15,6 +16,7 @@ pub struct Module {
     pub exports: BTreeSet<Symbol>,
     pub imports: BTreeSet<(Symbol, Symbol)>,
     pub body: Vec<Decl>,
+    pub attrs: Vec<Attr>,
 }
 
 /// A declaration.

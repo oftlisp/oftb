@@ -1,43 +1,52 @@
 (module ministd/prelude
-  *
-  +
-  -
-  1-
-  =
-  equals
-  false
-  list
-  nil
-  print
-  println
-  true)
+  [* + - 1- = byte? bytes? car cdr cons cons? equals false fixnum? function?
+   length list map nil nil? print println reverse string? symbol? true vector?]
+  no-prelude)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; INTRINSICS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(import ministd/internal/prelude/intrinsics
+  * + - = byte? bytes? car cdr cons cons? equals false fixnum? function? list
+  nil nil? print println string? symbol? true vector?)
+(import ministd/internal/prelude/list
+  foldl foldr length map reverse)
 
-; Constants
-(def nil   '())
-(def false nil)
-(def true  'true)
+(def *         *)
+(def +         +)
+(def -         -)
+(def =         =)
+(def byte?     byte?)
+(def bytes?    bytes?)
+(def car       car)
+(def cdr       cdr)
+(def cons      cons)
+(def cons?     cons?)
+(def equals    equals)
+(def false     false)
+(def fixnum?   fixnum?)
+(def function? function?)
+(def list      list)
+(def nil       nil)
+(def nil?      nil?)
+(def print     print)
+(def println   println)
+(def string?   string?)
+(def symbol?   symbol?)
+(def true      true)
+(def vector?   vector?)
 
-; Basic Functions
-(def =      oftb-intrinsics:eq)
-(def equals oftb-intrinsics:equals)
-(def list   oftb-intrinsics:list)
+(def foldl   foldl)
+(def foldr   foldr)
+(def length  length)
+(def map     map)
+(def reverse reverse)
 
-; I/O Functions
-(def print   oftb-intrinsics/io:print)
-(def println oftb-intrinsics/io:println)
+; TODO: Type support.
+(defn 0? (x)
+  (= x 0))
 
-; Math Functions
-(def * oftb-intrinsics/math:mul)
-(def + oftb-intrinsics/math:add)
-(def - oftb-intrinsics/math:sub)
+; TODO: Type support.
+(defn 1+ (x)
+  (+ x 1))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; NON-INTRINSICS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+; TODO: Type support.
 (defn 1- (x)
   (- x 1))

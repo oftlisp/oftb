@@ -2,11 +2,11 @@
 
 root = { soi ~ symbolish ~ eoi }
 // symbolish = { byte | float | fixnum }
-symbolish = { float | fixnum }
+symbolish = { fixnum }
 
 // byte = { unsigned ~ "B" }
 fixnum = { sign ~ unsigned }
-float = { sign ~ dec_digit+ ~ "." ~ dec_digit* }
+// float = { sign ~ dec_digit+ ~ "." ~ dec_digit* }
 
 sign = { "-"? }
 unsigned = { bin_num | hex_num | dec_num }

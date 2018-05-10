@@ -55,6 +55,10 @@ pub enum ErrorKind {
     #[fail(display = "Bad name for binary module: `{}' (expected `main')", _0)]
     BadBinaryName(Symbol),
 
+    /// Failed to compile a module.
+    #[fail(display = "Failed to compile module `{}'", _0)]
+    CouldntCompileModule(Symbol),
+
     /// An error opening a source file.
     #[fail(display = "Couldn't open `{}'", _0)]
     CouldntOpenSource(String),
@@ -162,6 +166,12 @@ pub enum ErrorKind {
     /// A value with an unexpected type was found.
     #[fail(display = "Expected {}, found {}", _0, _1)]
     Unexpected(&'static str, Literal),
+
+    /// An unknown attribute was present in a module.
+    ///
+    /// TODO: Display this better.
+    #[fail(display = "Unknown attribute on module `{}': {}", _0, _1)]
+    UnknownAttr(Symbol, Literal),
 
     /// The right-hand side of a letrec binding can't be a variable.
     #[fail(display = "The right-hand side of the letrec binding for {} can't be a variable {} which is defined by the letrec", _0, _1)]

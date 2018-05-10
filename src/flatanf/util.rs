@@ -63,6 +63,11 @@ pub struct Context {
 }
 
 impl Context {
+    /// Adds a global binding.
+    pub fn add_global(&mut self, module: Symbol, name: Symbol) {
+        self.globals.insert(module, name);
+    }
+
     /// Brackets a function call with a push and a pop.
     pub fn bracket<F, T>(&mut self, name: Symbol, f: F) -> T
     where

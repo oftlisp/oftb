@@ -1,5 +1,5 @@
 (module main
-  main)
+  [main])
 
 (import oftb-macro-expander
   say-hello)
@@ -7,6 +7,8 @@
   say-hello-from-sub-mod)
 
 (defn main (args)
+  (if (not (= (length args) 1))
+    (panic "usage: oftb-macro-expander package-dir"))
   ; (todo)
   (println 'todo)
 

@@ -1,4 +1,4 @@
-use num::{BigInt, BigRational, BigUint, ToPrimitive, Zero};
+use num::{BigInt, /*BigRational,*/ BigUint, ToPrimitive, Zero};
 use pest::Parser;
 use pest::iterators::{Pair, Pairs};
 
@@ -13,22 +13,26 @@ const _GRAMMAR: &'static str = include_str!("../symbolish.pest");
 pub struct SymbolishParser;
 
 enum Number {
-    Byte(BigUint),
+    //Byte(BigUint),
     Fixnum(BigInt),
-    Float(BigRational),
+    //Float(BigRational),
 }
 
 /// Converts a symbolish string into the appropriate literal.
 pub fn parse_symbolish(s: &str) -> Result<Literal, String> {
     match SymbolishParser::parse(Rule::root, s) {
         Ok(pairs) => match convert(pairs) {
-            Number::Byte(n) => unimplemented!(),
+            //Number::Byte(n) => unimplemented!(),
             Number::Fixnum(n) => if let Some(n) = n.to_isize() {
                 Ok(Literal::Fixnum(n))
             } else {
                 Err(format!("Invalid fixnum: {}", n))
             },
-            Number::Float(n) => unimplemented!(),
+            //Number::Float(n) => if let Some(n) = n.to_f64() {
+            //Ok(Literal::Float(n))
+            //} else {
+            //Err(format!("Invalid float: {}", n))
+            //},
         },
         Err(_) => Ok(Literal::Symbol(s.into())),
     }
@@ -53,7 +57,7 @@ fn convert_symbolish(mut pairs: Pairs<Rule>) -> Number {
     match pair.as_rule() {
         //Rule::byte => unimplemented!("{:#?}", pair),
         Rule::fixnum => Number::Fixnum(convert_fixnum(pair.into_inner())),
-        Rule::float => unimplemented!("{:#?}", pair),
+        //Rule::float => unimplemented!("{:#?}", pair),
         r => panic!("Invalid rule: {:?}", r),
     }
 }
@@ -68,7 +72,7 @@ fn convert_fixnum(mut pairs: Pairs<Rule>) -> BigInt {
     let sign = convert_sign(sign);
     let unsigned = convert_unsigned(unsigned.into_inner());
 
-    let mut signed = BigInt::from(unsigned);
+    let signed = BigInt::from(unsigned);
     if sign {
         -signed
     } else {
@@ -76,9 +80,9 @@ fn convert_fixnum(mut pairs: Pairs<Rule>) -> BigInt {
     }
 }
 
-fn convert_float(mut pairs: Pairs<Rule>) -> BigRational {
-    unimplemented!("{:?}", pairs)
-}
+//fn convert_float(mut pairs: Pairs<Rule>) -> BigRational {
+//unimplemented!("{:?}", pairs)
+//}
 
 fn convert_sign(pair: Pair<Rule>) -> bool {
     match pair.as_str() {
@@ -99,7 +103,7 @@ fn convert_unsigned(mut pairs: Pairs<Rule>) -> BigUint {
     }
 }
 
-fn convert_bin_num(mut pairs: Pairs<Rule>) -> BigUint {
+fn convert_bin_num(pairs: Pairs<Rule>) -> BigUint {
     let mut n = BigUint::zero();
     for pair in pairs {
         assert_eq!(pair.as_rule(), Rule::bin_digit);
@@ -113,7 +117,7 @@ fn convert_bin_num(mut pairs: Pairs<Rule>) -> BigUint {
     n
 }
 
-fn convert_dec_num(mut pairs: Pairs<Rule>) -> BigUint {
+fn convert_dec_num(pairs: Pairs<Rule>) -> BigUint {
     let mut n = BigUint::zero();
     for pair in pairs {
         assert_eq!(pair.as_rule(), Rule::dec_digit);
@@ -135,7 +139,7 @@ fn convert_dec_num(mut pairs: Pairs<Rule>) -> BigUint {
     n
 }
 
-fn convert_hex_num(mut pairs: Pairs<Rule>) -> BigUint {
+fn convert_hex_num(pairs: Pairs<Rule>) -> BigUint {
     let mut n = BigUint::zero();
     for pair in pairs {
         assert_eq!(pair.as_rule(), Rule::hex_digit);

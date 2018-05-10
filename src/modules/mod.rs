@@ -13,6 +13,7 @@ use symbol::Symbol;
 
 use BuiltinPackage;
 use anf::Module;
+use ast::Attr;
 use error::{Error, ErrorKind};
 use flatanf::Program;
 pub use modules::metadata::{BinaryComponentMetadata, ComponentsMetadata,
@@ -214,7 +215,7 @@ impl Packages {
             .map(|n| (prelude, n))
             .collect::<Vec<_>>();
         let augment_module_imports = |m: &mut Module| {
-            if m.name != prelude
+            if !m.attrs.iter().any(|attr| *attr == Attr::NoPrelude)
                 && !m.imports.iter().any(|&(m, _)| m == prelude)
             {
                 m.imports.extend(prelude_exports.iter().cloned());

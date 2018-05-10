@@ -1,5 +1,5 @@
 (module oftb-macro-expander
-  say-hello)
+  [say-hello])
 
 (defn say-hello ()
   (println "Hello"))

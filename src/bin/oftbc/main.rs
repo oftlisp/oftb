@@ -28,7 +28,16 @@ fn main() {
     }
 
     if let Err(err) = run(options) {
-        error!("{}", err);
+        let mut first = true;
+        for cause in err.causes() {
+            if first {
+                first = false;
+                error!("           {}", cause);
+            } else {
+                error!("caused by: {}", cause);
+            }
+        }
+        debug!("{}", err.backtrace());
         exit(1);
     }
 }

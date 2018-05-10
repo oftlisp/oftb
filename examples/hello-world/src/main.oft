@@ -1,5 +1,5 @@
 (module main
-  main)
+  [main])
 
 (defn even (x)
   (if (= x 0)

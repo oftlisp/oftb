@@ -1,0 +1,29 @@
+(module ministd/internal/prelude/list
+  [foldl foldr length map reverse]
+  no-prelude)
+
+(import ministd/internal/prelude/intrinsics
+  +
+  car
+  cdr
+  cons
+  nil?)
+
+(defn foldl (f x l)
+  (if (nil? l)
+    x
+    (foldl f (f x (car l)) (cdr l))))
+
+(defn foldr (f x l)
+  (if (nil? l)
+    x
+    (f (car l) (foldr f x (cdr l)))))
+
+(defn length (l)
+  (foldl (fn (l _) (+ l 1)) 0 l))
+
+(defn reverse (l)
+  (foldl (fn (a x) (cons x a)) '() l))
+
+(defn map (f l)
+  (reverse (foldl (fn (a x) (cons (f x) a)) '() l)))
