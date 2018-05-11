@@ -51,7 +51,10 @@ impl Program {
             decls.push((name.into(), expr));
         }
 
-        Ok(Program { decls, intrinsics })
+        Ok(Program {
+            decls,
+            intrinsics,
+        })
     }
 }
 

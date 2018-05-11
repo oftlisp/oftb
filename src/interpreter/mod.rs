@@ -3,9 +3,9 @@
 mod control;
 mod env;
 pub mod eval;
+mod kont;
 mod state;
 mod store;
-mod kont;
 mod value;
 
 use std::collections::HashMap;

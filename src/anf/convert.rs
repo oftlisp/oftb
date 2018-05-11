@@ -98,9 +98,10 @@ fn apply_context(mut expr: Expr, mut context: Vec<(Symbol, Expr)>) -> Expr {
 /// `ast::Expr` back if it's not possible.
 fn convert_aexpr(expr: AstExpr) -> Result<AExpr, AstExpr> {
     match expr {
-        AstExpr::Lambda(args, body, tail) => {
-            Ok(AExpr::Lambda(args, Box::new(convert_block(body, *tail))))
-        }
+        AstExpr::Lambda(args, body, tail) => Ok(AExpr::Lambda(
+            args,
+            Box::new(convert_block(body, *tail)),
+        )),
         AstExpr::Literal(l) => Ok(AExpr::Literal(l)),
         AstExpr::Var(n) => Ok(AExpr::Var(n)),
         expr => Err(expr),

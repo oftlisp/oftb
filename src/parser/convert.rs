@@ -89,7 +89,10 @@ fn convert_rmacro(
     fn simple_macro(name: &'static str, value: Literal) -> Literal {
         Literal::Cons(
             Box::new(Literal::Symbol(name.into())),
-            Box::new(Literal::Cons(Box::new(value), Box::new(Literal::Nil))),
+            Box::new(Literal::Cons(
+                Box::new(value),
+                Box::new(Literal::Nil),
+            )),
         )
     }
 

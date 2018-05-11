@@ -48,7 +48,8 @@ impl Packages {
 
     /// Adds a builtin package.
     pub fn add_builtins<P: BuiltinPackage>(&mut self) {
-        self.pkgs.insert(P::name(), Package::Builtins(P::decls()));
+        self.pkgs
+            .insert(P::name(), Package::Builtins(P::decls()));
     }
 
     /// Loads the modules in the package in the given directory, returning the
@@ -76,7 +77,9 @@ impl Packages {
     ) -> Result<(), Error> {
         let meta = self.load_metadata_from(&path)?;
         if package_name != meta.name {
-            return Err(ErrorKind::MisnamedPackage(package_name, meta.name).into());
+            return Err(
+                ErrorKind::MisnamedPackage(package_name, meta.name).into(),
+            );
         } else if meta.components.library.is_none() {
             if require_library {
                 return Err(ErrorKind::DependencyMustExportLib(package_name).into());
@@ -215,10 +218,13 @@ impl Packages {
             .map(|n| (prelude, n))
             .collect::<Vec<_>>();
         let augment_module_imports = |m: &mut Module| {
-            if !m.attrs.iter().any(|attr| *attr == Attr::NoPrelude)
+            if !m.attrs
+                .iter()
+                .any(|attr| *attr == Attr::NoPrelude)
                 && !m.imports.iter().any(|&(m, _)| m == prelude)
             {
-                m.imports.extend(prelude_exports.iter().cloned());
+                m.imports
+                    .extend(prelude_exports.iter().cloned());
             }
         };
 

@@ -76,7 +76,8 @@ pub enum ErrorKind {
     DependencyLoopInPackage(Symbol),
 
     /// It's impossible to depend on a package that doesn't export a library.
-    #[fail(display = "The `{}' package must export a library to be depended on.", _0)]
+    #[fail(display = "The `{}' package must export a library to be depended on.",
+           _0)]
     DependencyMustExportLib(Symbol),
 
     /// Two different decls have the same name.
@@ -150,7 +151,8 @@ pub enum ErrorKind {
     NoSuchVar(Symbol),
 
     /// An import was made to a symbol that doesn't exist or wasn't exported.
-    #[fail(display = "{} tried to import {}, but that doesn't exist (or wasn't exported)", _0, _1)]
+    #[fail(display = "{} tried to import {}, but that doesn't exist (or wasn't exported)",
+           _0, _1)]
     NonexistentImport(Symbol, Symbol),
 
     /// A nonexistent module was imported from.
@@ -174,6 +176,7 @@ pub enum ErrorKind {
     UnknownAttr(Symbol, Literal),
 
     /// The right-hand side of a letrec binding can't be a variable.
-    #[fail(display = "The right-hand side of the letrec binding for {} can't be a variable {} which is defined by the letrec", _0, _1)]
+    #[fail(display = "The right-hand side of the letrec binding for {} can't be a variable {} which is defined by the letrec",
+           _0, _1)]
     VarInLetrec(Symbol, Symbol),
 }

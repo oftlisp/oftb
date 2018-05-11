@@ -1,4 +1,6 @@
 use std::env::var_os;
+use std::fs::create_dir_all;
+use std::io::Error as IoError;
 use std::path::PathBuf;
 use std::process::exit;
 
@@ -36,7 +38,9 @@ impl Options {
     /// Sets up logging as specified by the `-q` and `-v` flags.
     pub fn start_logger(&self) {
         if !self.quiet {
-            let r = ::stderrlog::new().verbosity(1 + self.verbose).init();
+            let r = ::stderrlog::new()
+                .verbosity(self.verbose)
+                .init();
             if let Err(err) = r {
                 error!("Warning: logging couldn't start: {}", err);
             }
@@ -44,10 +48,16 @@ impl Options {
     }
 
     /// Returns the path to write the output file to.
-    pub fn output_path(&self) -> PathBuf {
+    pub fn output_path(&self) -> Result<PathBuf, IoError> {
         match self.output_path {
-            Some(ref path) => path.clone(),
-            None => PathBuf::from(format!("{}.ofta", self.binary_name)),
+            Some(ref path) => Ok(path.clone()),
+            None => {
+                let mut path = self.package_path.clone();
+                path.push("build");
+                create_dir_all(&path)?;
+                path.push(format!("{}.ofta", self.binary_name));
+                Ok(path)
+            }
         }
     }
 

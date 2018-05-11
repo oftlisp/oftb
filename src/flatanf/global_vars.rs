@@ -11,12 +11,14 @@ impl Expr {
         match *self {
             Expr::AExpr(ref e) => e.global_vars(),
             Expr::CExpr(ref e) => e.global_vars(),
-            Expr::Let(ref a, ref b) => {
-                a.global_vars().into_iter().chain(b.global_vars()).collect()
-            }
-            Expr::Seq(ref a, ref b) => {
-                a.global_vars().into_iter().chain(b.global_vars()).collect()
-            }
+            Expr::Let(ref a, ref b) => a.global_vars()
+                .into_iter()
+                .chain(b.global_vars())
+                .collect(),
+            Expr::Seq(ref a, ref b) => a.global_vars()
+                .into_iter()
+                .chain(b.global_vars())
+                .collect(),
         }
     }
 }
@@ -57,9 +59,9 @@ impl AExpr {
             AExpr::Lambda(_, ref body) => body.global_vars(),
             AExpr::Literal(_) => BTreeSet::new(),
             AExpr::Local(_) => BTreeSet::new(),
-            AExpr::Vector(ref vec) => {
-                vec.iter().flat_map(|e| e.global_vars()).collect()
-            }
+            AExpr::Vector(ref vec) => vec.iter()
+                .flat_map(|e| e.global_vars())
+                .collect(),
         }
     }
 }

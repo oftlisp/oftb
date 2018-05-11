@@ -42,7 +42,9 @@ impl Module {
             })
             .collect::<Result<_, _>>()?;
         let imports = {
-            let i = l.iter().position(|l| !helpers::is_import(l)).unwrap_or(0);
+            let i = l.iter()
+                .position(|l| !helpers::is_import(l))
+                .unwrap_or(0);
             l.drain(0..i)
                 .map(|l| helpers::convert_import(&l).unwrap())
                 .flat_map(|(m, vs)| vs.into_iter().map(move |v| (m, v)))

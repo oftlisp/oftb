@@ -1,5 +1,5 @@
-use interpreter::{Control, Kont, Value};
 use interpreter::env::Env;
+use interpreter::{Control, Kont, Value};
 
 /// The state of the interpreter.
 #[derive(Debug)]

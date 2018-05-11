@@ -53,8 +53,12 @@ macro_rules! __intrinsics_args {
 }
 
 macro_rules! __intrinsics_mod_name {
-    ($pkg:expr, "") => { $pkg };
-    ($pkg:expr, $mod:expr) => { concat!($pkg, "/", $mod) };
+    ($pkg:expr,"") => {
+        $pkg
+    };
+    ($pkg:expr, $mod:expr) => {
+        concat!($pkg, "/", $mod)
+    };
 }
 
 macro_rules! __intrinsics_mod {

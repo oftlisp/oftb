@@ -1,6 +1,6 @@
-use parser::parse_program;
 use modules::{BinaryComponentMetadata, ComponentsMetadata, DependencyMetadata,
               LibraryComponentMetadata, PackageMetadata};
+use parser::parse_program;
 
 #[test]
 fn parses_blogpost_package_oftd() {

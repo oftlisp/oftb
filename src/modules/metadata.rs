@@ -206,7 +206,9 @@ impl PackageMetadata {
         ));
 
         if self.dependencies.len() != 0 {
-            let mut deps = self.dependencies.into_iter().collect::<Vec<_>>();
+            let mut deps = self.dependencies
+                .into_iter()
+                .collect::<Vec<_>>();
             deps.sort_by_key(|&(n, _)| n.as_str());
             let mut dep_lit = vec![Literal::Symbol("dependencies".into())];
             dep_lit.extend(deps.into_iter().map(|(name, dep)| {
@@ -265,7 +267,10 @@ impl ComponentsMetadata {
             }
         }
 
-        Ok(ComponentsMetadata { library, binaries })
+        Ok(ComponentsMetadata {
+            library,
+            binaries,
+        })
     }
 
     /// Converts to a `Literal`.

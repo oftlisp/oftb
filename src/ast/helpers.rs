@@ -5,7 +5,11 @@ use literal::Literal;
 /// Tries to convert a literal to a `module` statement.
 pub fn convert_module(
     lit: &Literal,
-) -> Option<(Symbol, Vec<Symbol>, Vec<(Symbol, Option<Literal>)>)> {
+) -> Option<(
+    Symbol,
+    Vec<Symbol>,
+    Vec<(Symbol, Option<Literal>)>,
+)> {
     let (hd, mut tl) = lit.as_shl()?;
     if hd.as_str() != "module" {
         return None;

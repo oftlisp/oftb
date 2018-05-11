@@ -6,8 +6,8 @@ use symbol::Symbol;
 use anf::{AExpr as AnfAExpr, CExpr as AnfCExpr, Decl as AnfDecl,
           Expr as AnfExpr, Module};
 use error::{Error, ErrorKind};
-use flatanf::{AExpr, CExpr, Expr, Program};
 use flatanf::util::{toposort_mods, Context};
+use flatanf::{AExpr, CExpr, Expr, Program};
 
 impl Program {
     /// Creates a `Program` from a bunch of `anf::Module`s.
@@ -33,7 +33,10 @@ impl Program {
 
         let free = freevars(&decls);
         intrinsics.retain(|x| free.contains(x));
-        Ok(Program { decls, intrinsics })
+        Ok(Program {
+            decls,
+            intrinsics,
+        })
     }
 }
 
@@ -111,8 +114,10 @@ fn compile_module(
     }
     compile_batched_defns(&mut batched_defns, &mut decls, &mut context)?;
 
-    let decl_names =
-        decls.iter().map(|&(name, _)| name).collect::<HashSet<_>>();
+    let decl_names = decls
+        .iter()
+        .map(|&(name, _)| name)
+        .collect::<HashSet<_>>();
     for e in exports {
         let e = global(module_name, e);
         if !decl_names.contains(&e) {
@@ -184,7 +189,10 @@ fn compile_cexpr(
             Ok(CExpr::If(c, Box::new(t), Box::new(e)))
         }
         AnfCExpr::LetRec(lambdas, body) => {
-            let names = lambdas.iter().map(|&(n, _, _)| n).collect::<Vec<_>>();
+            let names = lambdas
+                .iter()
+                .map(|&(n, _, _)| n)
+                .collect::<Vec<_>>();
             context.bracket_many(names, |context| {
                 let lambdas = lambdas
                     .into_iter()

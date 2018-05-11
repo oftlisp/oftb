@@ -2,12 +2,4 @@
   [main])
 
 (defn main (args)
-  (defn even (x)
-    (if (= x 0)
-      true
-      (odd (1- x))))
-  (defn odd (x)
-    (if (= x 0)
-      false
-      (even (1- x))))
-  (even 100))
+  (println "Hello, world!"))

@@ -1,6 +1,7 @@
 .*
 !.gitignore
 
-/target/
+build/
+target/
+
 *.ofta
-**/*.rs.bk

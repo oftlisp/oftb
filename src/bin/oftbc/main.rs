@@ -60,7 +60,8 @@ fn run(options: Options) -> Result<(), Error> {
 
     // Write out the compiled program.
     info!("Saving bytecode...");
-    let mut f = File::create(options.output_path())?;
+    let path = options.output_path()?;
+    let mut f = File::create(path)?;
     program.serialize_to(&mut f)?;
 
     // Done!

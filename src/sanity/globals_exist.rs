@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
-use {Error, ErrorKind};
 use flatanf::Program;
+use {Error, ErrorKind};
 
 /// Checks that the intrinsics the outputted program declares are a subset of
 /// those we support.

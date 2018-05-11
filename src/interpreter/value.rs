@@ -53,7 +53,10 @@ impl Value {
         self,
         store: &'store Store<'program>,
     ) -> DisplayValue<'store, 'program> {
-        DisplayValue { value: self, store }
+        DisplayValue {
+            value: self,
+            store,
+        }
     }
 
     /// Determines if two values are "deeply" equal. Note that this may take
@@ -113,7 +116,11 @@ impl<'store, 'program: 'store> Display for DisplayValue<'store, 'program> {
             Value::Bytes(a, l) => escape_bytes(self.store.get_bytes(a, l), fmt),
             Value::Closure(_) => write!(fmt, "<<function>>"),
             Value::Cons(h, t) => {
-                write!(fmt, "({}", self.store.get(h).display(self.store))?;
+                write!(
+                    fmt,
+                    "({}",
+                    self.store.get(h).display(self.store)
+                )?;
                 let mut l = self.store.get(t);
                 loop {
                     match l {

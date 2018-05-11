@@ -53,10 +53,16 @@ fn run(options: Options) -> Result<(), Error> {
     };
 
     // Create the expression for the call to main.
-    let args = options.args.into_iter().map(Literal::String).collect();
+    let args = options
+        .args
+        .into_iter()
+        .map(Literal::String)
+        .collect();
     let args = AExpr::Literal(Literal::list(args));
-    let main =
-        Expr::CExpr(CExpr::Call(AExpr::Global("main:main".into()), vec![args]));
+    let main = Expr::CExpr(CExpr::Call(
+        AExpr::Global("main:main".into()),
+        vec![args],
+    ));
 
     // Create the interpreter.
     let mut interpreter = Interpreter::new();
