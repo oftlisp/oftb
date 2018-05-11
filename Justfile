@@ -9,7 +9,7 @@ doc:
 	cargo doc --all
 run-hello-world: build
 	cargo run --bin oftbc -- examples/hello-world hello-world --std ministd -vvvv
-	cargo run --bin oftbi -- hello-world.ofta -vvvv
+	cargo run --bin oftbi -- hello-world.ofta -vvv
 test:
 	cargo test --all
 watch TARGETS="all":

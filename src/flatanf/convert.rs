@@ -183,20 +183,23 @@ fn compile_cexpr(
             let e = compile_expr(context, *e)?;
             Ok(CExpr::If(c, Box::new(t), Box::new(e)))
         }
-        AnfCExpr::LetRec(bindings, body) => {
-            let names = bindings.iter().map(|&(n, _)| n).collect::<Vec<_>>();
+        AnfCExpr::LetRec(lambdas, body) => {
+            let names = lambdas.iter().map(|&(n, _, _)| n).collect::<Vec<_>>();
             context.bracket_many(names, |context| {
-                let bindings = bindings
+                let lambdas = lambdas
                     .into_iter()
-                    .map(|(name, bound)| match bound {
-                        AnfAExpr::Var(var) => {
-                            Err(Error::from(ErrorKind::VarInLetrec(name, var)))
-                        }
-                        bound => compile_aexpr(context, bound),
+                    .map(|(name, args, body)| {
+                        let argn = args.len();
+                        let body = context.bracket_anon(|context| {
+                            context.bracket_many(args, |context| {
+                                compile_expr(context, body)
+                            })
+                        })?;
+                        Ok((argn, body))
                     })
-                    .collect::<Result<_, _>>()?;
+                    .collect::<Result<Vec<_>, Error>>()?;
                 let body = compile_expr(context, *body)?;
-                Ok(CExpr::LetRec(bindings, Box::new(body)))
+                Ok(CExpr::LetRec(lambdas, Box::new(body)))
             })
         }
     }

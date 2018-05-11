@@ -1,3 +1,5 @@
+use std::mem::swap;
+
 use symbol::Symbol;
 
 use anf::{AExpr, CExpr, Decl, Expr, Module};
@@ -107,6 +109,16 @@ fn convert_aexpr(expr: AstExpr) -> Result<AExpr, AstExpr> {
 
 /// Converts a lexical block into an ANF expression.
 fn convert_block(body: Vec<AstExpr>, tail: AstExpr) -> Expr {
+    let save_lambdas = |anf, lambdas: &mut Vec<_>| {
+        if lambdas.is_empty() {
+            anf
+        } else {
+            let mut tmp = Vec::new();
+            swap(lambdas, &mut tmp);
+            Expr::CExpr(CExpr::LetRec(tmp, Box::new(anf)))
+        }
+    };
+
     let mut anf = tail.into();
     let mut lambdas = Vec::new();
     for expr in body.into_iter().rev() {
@@ -118,24 +130,15 @@ fn convert_block(body: Vec<AstExpr>, tail: AstExpr) -> Expr {
                 }
                 AstDecl::Defn(name, args, body, tail) => {
                     let (name, args, body, tail) = (name, args, body, tail);
-                    lambdas.push((
-                        name,
-                        AExpr::Lambda(
-                            args,
-                            Box::new(convert_block(body, tail)),
-                        ),
-                    ));
+                    lambdas.push((name, args, convert_block(body, tail)));
                 }
             }
         } else {
-            if !lambdas.is_empty() {
-                anf = Expr::CExpr(CExpr::LetRec(lambdas, Box::new(anf)));
-                lambdas = Vec::new();
-            }
+            anf = save_lambdas(anf, &mut lambdas);
             anf = Expr::Seq(Box::new(expr.into()), Box::new(anf));
         }
     }
-    anf
+    save_lambdas(anf, &mut lambdas)
 }
 
 /// Converts an `ast::Expr` into an `anf::AExpr`, possibly adding bindings to

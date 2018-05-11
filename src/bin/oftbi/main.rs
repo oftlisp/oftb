@@ -65,7 +65,6 @@ fn run(options: Options) -> Result<(), Error> {
     // Start interpreting global decls.
     debug!("Initializing program...");
     for &(name, ref expr) in &program.decls {
-        debug!("{} = {:?}", name, expr);
         let val = interpreter.eval(expr);
         interpreter.globals.insert(name, val);
     }

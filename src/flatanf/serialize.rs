@@ -70,11 +70,12 @@ impl CExpr {
                 t.serialize_to(w)?;
                 e.serialize_to(w)
             }
-            CExpr::LetRec(ref bound, ref body) => {
+            CExpr::LetRec(ref lambdas, ref body) => {
                 w.write_u8(0x04)?;
-                serialize_usize_as_u64(bound.len(), w)?;
-                for e in bound {
-                    e.serialize_to(w)?;
+                serialize_usize_as_u64(lambdas.len(), w)?;
+                for &(argn, ref lbody) in lambdas {
+                    serialize_usize_as_u64(argn, w)?;
+                    lbody.serialize_to(w)?;
                 }
                 body.serialize_to(w)
             }

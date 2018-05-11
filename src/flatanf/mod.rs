@@ -52,9 +52,8 @@ pub enum CExpr {
     /// A conditional.
     If(AExpr, Box<Expr>, Box<Expr>),
 
-    /// A letrec. Adds the bindings to the environment, then evaluates each,
-    /// then evaluates the Expr.
-    LetRec(Vec<AExpr>, Box<Expr>),
+    /// A letrec, which only handles (mutually) recursive functions.
+    LetRec(Vec<(usize, Expr)>, Box<Expr>),
 }
 
 /// An atomic expression, which must immediately evaluate to a value without

@@ -52,7 +52,7 @@ pub enum Expr {
 pub enum CExpr {
     Call(AExpr, Vec<AExpr>),
     If(AExpr, Box<Expr>, Box<Expr>),
-    LetRec(Vec<(Symbol, AExpr)>, Box<Expr>),
+    LetRec(Vec<(Symbol, Vec<Symbol>, Expr)>, Box<Expr>),
 }
 
 /// An atomic expression, which must immediately evaluate to a value without

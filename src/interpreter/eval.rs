@@ -11,7 +11,7 @@ use interpreter::{Control, Env, Intrinsic, Kont, State, Store, Value};
 /// Evaluates by a single step.
 pub fn step<'program>(
     control: Control<'program>,
-    env: Env,
+    mut env: Env,
     globals: &HashMap<Symbol, Value>,
     store: &mut Store<'program>,
     mut konts: Vec<Kont<'program>>,
@@ -36,7 +36,18 @@ pub fn step<'program>(
                     let expr = if let Value::Nil = c { e } else { t };
                     State::Running(Control::Normal(expr), env, konts)
                 }
-                CExpr::LetRec(ref bound, ref body) => unimplemented!(),
+                CExpr::LetRec(ref lambdas, ref body) => {
+                    let mut addrs = Vec::new();
+                    for &(argn, ref body) in lambdas {
+                        let a = store.store_closure(argn, body, Env::new());
+                        addrs.push(a);
+                        env = env.push(Value::Closure(a));
+                    }
+                    for a in addrs {
+                        store.mutate_closure_env(a, env.clone());
+                    }
+                    State::Running(Control::Normal(body), env, konts)
+                }
             },
             Expr::Let(ref l, ref r) => {
                 konts.push(Kont::Let(r, env.clone()));

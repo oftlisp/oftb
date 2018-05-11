@@ -103,12 +103,14 @@ impl CExpr {
             }
             0x04 => {
                 let len = deserialize_u64_as_usize(r)?;
-                let mut bound = Vec::new();
+                let mut lambdas = Vec::new();
                 for _ in 0..len {
-                    bound.push(AExpr::deserialize_from(r)?);
+                    let argn = deserialize_u64_as_usize(r)?;
+                    let body = Expr::deserialize_from(r)?;
+                    lambdas.push((argn, body));
                 }
                 let body = Expr::deserialize_from(r)?;
-                Ok(CExpr::LetRec(bound, Box::new(body)))
+                Ok(CExpr::LetRec(lambdas, Box::new(body)))
             }
             _ => bail!("Unknown discriminant for CExpr: {}", discrim),
         }

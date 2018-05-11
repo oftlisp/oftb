@@ -37,7 +37,7 @@ impl CExpr {
                 .collect(),
             CExpr::LetRec(ref bound, ref body) => bound
                 .iter()
-                .flat_map(|b| b.global_vars())
+                .flat_map(|&(_, ref b)| b.global_vars())
                 .chain(body.global_vars())
                 .collect(),
         }

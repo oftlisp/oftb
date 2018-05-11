@@ -74,6 +74,12 @@ impl<'program> Store<'program> {
             .collect()
     }
 
+    /// Adds an item to the environment of the given closure. This is
+    /// reasonably unsafe.
+    pub fn mutate_closure_env(&mut self, addr: Addr<Closure>, env: Env) {
+        self.clos[addr.0].2 = env;
+    }
+
     /// Stores a value into the value heap.
     pub fn store(&mut self, value: Value) -> Addr<Value> {
         let n = if let Value::Nil = value {
