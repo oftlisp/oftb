@@ -66,6 +66,7 @@ macro_rules! __intrinsics_mod {
         mod_name $mod_name:expr;
         $(fn $name:ident[$store:ident, $konts:ident]($($args:tt)*) $body:block)*
     ) => {
+        #[allow(unused_imports)]
         use super::*;
 
         $(fn $name<'program>(

@@ -1,8 +1,7 @@
 (module ministd/internal/prelude/intrinsics
   [* + - = byte? bytes? car cdr cons cons? equals false fixnum? function? list
-   nil nil? print println string? symbol? true vector?]
+   nil nil? print println string? symbol? true vector? write writeln]
   no-prelude)
-
 
 ; Constants
 (def nil   '())
@@ -10,29 +9,31 @@
 (def true  'true)
 
 ; Basic Functions
-(def =      oftb-intrinsics:eq)
-(def car    oftb-intrinsics:car)
-(def cdr    oftb-intrinsics:cdr)
-(def cons   oftb-intrinsics:cons)
-(def equals oftb-intrinsics:equals)
-(def list   oftb-intrinsics:list)
+(def =      intrinsics:eq)
+(def car    intrinsics:car)
+(def cdr    intrinsics:cdr)
+(def cons   intrinsics:cons)
+(def equals intrinsics:equals)
+(def list   intrinsics:list)
 
 ; I/O Functions
-(def print   oftb-intrinsics/io:print)
-(def println oftb-intrinsics/io:println)
+(def print   intrinsics/io:print)
+(def println intrinsics/io:println)
+(def write   intrinsics/io:write)
+(def writeln intrinsics/io:writeln)
 
 ; Math Functions
-(def * oftb-intrinsics/math:mul)
-(def + oftb-intrinsics/math:add)
-(def - oftb-intrinsics/math:sub)
+(def * intrinsics/math:mul)
+(def + intrinsics/math:add)
+(def - intrinsics/math:sub)
 
 ; Type-Test Functions
-(def byte?     oftb-intrinsics/types:is_byte)
-(def bytes?    oftb-intrinsics/types:is_bytes)
-(def cons?     oftb-intrinsics/types:is_cons)
-(def fixnum?   oftb-intrinsics/types:is_fixnum)
-(def function? oftb-intrinsics/types:is_function)
-(def nil?      oftb-intrinsics/types:is_nil)
-(def string?   oftb-intrinsics/types:is_string)
-(def symbol?   oftb-intrinsics/types:is_symbol)
-(def vector?   oftb-intrinsics/types:is_vector)
+(def byte?     intrinsics/types:is_byte)
+(def bytes?    intrinsics/types:is_bytes)
+(def cons?     intrinsics/types:is_cons)
+(def fixnum?   intrinsics/types:is_fixnum)
+(def function? intrinsics/types:is_function)
+(def nil?      intrinsics/types:is_nil)
+(def string?   intrinsics/types:is_string)
+(def symbol?   intrinsics/types:is_symbol)
+(def vector?   intrinsics/types:is_vector)

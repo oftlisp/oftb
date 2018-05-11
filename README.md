@@ -5,6 +5,8 @@
 
 The OftLisp bootstrapper.
 
+Requires Rust version 1.26.0 or later.
+
 ## oftb-macro-expander
 
 There's also a macro expander written in OftLisp here, for bootstrapping.
@@ -13,6 +15,7 @@ There's also a macro expander written in OftLisp here, for bootstrapping.
 
 This repo also contains ministd, the trimmed-down version of the standard library used when bootstrapping.
 Notably, ministd does not provide any macros.
+Functions that normally exist as a variadic macro version and a fixed-arity function version are usually defined with a fixed arity.
 
 ## License
 

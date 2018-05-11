@@ -7,9 +7,9 @@ check:
 	cargo check --all
 doc:
 	cargo doc --all
-run-hello-world: build
-	cargo run --bin oftbc -- examples/hello-world hello-world --std ministd -vv
-	cargo run --bin oftbi -- hello-world.ofta -vv
+run-hello-world:
+	cargo run --bin oftbc -- examples/hello-world hello-world --std ministd
+	cargo run --bin oftbi -- examples/hello-world/build/hello-world.ofta
 test:
 	cargo test --all
 watch TARGETS="all":

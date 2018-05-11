@@ -13,7 +13,7 @@ fn boolify(b: bool) -> Value {
     }
 }
 
-fn print_values(store: &Store, values: &[Value]) {
+fn print_values(store: &Store, values: &[Value], printlike: bool) {
     let mut first = true;
     for val in values {
         if first {
@@ -21,12 +21,12 @@ fn print_values(store: &Store, values: &[Value]) {
         } else {
             print!(" ");
         }
-        print!("{}", val.display(store));
+        print!("{}", val.display(store, printlike));
     }
 }
 
 intrinsics! {
-    pkg "oftb-intrinsics" as Intrinsics;
+    pkg "intrinsics" as Intrinsics;
 
     mod "" as root {
         fn car[store, _k](l) {
@@ -70,14 +70,32 @@ intrinsics! {
 
     mod "io" as io {
         fn print[store, _k](*args) {
-            print_values(store, args);
+            print_values(store, args, true);
             Value::Nil
         }
 
         fn println[store, _k](*args) {
-            print_values(store, args);
+            print_values(store, args, true);
             println!();
             Value::Nil
+        }
+
+        fn write[store, _k](*args) {
+            print_values(store, args, false);
+            Value::Nil
+        }
+
+        fn writeln[store, _k](*args) {
+            print_values(store, args, false);
+            println!();
+            Value::Nil
+        }
+    }
+
+    mod "oftb" as oftb {
+        fn read_file[s, _k](path) {
+            // TODO
+            unimplemented!()
         }
     }
 

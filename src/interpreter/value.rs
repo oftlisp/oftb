@@ -48,13 +48,16 @@ pub enum Value {
 }
 
 impl Value {
-    /// Returns an object that impls `Display`, which will display this value.
+    /// Returns an object that will display this value. If the `printlike`
+    /// argument is true, strings will not be escaped.
     pub fn display<'store, 'program: 'store>(
         self,
         store: &'store Store<'program>,
-    ) -> DisplayValue<'store, 'program> {
+        printlike: bool,
+    ) -> impl 'store + Display {
         DisplayValue {
             value: self,
+            printlike,
             store,
         }
     }
@@ -106,6 +109,7 @@ impl Value {
 /// Impls `Display` for `Value`.
 pub struct DisplayValue<'store, 'program: 'store> {
     value: Value,
+    printlike: bool,
     store: &'store Store<'program>,
 }
 
@@ -119,19 +123,27 @@ impl<'store, 'program: 'store> Display for DisplayValue<'store, 'program> {
                 write!(
                     fmt,
                     "({}",
-                    self.store.get(h).display(self.store)
+                    self.store
+                        .get(h)
+                        .display(self.store, self.printlike)
                 )?;
                 let mut l = self.store.get(t);
                 loop {
                     match l {
                         Value::Cons(h, t) => {
-                            let h = self.store.get(h).display(self.store);
+                            let h = self.store
+                                .get(h)
+                                .display(self.store, self.printlike);
                             write!(fmt, " {}", h)?;
                             l = self.store.get(t);
                         }
                         Value::Nil => break,
                         _ => {
-                            write!(fmt, " | {}", l.display(self.store))?;
+                            write!(
+                                fmt,
+                                " | {}",
+                                l.display(self.store, self.printlike)
+                            )?;
                             break;
                         }
                     }
@@ -141,7 +153,13 @@ impl<'store, 'program: 'store> Display for DisplayValue<'store, 'program> {
             Value::Fixnum(n) => write!(fmt, "{}", n),
             Value::Intrinsic(i) => write!(fmt, "<<function {}>>", i),
             Value::Nil => write!(fmt, "()"),
-            Value::String(a, l) => escape_str(self.store.get_str(a, l), fmt),
+            Value::String(a, l) => {
+                if self.printlike {
+                    write!(fmt, "{}", self.store.get_str(a, l))
+                } else {
+                    escape_str(self.store.get_str(a, l), fmt)
+                }
+            }
             Value::Symbol(s) => write!(fmt, "{}", s),
             Value::Vector(a, l) => {
                 write!(fmt, "[")?;
@@ -152,7 +170,7 @@ impl<'store, 'program: 'store> Display for DisplayValue<'store, 'program> {
                     } else {
                         write!(fmt, " ")?;
                     }
-                    write!(fmt, "{}", v.display(self.store))?;
+                    write!(fmt, "{}", v.display(self.store, self.printlike))?;
                 }
                 write!(fmt, "]")
             }

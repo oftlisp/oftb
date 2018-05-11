@@ -79,7 +79,7 @@ fn run(options: Options) -> Result<(), Error> {
     debug!("Running program...");
     let retval = interpreter.eval(&main);
     if retval != Value::Nil {
-        println!("{}", retval.display(&interpreter.store));
+        println!("{}", retval.display(&interpreter.store, false));
     }
 
     Ok(())
