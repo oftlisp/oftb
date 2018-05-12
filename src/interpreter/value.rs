@@ -106,8 +106,7 @@ impl Value {
     }
 }
 
-/// Impls `Display` for `Value`.
-pub struct DisplayValue<'store, 'program: 'store> {
+struct DisplayValue<'store, 'program: 'store> {
     value: Value,
     printlike: bool,
     store: &'store Store<'program>,

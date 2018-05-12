@@ -321,7 +321,17 @@ impl Packages {
     pub fn load_module<P: AsRef<Path>>(path: P) -> Result<Module, Error> {
         let lits = parse_file(path)?;
         let ast_mod = ::ast::Module::from_values(lits)?;
-        Ok(Module::from(ast_mod))
+        if let Some(name) = ast_mod
+            .body
+            .iter()
+            .map(|decl| decl.name())
+            .find(|name| name.contains(':'))
+        {
+            Err(ErrorKind::IllegalDeclName(name).into())
+        } else {
+            let anf_mod = Module::from(ast_mod);
+            Ok(anf_mod)
+        }
     }
 
     /// Returns the name of the standard library package, panicing if none has

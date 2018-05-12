@@ -4,9 +4,9 @@ use std::io::Error as IoError;
 use std::path::PathBuf;
 use std::process::exit;
 
+/// The `compile` subcommand.
 #[derive(Debug, StructOpt)]
-#[structopt(raw(setting = "::structopt::clap::AppSettings::ColoredHelp"))]
-pub struct Options {
+pub struct CompileOptions {
     /// The path to the main package.
     #[structopt(name = "PACKAGE-PATH", parse(from_os_str))]
     pub package_path: PathBuf,
@@ -24,29 +24,9 @@ pub struct Options {
     /// `$OFTLISP_ROOT/std`.
     #[structopt(long = "std", name = "PATH", parse(from_os_str))]
     pub std_path: Option<PathBuf>,
-
-    /// Turns off message output.
-    #[structopt(short = "q", long = "quiet")]
-    pub quiet: bool,
-
-    /// Increases the verbosity. Default verbosity is errors only.
-    #[structopt(short = "v", long = "verbose", parse(from_occurrences))]
-    pub verbose: usize,
 }
 
-impl Options {
-    /// Sets up logging as specified by the `-q` and `-v` flags.
-    pub fn start_logger(&self) {
-        if !self.quiet {
-            let r = ::stderrlog::new()
-                .verbosity(self.verbose)
-                .init();
-            if let Err(err) = r {
-                error!("Warning: logging couldn't start: {}", err);
-            }
-        }
-    }
-
+impl CompileOptions {
     /// Returns the path to write the output file to.
     pub fn output_path(&self) -> Result<PathBuf, IoError> {
         match self.output_path {

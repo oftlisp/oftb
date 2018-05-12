@@ -23,9 +23,5 @@ num = "0.1.42"
 proptest = "0.7.0"
 
 [[bin]]
-name = "oftbc"
-path = "src/bin/oftbc/main.rs"
-
-[[bin]]
-name = "oftbi"
-path = "src/bin/oftbi/main.rs"
+name = "oftb"
+path = "src/bin/main.rs"

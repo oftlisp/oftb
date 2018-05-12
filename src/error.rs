@@ -64,15 +64,15 @@ pub enum ErrorKind {
     CouldntOpenSource(String),
 
     /// An error opening a source file.
-    #[fail(display = "Couldn't open directory {} in package `{}'", _0, _1)]
+    #[fail(display = "Couldn't open directory `{}' in package `{}'", _0, _1)]
     CouldntReadPackageDir(String, Symbol),
 
     /// A dependency loop was detected between modules.
-    #[fail(display = "Dependency loop involving the {} module", _0)]
+    #[fail(display = "Dependency loop involving the `{}' module", _0)]
     DependencyLoopInModule(Symbol),
 
     /// A dependency loop was detected between packages.
-    #[fail(display = "Dependency loop involving the {} package", _0)]
+    #[fail(display = "Dependency loop involving the `{}' package", _0)]
     DependencyLoopInPackage(Symbol),
 
     /// It's impossible to depend on a package that doesn't export a library.
@@ -81,16 +81,16 @@ pub enum ErrorKind {
     DependencyMustExportLib(Symbol),
 
     /// Two different decls have the same name.
-    #[fail(display = "There are two decls named {}", _0)]
+    #[fail(display = "There are two decls named `{}'", _0)]
     DuplicateDeclName(Symbol),
 
     /// Two different variables in a letrec have the same name.
-    #[fail(display = "There are two variables in the same letrec named {}",
+    #[fail(display = "There are two variables in the same letrec named `{}'",
            _0)]
     DuplicateLetrecName(Symbol),
 
-    /// A field was duplicated.
-    #[fail(display = "Duplicate field: {}", _0)]
+    /// A field was duplicated in a metadata file.
+    #[fail(display = "Duplicate field `{}'", _0)]
     DuplicateField(Symbol),
 
     /// Globals exist that weren't defined.
@@ -98,6 +98,10 @@ pub enum ErrorKind {
     /// TODO: Nicer Display formatting.
     #[fail(display = "Undefined globals: {:?}", _0)]
     FreeVars(Vec<Symbol>),
+
+    /// A decls has a name that declares a global.
+    #[fail(display = "It is not legal to declare a variable named `{}'", _0)]
+    IllegalDeclName(Symbol),
 
     /// A given dependency version was invalid.
     #[fail(display = "Bad dependency version: {}", _0)]
@@ -126,12 +130,12 @@ pub enum ErrorKind {
     MisnamedPackage(Symbol, Symbol),
 
     /// A variable that was exported wasn't defined.
-    #[fail(display = "{} should have exported {}, but it wasn't defined", _0,
-           _1)]
+    #[fail(display = "`{}' should have exported `{}', but it wasn't defined",
+           _0, _1)]
     MissingExport(Symbol, Symbol),
 
-    /// A required field was missing.
-    #[fail(display = "Missing field: {}", _0)]
+    /// A required field was missing from a metadata file.
+    #[fail(display = "Missing field: `{}'", _0)]
     MissingField(Symbol),
 
     /// The main function wasn't present.
@@ -147,11 +151,11 @@ pub enum ErrorKind {
     NoSuchBinary(Symbol, String),
 
     /// A variable was used that doesn't exist.
-    #[fail(display = "No such variable: {}", _0)]
+    #[fail(display = "No such variable: `{}'", _0)]
     NoSuchVar(Symbol),
 
     /// An import was made to a symbol that doesn't exist or wasn't exported.
-    #[fail(display = "{} tried to import {}, but that doesn't exist (or wasn't exported)",
+    #[fail(display = "`{}' tried to import `{}', but that doesn't exist (or wasn't exported)",
            _0, _1)]
     NonexistentImport(Symbol, Symbol),
 
@@ -165,8 +169,8 @@ pub enum ErrorKind {
     #[fail(display = "Syntax error in {}", _0)]
     Parse(String),
 
-    /// A value with an unexpected type was found.
-    #[fail(display = "Expected {}, found {}", _0, _1)]
+    /// A value with an unexpected type was found in a metadata file.
+    #[fail(display = "Expected `{}', found `{}'", _0, _1)]
     Unexpected(&'static str, Literal),
 
     /// An unknown attribute was present in a module.
@@ -174,9 +178,4 @@ pub enum ErrorKind {
     /// TODO: Display this better.
     #[fail(display = "Unknown attribute on module `{}': {}", _0, _1)]
     UnknownAttr(Symbol, Literal),
-
-    /// The right-hand side of a letrec binding can't be a variable.
-    #[fail(display = "The right-hand side of the letrec binding for {} can't be a variable {} which is defined by the letrec",
-           _0, _1)]
-    VarInLetrec(Symbol, Symbol),
 }

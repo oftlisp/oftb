@@ -2,14 +2,13 @@ all: check build doc test build-macro-expander
 build:
 	cargo build --all
 build-macro-expander: build
-	cargo run --bin oftbc -- -vvv macro-expander oftb-macro-expander --std ministd
+	cargo run -- compile --std ministd macro-expander oftb-macro-expander
 check:
 	cargo check --all
 doc:
 	cargo doc --all
 run-hello-world:
-	cargo run --bin oftbc -- examples/hello-world hello-world --std ministd
-	cargo run --bin oftbi -- examples/hello-world/build/hello-world.ofta
+	cargo run -- run --std ministd examples/hello-world hello-world
 test:
 	cargo test --all
 watch TARGETS="all":

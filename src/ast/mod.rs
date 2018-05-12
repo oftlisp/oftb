@@ -126,6 +126,14 @@ impl Decl {
             Err(ErrorKind::InvalidDecl(lit).into())
         }
     }
+
+    /// Returns the name of the decl.
+    pub fn name(&self) -> Symbol {
+        match *self {
+            Decl::Def(name, _) => name,
+            Decl::Defn(name, _, _, _) => name,
+        }
+    }
 }
 
 /// The basic expression type.

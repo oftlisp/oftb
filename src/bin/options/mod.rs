@@ -1,4 +1,10 @@
-use std::path::PathBuf;
+mod compile;
+mod interpret;
+mod run;
+
+pub use options::compile::CompileOptions;
+pub use options::interpret::InterpretOptions;
+pub use options::run::RunOptions;
 
 #[derive(Debug, StructOpt)]
 #[structopt(raw(setting = "::structopt::clap::AppSettings::ColoredHelp"))]
@@ -11,12 +17,9 @@ pub struct Options {
     #[structopt(short = "v", long = "verbose", parse(from_occurrences))]
     pub verbose: usize,
 
-    /// The bytecode to run.
-    #[structopt(name = "FILE", parse(from_os_str))]
-    pub file: PathBuf,
-
-    /// Any options to pass to the program being run.
-    pub args: Vec<String>,
+    /// The subcommand to run.
+    #[structopt(subcommand)]
+    pub subcommand: Subcommand,
 }
 
 impl Options {
@@ -31,4 +34,19 @@ impl Options {
             }
         }
     }
+}
+
+#[derive(Debug, StructOpt)]
+pub enum Subcommand {
+    /// Precompiles a program.
+    #[structopt(name = "compile")]
+    Compile(CompileOptions),
+
+    /// Interprets a precompiled program.
+    #[structopt(name = "interpret")]
+    Interpret(InterpretOptions),
+
+    /// Runs a program.
+    #[structopt(name = "run")]
+    Run(RunOptions),
 }
