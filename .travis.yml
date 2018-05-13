@@ -13,7 +13,11 @@ matrix:
   fast_finish: true
 cache: cargo
 
-script: cargo test
+before_install:
+- command -v just >/dev/null || cargo install just
+
+script:
+- just all
 
 before_deploy: cargo build --release
 deploy:
