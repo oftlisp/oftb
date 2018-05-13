@@ -102,7 +102,7 @@ impl Decl {
                 return Err(ErrorKind::InvalidDecl(lit).into());
             };
             Ok(Decl::Def(name, expr))
-        } else if lit.is_shl("defn".into()) {
+        } else if lit.is_shl("intrinsics:defn".into()) {
             let mut l = lit.as_list().unwrap();
             if l.len() < 4 {
                 return Err(ErrorKind::InvalidDecl(lit).into());
@@ -170,7 +170,8 @@ impl Expr {
                 };
                 match *h {
                     Literal::Symbol(s)
-                        if s.as_str() == "def" || s.as_str() == "defn" =>
+                        if s.as_str() == "def"
+                            || s.as_str() == "intrinsics:defn" =>
                     {
                         let lit = Literal::Cons(h, t_lit);
                         let decl = Decl::from_value(lit)?;

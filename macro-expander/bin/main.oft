@@ -1,0 +1,10 @@
+(module main
+  [main])
+
+(intrinsics:defn main (args)
+  (if (not (= (length args) 2))
+    (panic "usage: oftb-macro-expander package-dir binary-name"))
+  (def package-dir (nth 0 args))
+  (def binary-name (nth 1 args))
+  ; (todo)
+  (println 'todo 'compile 'package package-dir "'s" 'binary binary-name))

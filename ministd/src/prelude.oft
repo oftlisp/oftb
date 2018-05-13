@@ -1,13 +1,16 @@
 (module ministd/prelude
-  [* + - 1- = byte? bytes? car cdr cons cons? equals false fixnum? function?
-   length list map nil nil? print println reverse string? symbol? true vector?]
+  [* + - 1- = and byte? bytes? car cdr cons cons? equals false fixnum?
+   function? length list map nil nil? nth not or panic print println reverse
+   skip string? symbol? take true vector?]
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
   * + - = byte? bytes? car cdr cons cons? equals false fixnum? function? list
-  nil nil? print println string? symbol? true vector?)
+  nil nil? panic print println string? symbol? true vector?)
 (import ministd/internal/prelude/list
-  foldl foldr length map reverse)
+  foldl foldr length map nth reverse skip take)
+(import ministd/internal/prelude/logic
+  and not or)
 
 (def *         *)
 (def +         +)
@@ -26,6 +29,7 @@
 (def list      list)
 (def nil       nil)
 (def nil?      nil?)
+(def panic     panic)
 (def print     print)
 (def println   println)
 (def string?   string?)
@@ -37,16 +41,23 @@
 (def foldr   foldr)
 (def length  length)
 (def map     map)
+(def nth     nth)
 (def reverse reverse)
+(def skip    skip)
+(def take    take)
+
+(def and and)
+(def not not)
+(def or  or)
 
 ; TODO: Type support.
-(defn 0? (x)
+(intrinsics:defn 0? (x)
   (= x 0))
 
 ; TODO: Type support.
-(defn 1+ (x)
+(intrinsics:defn 1+ (x)
   (+ x 1))
 
 ; TODO: Type support.
-(defn 1- (x)
+(intrinsics:defn 1- (x)
   (- x 1))

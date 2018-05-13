@@ -66,6 +66,10 @@ intrinsics! {
             }
             l
         }
+
+        fn panic[store, _k](msg) {
+            panic!("{}", msg.display(store, true))
+        }
     }
 
     mod "io" as io {
@@ -90,12 +94,39 @@ intrinsics! {
             println!();
             Value::Nil
         }
+
+        fn write_bytes[store, _k](bytes) {
+            use std::io::{stdout,Write};
+
+            let bytes = if let Value::Bytes(addr, len) = bytes {
+                store.get_bytes(addr, len)
+            } else {
+                unimplemented!("TODO Type Error")
+            };
+            stdout().write_all(bytes).unwrap();
+            Value::Nil
+        }
     }
 
     mod "oftb" as oftb {
-        fn read_file[s, _k](path) {
-            // TODO
-            unimplemented!()
+        fn read_dir[store, _k](path) {
+            let path = if let Value::String(addr, len) = path {
+                store.get_str(addr, len)
+            } else {
+                unimplemented!("TODO Type Error")
+            };
+
+            unimplemented!("read_dir {:?}", path)
+        }
+
+        fn read_file[store, _k](path) {
+            let path = if let Value::String(addr, len) = path {
+                store.get_str(addr, len)
+            } else {
+                unimplemented!("TODO Type Error")
+            };
+
+            unimplemented!("read_file {:?}", path)
         }
     }
 

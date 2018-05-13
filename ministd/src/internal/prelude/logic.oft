@@ -1,0 +1,15 @@
+(module ministd/internal/prelude/logic
+  [and not or]
+  no-prelude)
+
+(import ministd/internal/prelude/intrinsics
+  false true)
+
+(intrinsics:defn and (l r)
+  (if l r false))
+
+(intrinsics:defn not (x)
+  (if x false true))
+
+(intrinsics:defn or (l r)
+  (if l true r))

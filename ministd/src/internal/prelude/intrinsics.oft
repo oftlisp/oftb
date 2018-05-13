@@ -1,6 +1,7 @@
 (module ministd/internal/prelude/intrinsics
   [* + - = byte? bytes? car cdr cons cons? equals false fixnum? function? list
-   nil nil? print println string? symbol? true vector? write writeln]
+   nil nil? panic print println string? symbol? true vector? write writeln
+   write-bytes]
   no-prelude)
 
 ; Constants
@@ -15,12 +16,14 @@
 (def cons   intrinsics:cons)
 (def equals intrinsics:equals)
 (def list   intrinsics:list)
+(def panic  intrinsics:panic)
 
 ; I/O Functions
-(def print   intrinsics/io:print)
-(def println intrinsics/io:println)
-(def write   intrinsics/io:write)
-(def writeln intrinsics/io:writeln)
+(def print       intrinsics/io:print)
+(def println     intrinsics/io:println)
+(def write       intrinsics/io:write)
+(def writeln     intrinsics/io:writeln)
+(def write-bytes intrinsics/io:write_bytes)
 
 ; Math Functions
 (def * intrinsics/math:mul)

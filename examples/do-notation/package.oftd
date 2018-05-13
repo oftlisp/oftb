@@ -1,0 +1,10 @@
+(authors
+  "Nathan Ringo <remexre@gmail.com>")
+(license "CC0-1.0")
+(name do-notation)
+(version "0.1.0")
+
+(components
+  (binary
+    (name "list-monad")
+    (path "src/list-monad.oft")))

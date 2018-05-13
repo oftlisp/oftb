@@ -1,11 +1,11 @@
 (authors
   "Nathan Ringo <remexre@gmail.com>")
 (license "MIT")
-(name oftb-macro-expander)
+(name macro-expander)
 (version "0.1.0")
 
 (components
   (library)
   (binary
     (name "oftb-macro-expander")
-    (path "bin/oftb-macro-expander.oft")))
+    (path "bin/main.oft")))

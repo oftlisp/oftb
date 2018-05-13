@@ -1,5 +1,8 @@
 (module main
   [main])
 
+(defmacro do (... args)
+  nil)
+
 (intrinsics:defn main (args)
   (println "Hello, world!"))

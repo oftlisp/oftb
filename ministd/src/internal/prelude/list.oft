@@ -1,29 +1,40 @@
 (module ministd/internal/prelude/list
-  [foldl foldr length map reverse]
+  [foldl foldr length map nth reverse skip take]
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
-  +
-  car
-  cdr
-  cons
-  nil?)
+  + - = car cdr cons nil nil?)
 
-(defn foldl (f x l)
+(intrinsics:defn foldl (f x l)
   (if (nil? l)
     x
     (foldl f (f x (car l)) (cdr l))))
 
-(defn foldr (f x l)
+(intrinsics:defn foldr (f x l)
   (if (nil? l)
     x
     (f (car l) (foldr f x (cdr l)))))
 
-(defn length (l)
+(intrinsics:defn length (l)
   (foldl (fn (l _) (+ l 1)) 0 l))
 
-(defn reverse (l)
+(intrinsics:defn map (f l)
+  (reverse (foldl (fn (a x) (cons (f x) a)) '() l)))
+
+(intrinsics:defn nth (n l)
+  (car (skip n l)))
+
+(intrinsics:defn reverse (l)
   (foldl (fn (a x) (cons x a)) '() l))
 
-(defn map (f l)
-  (reverse (foldl (fn (a x) (cons (f x) a)) '() l)))
+(intrinsics:defn skip (n l)
+  (if (= n 0)
+    l
+    (skip (- n 1) (cdr l))))
+
+(intrinsics:defn take (n l)
+  (intrinsics:defn helper (n l acc)
+    (if (= n 0)
+      acc
+      (helper (- n 1) (cdr l) (cons (car l) acc))))
+  (reverse (helper n l nil)))
