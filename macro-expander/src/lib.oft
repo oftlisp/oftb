@@ -1,2 +1,5 @@
 (module macro-expander
-  [])
+  [load-package])
+
+(intrinsics:defn load-package ()
+  'todo)

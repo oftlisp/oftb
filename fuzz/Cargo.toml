@@ -17,3 +17,7 @@ libfuzzer-sys = { git = "https://github.com/rust-fuzz/libfuzzer-sys.git" }
 [[bin]]
 name = "parse_program"
 path = "fuzz_targets/parse_program.rs"
+
+[[bin]]
+name = "parse_ofta"
+path = "fuzz_targets/parse_ofta.rs"

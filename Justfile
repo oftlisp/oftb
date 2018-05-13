@@ -23,14 +23,17 @@ compile PKG BIN:
 interpret OFTA ARGS="":
 	cargo run -- interpret {{OFTA}} {{ARGS}}
 macro-expand PKG BIN: build-macro-expander
-	just interpret macro-expander/build/oftb-macro-expander.ofta "{{PKG}} {{BIN}}"
+	@mkdir -p {{PKG}}/build
+	just interpret macro-expander/build/oftb-macro-expander.ofta "{{PKG}} {{BIN}}" > {{PKG}}/build/{{BIN}}.ofta
 run PKG BIN ARGS="":
 	cargo run -- run --std ministd {{PKG}} {{BIN}} {{ARGS}}
 
 afl:
 	cd fuzz/afl/oftb-fuzz-target && cargo afl build
 	cd fuzz/afl/oftb-fuzz-target && cargo afl fuzz -i in -o out target/debug/oftb-fuzz-target
-fuzz:
+fuzz-ofta-parser:
+	cargo +nightly fuzz run parse_ofta
+fuzz-program-parser:
 	cargo +nightly fuzz run parse_program
 
 outdated-deps:

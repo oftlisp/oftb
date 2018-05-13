@@ -158,6 +158,7 @@ fn convert_byte_escape(pair: Pair<Rule>) -> u8 {
     match pair.as_rule() {
         Rule::hex_esc => convert_hex_escape(pair.into_inner()) as u8,
         Rule::predef_esc => match pair.as_str() {
+            "0" => b'\0',
             "n" => b'\n',
             "r" => b'\r',
             "t" => b'\t',

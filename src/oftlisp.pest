@@ -6,7 +6,7 @@ value = { rmacro | bytes | symbolish | list | vector | string }
 // Common rules for byteStrings and strings.
 hex_esc = { "x" ~ hex_digit{2} }
 hex_digit = { '0'..'9' | 'a'..'f' | 'A'..'F' }
-predef_esc = { "n" | "r" | "t" | "\\" | "\"" | "'" }
+predef_esc = { "0" | "n" | "r" | "t" | "\\" | "\"" | "'" }
 
 // Byte Strings
 bytes = ${ "b\"" ~ (bytes_raw_ch | bytes_esc_ch)* ~ "\"" }

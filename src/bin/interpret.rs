@@ -14,6 +14,14 @@ pub fn run(options: InterpretOptions) -> Result<(), Error> {
         let mut f = File::open(options.file)?;
         Program::deserialize_from(&mut f)?
     };
+    if !program
+        .decls
+        .iter()
+        .map(|(name, _)| name)
+        .any(|name| name.as_str() == "main:main")
+    {
+        bail!("Missing main:main function.")
+    }
 
     // Create the expression for the call to main.
     let args = options

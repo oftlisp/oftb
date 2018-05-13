@@ -1,0 +1,6 @@
+(module ministd/internal/oftb
+  [read-dir read-file]
+  no-prelude)
+
+(def read-dir    intrinsics/oftb:read_dir)
+(def read-file   intrinsics/oftb:read_file)

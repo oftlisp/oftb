@@ -1,41 +1,45 @@
 (module ministd/prelude
   [* + - 1- = and byte? bytes? car cdr cons cons? equals false fixnum?
    function? length list map nil nil? nth not or panic print println reverse
-   skip string? symbol? take true vector?]
+   skip string? symbol? take true vector? write write-bytes writeln]
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
   * + - = byte? bytes? car cdr cons cons? equals false fixnum? function? list
-  nil nil? panic print println string? symbol? true vector?)
+  nil nil? panic print println string? symbol? true vector? write write-bytes
+  writeln)
 (import ministd/internal/prelude/list
   foldl foldr length map nth reverse skip take)
 (import ministd/internal/prelude/logic
   and not or)
 
-(def *         *)
-(def +         +)
-(def -         -)
-(def =         =)
-(def byte?     byte?)
-(def bytes?    bytes?)
-(def car       car)
-(def cdr       cdr)
-(def cons      cons)
-(def cons?     cons?)
-(def equals    equals)
-(def false     false)
-(def fixnum?   fixnum?)
-(def function? function?)
-(def list      list)
-(def nil       nil)
-(def nil?      nil?)
-(def panic     panic)
-(def print     print)
-(def println   println)
-(def string?   string?)
-(def symbol?   symbol?)
-(def true      true)
-(def vector?   vector?)
+(def *           *)
+(def +           +)
+(def -           -)
+(def =           =)
+(def byte?       byte?)
+(def bytes?      bytes?)
+(def car         car)
+(def cdr         cdr)
+(def cons        cons)
+(def cons?       cons?)
+(def equals      equals)
+(def false       false)
+(def fixnum?     fixnum?)
+(def function?   function?)
+(def list        list)
+(def nil         nil)
+(def nil?        nil?)
+(def panic       panic)
+(def print       print)
+(def println     println)
+(def string?     string?)
+(def symbol?     symbol?)
+(def true        true)
+(def vector?     vector?)
+(def write       write)
+(def write-bytes write-bytes)
+(def writeln     writeln)
 
 (def foldl   foldl)
 (def foldr   foldr)
