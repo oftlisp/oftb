@@ -12,15 +12,17 @@
   (def exports (map
     (fn (m) (map-pair symbol<-string exports-of m))
     prelude-files))
-  (def all-exports (foldl vector-append [] (map snd exports)))
-  (println "\n\n\n\n\n")
-  (println exports)
-  (println "\n\n\n\n\n")
 
-  (println (list 'module 'std/prelude all-exports 'no-prelude))
-  (each println (map (fn (m) (cons 'import (map-snd list<-vector m))) exports))
-  nil)
+  (println (module-stmt-for exports))
+  (each print-import-for exports))
 
 (intrinsics:defn exports-of (src)
-  (println src)
   (car (cdr (cdr (car src)))))
+
+(intrinsics:defn module-stmt-for (exports)
+  (def all-exports (foldl vector-append [] (map snd exports)))
+  (list 'module 'std/prelude all-exports 'no-prelude))
+
+(intrinsics:defn print-import-for (m)
+  (def import-stmt (cons 'import (map-snd list<-vector m)))
+  (println import-stmt))

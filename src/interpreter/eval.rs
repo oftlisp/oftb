@@ -15,7 +15,6 @@ pub fn step<'program>(
     store: &mut Store<'program>,
     mut konts: Vec<Kont<'program>>,
 ) -> State<'program> {
-    trace!("running {:?}", control);
     match control {
         Control::Normal(expr) => match *expr {
             Expr::AExpr(ref expr) => {
