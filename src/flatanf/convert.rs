@@ -198,10 +198,8 @@ fn compile_cexpr(
                     .into_iter()
                     .map(|(name, args, body)| {
                         let argn = args.len();
-                        let body = context.bracket_anon(|context| {
-                            context.bracket_many(args, |context| {
-                                compile_expr(context, body)
-                            })
+                        let body = context.bracket_many(args, |context| {
+                            compile_expr(context, body)
                         })?;
                         Ok((argn, body))
                     })
@@ -220,10 +218,8 @@ fn compile_aexpr(
     match expr {
         AnfAExpr::Lambda(args, body) => {
             let argn = args.len();
-            let body = context.bracket_anon(|context| {
-                context
-                    .bracket_many(args, |context| compile_expr(context, *body))
-            })?;
+            let body = context
+                .bracket_many(args, |context| compile_expr(context, *body))?;
             Ok(AExpr::Lambda(argn, Box::new(body)))
         }
         AnfAExpr::Literal(lit) => Ok(AExpr::Literal(lit)),

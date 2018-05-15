@@ -72,7 +72,6 @@ pub fn apply<'program>(
             if argn != args.len() {
                 unimplemented!("Bad argn, {} vs {}", argn, args.len());
             }
-            env = env.push(func);
             for arg in args {
                 env = env.push(arg);
             }
