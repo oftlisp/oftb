@@ -122,27 +122,20 @@ impl<'store, 'program: 'store> Display for DisplayValue<'store, 'program> {
                 write!(
                     fmt,
                     "({}",
-                    self.store
-                        .get(h)
-                        .display(self.store, self.printlike)
+                    self.store.get(h).display(self.store, false)
                 )?;
                 let mut l = self.store.get(t);
                 loop {
                     match l {
                         Value::Cons(h, t) => {
-                            let h = self.store
-                                .get(h)
-                                .display(self.store, self.printlike);
+                            let h =
+                                self.store.get(h).display(self.store, false);
                             write!(fmt, " {}", h)?;
                             l = self.store.get(t);
                         }
                         Value::Nil => break,
                         _ => {
-                            write!(
-                                fmt,
-                                " | {}",
-                                l.display(self.store, self.printlike)
-                            )?;
+                            write!(fmt, " | {}", l.display(self.store, false))?;
                             break;
                         }
                     }
@@ -169,7 +162,7 @@ impl<'store, 'program: 'store> Display for DisplayValue<'store, 'program> {
                     } else {
                         write!(fmt, " ")?;
                     }
-                    write!(fmt, "{}", v.display(self.store, self.printlike))?;
+                    write!(fmt, "{}", v.display(self.store, false))?;
                 }
                 write!(fmt, "]")
             }

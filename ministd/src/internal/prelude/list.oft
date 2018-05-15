@@ -1,9 +1,44 @@
 (module ministd/internal/prelude/list
-  [foldl foldr length map nth reverse skip take]
+  [append assoc each flat-map foldl foldr length map nth partition reverse skip
+   take]
   no-prelude)
 
+(import ministd/internal/prelude/either
+  either)
 (import ministd/internal/prelude/intrinsics
-  + - = car cdr cons nil nil?)
+  + - = car cdr cons equals nil nil?)
+(import ministd/internal/prelude/option
+  none some)
+(import ministd/internal/prelude/pair
+  map-pair pair)
+
+(intrinsics:defn append (l r)
+  (intrinsics:defn helper (l r)
+    (if (nil? l)
+      r
+      (helper (cdr l) (cons (car l) r))))
+  (helper (reverse l) r))
+
+(intrinsics:defn assoc (l x)
+  (if (nil? x)
+    none
+    (if (equals (car (car l)) x)
+      (some (cdr (car l)))
+      (assoc (cdr l) x))))
+
+(intrinsics:defn each (f l)
+  (if (nil? l)
+    nil
+    (progn
+      (f (car l))
+      (each f (cdr l)))))
+
+(intrinsics:defn flat-map (f l)
+  (intrinsics:defn helper (l acc)
+    (if (nil? l)
+      acc
+      (helper (cdr l) (append (f (car l)) acc))))
+  (helper l nil))
 
 (intrinsics:defn foldl (f x l)
   (if (nil? l)
@@ -23,6 +58,16 @@
 
 (intrinsics:defn nth (n l)
   (car (skip n l)))
+
+(intrinsics:defn partition (es)
+  (intrinsics:defn helper (es ls rs)
+    (if (nil? es)
+      (pair ls rs)
+      (either
+        (fn (l) (helper (cdr es) (cons l ls) rs))
+        (fn (r) (helper (cdr es) ls (cons r rs)))
+        (car es))))
+  (map-pair reverse reverse (helper es nil nil)))
 
 (intrinsics:defn reverse (l)
   (foldl (fn (a x) (cons x a)) '() l))

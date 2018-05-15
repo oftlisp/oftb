@@ -21,10 +21,11 @@ watch TARGETS="all":
 compile PKG BIN:
 	cargo run -- compile --std ministd {{PKG}} {{BIN}}
 interpret OFTA ARGS="":
-	cargo run -- interpret {{OFTA}} {{ARGS}}
+	cargo run -- -v interpret {{OFTA}} {{ARGS}}
 macro-expand PKG BIN: build-macro-expander
 	@mkdir -p {{PKG}}/build
-	just interpret macro-expander/build/oftb-macro-expander.ofta "{{PKG}} {{BIN}}" > {{PKG}}/build/{{BIN}}.ofta
+	just interpret macro-expander/build/oftb-macro-expander.ofta "{{PKG}} {{BIN}}"
+	@# just interpret macro-expander/build/oftb-macro-expander.ofta "{{PKG}} {{BIN}}" > {{PKG}}/build/{{BIN}}.ofta
 run PKG BIN ARGS="":
 	cargo run -- run --std ministd {{PKG}} {{BIN}} {{ARGS}}
 

@@ -1,0 +1,23 @@
+(module macro-expander/fs
+  [walk-dir walk-dir-files])
+
+(import ministd/internal/oftb
+  read-dir read-file)
+
+(intrinsics:defn walk-dir (root)
+  (def entries (partition (map
+    (fn (entry)
+      (def path (car entry))
+      (def type (cdr entry))
+      (if (eq type 'file)
+        (left path)
+        (if (eq type 'dir)
+          (right path)
+          (panic "Unsupported file type found"))))
+    (read-dir root))))
+  (append (fst entries) (flat-map walk-dir (snd entries))))
+
+(intrinsics:defn walk-dir-files (root)
+  (map
+    (fn (path) (pair path (read-file path)))
+    (walk-dir root)))

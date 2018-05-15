@@ -1,5 +1,7 @@
 (module macro-expander
-  [load-package])
+  [load-packages])
 
-(intrinsics:defn load-package ()
-  'todo)
+(import macro-expander/packages
+  load-packages)
+
+(def load-packages load-packages)

@@ -1,6 +1,7 @@
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::marker::PhantomData;
 
+use Literal;
 use flatanf::Expr;
 use interpreter::{Env, Value};
 
@@ -112,6 +113,39 @@ impl<'program> Store<'program> {
         Addr(n, PhantomData)
     }
 
+    /// Builds a literal onto the value heap.
+    pub fn store_literal(&mut self, lit: &Literal) -> Value {
+        match *lit {
+            Literal::Byte(n) => Value::Byte(n),
+            Literal::Bytes(ref bs) => {
+                let (a, l) = self.store_bytes(bs);
+                Value::Bytes(a, l)
+            }
+            Literal::Cons(ref h, ref t) => {
+                let h = self.store_literal(h);
+                let t = self.store_literal(t);
+                Value::Cons(self.store(h), self.store(t))
+            }
+            Literal::Fixnum(n) => Value::Fixnum(n),
+            Literal::Nil => Value::Nil,
+            Literal::String(ref s) => {
+                let (a, l) = self.store_str(s);
+                Value::String(a, l)
+            }
+            Literal::Symbol(s) => Value::Symbol(s),
+            Literal::Vector(ref vs) => {
+                let vs = vs.iter()
+                    .map(|lit| {
+                        let val = self.store_literal(lit);
+                        self.store(val)
+                    })
+                    .collect::<Vec<_>>();
+                let (a, l) = self.store_vec(&vs);
+                Value::Vector(a, l)
+            }
+        }
+    }
+
     /// Stores a string into the vector heap.
     pub fn store_str(&mut self, s: &str) -> (Addr<String>, usize) {
         let n = self.strs.len();
@@ -150,6 +184,18 @@ impl<T> Debug for Addr<T> {
 }
 
 impl<T> Eq for Addr<T> {}
+
+impl<T> From<usize> for Addr<T> {
+    fn from(n: usize) -> Addr<T> {
+        Addr(n, PhantomData)
+    }
+}
+
+impl<T> Into<usize> for Addr<T> {
+    fn into(self) -> usize {
+        self.0
+    }
+}
 
 impl<T> PartialEq for Addr<T> {
     fn eq(&self, other: &Addr<T>) -> bool {

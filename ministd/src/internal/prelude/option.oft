@@ -1,0 +1,25 @@
+(module ministd/internal/prelude/option
+  [expect none none? some some?]
+  no-prelude)
+
+(import ministd/internal/prelude/intrinsics
+  car cdr cons cons? eq false panic)
+
+(def none 'none)
+
+(intrinsics:defn some (x)
+  (cons 'some x))
+
+(intrinsics:defn some? (opt)
+  (if (cons? opt)
+    (eq (car opt) 'some)
+    false))
+
+(intrinsics:defn none? (opt)
+  (eq opt 'none))
+
+(intrinsics:defn expect (opt msg)
+  (if (none? opt)
+    (panic msg)
+    (if (some? opt)
+      (cdr opt))))

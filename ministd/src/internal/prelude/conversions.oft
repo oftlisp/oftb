@@ -1,0 +1,17 @@
+(module ministd/internal/prelude/conversions
+  [list<-vector symbol<-string]
+  no-prelude)
+
+(import ministd/internal/prelude/intrinsics
+  - = cons nil)
+(import ministd/internal/prelude/vector
+  vector-length vector-nth)
+
+(def symbol<-string intrinsics/convert:symbol_of_string)
+
+(intrinsics:defn list<-vector (v)
+  (intrinsics:defn helper (n acc)
+    (if (= n 0)
+      (cons (vector-nth 0 v) acc)
+      (helper (- n 1) (cons (vector-nth n v) acc))))
+  (helper (- (vector-length v) 1) nil))

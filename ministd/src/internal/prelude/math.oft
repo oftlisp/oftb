@@ -1,0 +1,10 @@
+(module ministd/internal/prelude/math
+  [0? 1+ 1-]
+  no-prelude)
+
+(import ministd/internal/prelude/intrinsics
+  + - =)
+
+(intrinsics:defn 0? (x) (= x 0))
+(intrinsics:defn 1+ (x) (+ x 1))
+(intrinsics:defn 1- (x) (- x 1))

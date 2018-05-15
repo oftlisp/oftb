@@ -1,0 +1,26 @@
+(module main
+  [main])
+
+(import macro-expander/fs
+  walk-dir-files)
+
+(intrinsics:defn main (args)
+  (if (not (= (length args) 1))
+    (panic "usage: make-prelude ministd-dir"))
+  (def prelude-srcs-path (string-append (nth 0 args) "/src/internal/prelude"))
+  (def prelude-files (walk-dir-files prelude-srcs-path))
+  (def exports (map
+    (fn (m) (map-pair symbol<-string exports-of m))
+    prelude-files))
+  (def all-exports (foldl vector-append [] (map snd exports)))
+  (println "\n\n\n\n\n")
+  (println exports)
+  (println "\n\n\n\n\n")
+
+  (println (list 'module 'std/prelude all-exports 'no-prelude))
+  (each println (map (fn (m) (cons 'import (map-snd list<-vector m))) exports))
+  nil)
+
+(intrinsics:defn exports-of (src)
+  (println src)
+  (car (cdr (cdr (car src)))))

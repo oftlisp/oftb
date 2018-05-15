@@ -35,7 +35,7 @@ fn main() {
 
     if let Err(err) = result {
         let mut first = true;
-        let num_errs: usize = err.causes().map(|_| 1).sum();
+        let num_errs = err.causes().count();
         if num_errs <= 1 {
             error!("{}", err);
         } else {

@@ -1,0 +1,8 @@
+(module ministd/internal/prelude/vector
+  [vector-append vector-length vector-nth vector-slice]
+  no-prelude)
+
+(def vector-append intrinsics/vector:append)
+(def vector-length intrinsics/vector:length)
+(def vector-nth    intrinsics/vector:nth)
+(def vector-slice  intrinsics/vector:slice)

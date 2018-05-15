@@ -1,0 +1,13 @@
+(module ministd/internal/prelude/string
+  [string-append string-length string-nth string-slice]
+  no-prelude)
+
+(import ministd/internal/prelude/math
+  1+)
+
+(def string-append intrinsics/strings:append)
+(def string-length intrinsics/strings:length)
+(def string-slice  intrinsics/strings:slice)
+
+(intrinsics:defn string-nth (n s)
+  (string-slice n (1+ n) s))

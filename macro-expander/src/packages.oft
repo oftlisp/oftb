@@ -1,0 +1,27 @@
+(module macro-expander/packages
+  [load-packages])
+
+(import macro-expander/fs
+  walk-dir-files)
+(import ministd/internal/oftb
+  read-file)
+
+(intrinsics:defn package (name lib bins)
+  (list name lib bins))
+
+(intrinsics:defn load-packages (root-package-path)
+  (def root (load-package-from root-package-path))
+  (println 'root '= root))
+
+(intrinsics:defn load-package-from (path)
+  (def metadata-path (string-append path "/package.oftd"))
+  (def metadata (read-file metadata-path))
+
+  (def name (expect (assoc metadata 'name)
+    "Missing package name"))
+  (def components (expect (assoc metadata 'components)
+    "Missing package components list"))
+
+  (def files (walk-dir-files (string-append path "/src")))
+
+  (cons metadata files))

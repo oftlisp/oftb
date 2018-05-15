@@ -2,7 +2,7 @@
   [main])
 
 (import macro-expander
-  load-package)
+  load-packages)
 
 (intrinsics:defn main (args)
   (if (not (= (length args) 2))
@@ -10,5 +10,5 @@
   (def package-dir (nth 0 args))
   (def binary-name (nth 1 args))
 
-  ; (todo)
-  (write-bytes b"ofta\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"))
+  (def package (load-packages package-dir))
+  'todo)
