@@ -56,16 +56,19 @@ pub fn toposort_mods<F: FnMut(Module) -> Result<(), Error>>(
 }
 
 /// A context for converting to use De Bruijn indices.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Context {
     globals: HashMap<Symbol, Symbol>,
-    locals: Vec<Option<Symbol>>,
+    locals: Vec<Symbol>,
 }
 
 impl Context {
     /// Adds a global binding.
-    pub fn add_global(&mut self, module: Symbol, name: Symbol) {
-        self.globals.insert(module, name);
+    ///
+    ///  - `name` is the "local name," for example `map`.
+    ///  - `fully_qualified` is the "global name," for example `std/prelude:map`.
+    pub fn add_global(&mut self, name: Symbol, fully_qualified: Symbol) {
+        self.globals.insert(name, fully_qualified);
     }
 
     /// Brackets a function call with a push and a pop.
@@ -74,17 +77,6 @@ impl Context {
         F: FnOnce(&mut Context) -> T,
     {
         self.push(name);
-        let out = f(self);
-        self.pop();
-        out
-    }
-
-    /// Brackets a function call with an anonymous push and a pop.
-    pub fn bracket_anon<F, T>(&mut self, f: F) -> T
-    where
-        F: FnOnce(&mut Context) -> T,
-    {
-        self.push_anon();
         let out = f(self);
         self.pop();
         out
@@ -113,7 +105,7 @@ impl Context {
         if !self.locals.is_empty() {
             let off = self.locals.len() - 1;
             for n in 0..self.locals.len() {
-                if self.locals[off - n] == Some(name) {
+                if self.locals[off - n] == name {
                     return Ok(AExpr::Local(n));
                 }
             }
@@ -127,12 +119,7 @@ impl Context {
 
     /// Adds a binding to the context.
     fn push(&mut self, name: Symbol) {
-        self.locals.push(Some(name));
-    }
-
-    /// Adds an anonymous binding to the context.
-    fn push_anon(&mut self) {
-        self.locals.push(None);
+        self.locals.push(name);
     }
 
     /// Adds several bindings to the context.

@@ -140,10 +140,8 @@ fn compile_decl(
             Ok((name, expr))
         }
         AnfDecl::Defn(name, args, body) => {
-            let body = context.bracket(name, |context| {
-                context.bracket_many(args.iter().cloned(), |context| {
-                    compile_expr(context, body)
-                })
+            let body = context.bracket_many(args.iter().cloned(), |context| {
+                compile_expr(context, body)
             })?;
             let name = global(mod_name, name);
             let expr = Expr::AExpr(AExpr::Lambda(args.len(), Box::new(body)));

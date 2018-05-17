@@ -7,11 +7,11 @@ use flatanf::{AExpr, CExpr, Expr, Program};
 /// This check panics if it fails -- a failed test here indicates a compiler
 /// error.
 pub fn locals_valid(program: &Program) {
-    for &(_, ref e) in &program.decls {
+    for &(name, ref e) in &program.decls {
         let fr = check_expr(0, e);
         if fr.is_err() {
-            error!("{}", fr);
-            panic!("{}", fr)
+            error!("In decl {}:\n\n{}", name, fr);
+            panic!("In decl {}:\n\n{}", name, fr)
         }
     }
 }
@@ -32,7 +32,7 @@ fn check_expr<'a>(depth: usize, expr: &'a Expr) -> FailRecord<'a> {
 fn check_aexpr<'a>(depth: usize, expr: &'a AExpr) -> FailRecord<'a> {
     match *expr {
         AExpr::Lambda(argn, ref body) => check_expr(depth + argn, body),
-        AExpr::Local(n) if n > depth => FailRecord::err(n, depth),
+        AExpr::Local(n) if n >= depth => FailRecord::err(n, depth),
         AExpr::Local(_) => FailRecord::ok(),
         AExpr::Vector(ref es) => {
             FailRecord::all(es.iter().map(|e| check_aexpr(depth, e)))
@@ -136,13 +136,13 @@ impl<'a> Display for FailRecord<'a> {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         match *self {
             FailRecord::CauseA(expr, ref tl) => {
-                write!(fmt, "In expr {:?}:\n{}", expr, tl)
+                write!(fmt, "In expr {}:\n\n{}", expr, tl)
             }
             FailRecord::CauseC(expr, ref tl) => {
-                write!(fmt, "In expr {:?}:\n{}", expr, tl)
+                write!(fmt, "In expr {}:\n\n{}", expr, tl)
             }
             FailRecord::CauseE(expr, ref tl) => {
-                write!(fmt, "In expr {:?}:\n{}", expr, tl)
+                write!(fmt, "In expr {}:\n\n{}", expr, tl)
             }
             FailRecord::NoError => write!(fmt, "No error"),
             FailRecord::RootCause(var, depth) => write!(

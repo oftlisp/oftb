@@ -68,7 +68,7 @@ pub fn apply<'program>(
 ) -> State<'program> {
     match func {
         Value::Closure(clo_addr) => {
-            let (argn, body, mut env) = store.get_closure(clo_addr);
+            let (argn, body, _, mut env) = store.get_closure(clo_addr);
             if argn != args.len() {
                 unimplemented!("Bad argn, {} vs {}", argn, args.len());
             }

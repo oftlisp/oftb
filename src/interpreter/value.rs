@@ -117,7 +117,13 @@ impl<'store, 'program: 'store> Display for DisplayValue<'store, 'program> {
         match self.value {
             Value::Byte(n) => write!(fmt, "{}", n),
             Value::Bytes(a, l) => escape_bytes(self.store.get_bytes(a, l), fmt),
-            Value::Closure(_) => write!(fmt, "<<function>>"),
+            Value::Closure(a) => {
+                if let Some(name) = self.store.get_closure(a).2 {
+                    write!(fmt, "<<function {}>>", name)
+                } else {
+                    write!(fmt, "<<function>>")
+                }
+            }
             Value::Cons(h, t) => {
                 write!(
                     fmt,

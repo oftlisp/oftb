@@ -43,6 +43,11 @@ pub fn run(options: InterpretOptions) -> Result<(), Error> {
     debug!("Initializing program...");
     for &(name, ref expr) in &program.decls {
         let val = interpreter.eval(expr);
+        if let Value::Closure(addr) = val {
+            interpreter
+                .store
+                .mutate_closure_name(addr, name);
+        }
         interpreter.globals.insert(name, val);
     }
 

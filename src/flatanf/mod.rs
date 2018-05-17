@@ -4,6 +4,7 @@
 
 mod convert;
 mod deserialize;
+mod display;
 mod global_vars;
 mod serialize;
 mod util;

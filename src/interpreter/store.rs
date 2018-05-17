@@ -1,6 +1,8 @@
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::marker::PhantomData;
 
+use symbol::Symbol;
+
 use Literal;
 use flatanf::Expr;
 use interpreter::{Env, Value};
@@ -18,7 +20,7 @@ pub enum Vector {}
 #[derive(Debug)]
 pub struct Store<'program> {
     bytes: Vec<u8>,
-    clos: Vec<(usize, &'program Expr, Env)>,
+    clos: Vec<(usize, &'program Expr, Option<Symbol>, Env)>,
     strs: String,
     vecs: Vec<Addr<Value>>,
 
@@ -53,9 +55,9 @@ impl<'program> Store<'program> {
     pub fn get_closure(
         &self,
         addr: Addr<Closure>,
-    ) -> (usize, &'program Expr, Env) {
-        let &(addr, ref body, ref env) = &self.clos[addr.0];
-        (addr, body, env.clone())
+    ) -> (usize, &'program Expr, Option<Symbol>, Env) {
+        let &(addr, ref body, name, ref env) = &self.clos[addr.0];
+        (addr, body, name, env.clone())
     }
 
     /// Gets a string out of the string heap.
@@ -75,10 +77,14 @@ impl<'program> Store<'program> {
             .collect()
     }
 
-    /// Adds an item to the environment of the given closure. This is
-    /// reasonably unsafe.
+    /// Sets the environment of the given closure. This is reasonably unsafe.
     pub fn mutate_closure_env(&mut self, addr: Addr<Closure>, env: Env) {
-        self.clos[addr.0].2 = env;
+        self.clos[addr.0].3 = env;
+    }
+
+    /// Sets the name of the given closure.
+    pub fn mutate_closure_name(&mut self, addr: Addr<Closure>, name: Symbol) {
+        self.clos[addr.0].2 = Some(name);
     }
 
     /// Stores a value into the value heap.
@@ -109,7 +115,7 @@ impl<'program> Store<'program> {
         env: Env,
     ) -> Addr<Closure> {
         let n = self.clos.len();
-        self.clos.push((argn, body, env));
+        self.clos.push((argn, body, None, env));
         Addr(n, PhantomData)
     }
 
