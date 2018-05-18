@@ -16,10 +16,10 @@ macro_rules! __intrinsics_argn {
     ($args_var:ident, *$rest:ident) => {};
 
     ($args_var:ident, $($args:ident),*) => {
-        assert_eq!($args_var.len(), __intrinsics_count!($($args)*));
+        assert_eq!($args_var.len(), __intrinsics_count!($($args)*), "bad argn");
     };
     ($args_var:ident, $($args:ident,)* *$rest:ident) => {
-        assert!($args_var.len() >= __intrinsics_count!($($args)*));
+        assert!($args_var.len() >= __intrinsics_count!($($args)*), "bad argn");
     };
 }
 

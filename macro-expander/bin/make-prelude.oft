@@ -3,26 +3,54 @@
 
 (import macro-expander/fs
   walk-dir-files)
+(import ministd/internal/oftb
+  read-file)
 
 (intrinsics:defn main (args)
   (if (not (= (length args) 1))
     (panic "usage: make-prelude ministd-dir"))
-  (def prelude-srcs-path (string-append (nth 0 args) "/src/internal/prelude"))
+  (def prelude-pkg-path (nth 0 args))
+  (def prelude-srcs-path (string-append prelude-pkg-path "/src/internal/prelude"))
+  (def src-path-len (+ (string-length prelude-pkg-path) 4))
+  (def package-name (get-package-name prelude-pkg-path))
+
   (def prelude-files (walk-dir-files prelude-srcs-path))
+  (intrinsics:defn to-import-name (path)
+    (def l (string-length path))
+    (def path (string-slice src-path-len (- l 4) path))
+    (symbol<-string (string-append
+      (string<-symbol package-name)
+      path)))
   (def exports (map
-    (fn (m) (map-pair symbol<-string exports-of m))
+    (fn (m) (map-pair to-import-name exports-of m))
     prelude-files))
 
-  (println (module-stmt-for exports))
-  (each print-import-for exports))
+  (println (module-stmt-for package-name exports))
+  (println)
+  (each print-import-for exports)
+  (println)
+  (each (fn (v)
+    (vector-each (fn (name)
+      (println (list 'def name name)))
+      v))
+    (map snd exports)))
+
+(intrinsics:defn get-package-name (package-dir)
+  (def metadata (read-file (string-append package-dir "/package.oftd")))
+  (car (expect (assoc metadata 'name) "Package is missing a name")))
 
 (intrinsics:defn exports-of (src)
   (car (cdr (cdr (car src)))))
 
-(intrinsics:defn module-stmt-for (exports)
+(intrinsics:defn module-stmt-for (package-name exports)
+  (def module-name (symbol<-string (string-append
+    (string<-symbol package-name)
+    "/prelude")))
   (def all-exports (foldl vector-append [] (map snd exports)))
-  (list 'module 'std/prelude all-exports 'no-prelude))
+  (list 'module module-name all-exports 'no-prelude))
 
 (intrinsics:defn print-import-for (m)
-  (def import-stmt (cons 'import (map-snd list<-vector m)))
+  (def module-name (fst m))
+  (def imports (list<-vector (snd m)))
+  (def import-stmt (cons 'import (cons module-name imports)))
   (println import-stmt))

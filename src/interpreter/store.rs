@@ -77,6 +77,11 @@ impl<'program> Store<'program> {
             .collect()
     }
 
+    /// Gets a single value out of the vector heap.
+    pub fn get_vec_val(&self, addr: Addr<Vector>) -> Value {
+        self.get(self.vecs[addr.0])
+    }
+
     /// Sets the environment of the given closure. This is reasonably unsafe.
     pub fn mutate_closure_env(&mut self, addr: Addr<Closure>, env: Env) {
         self.clos[addr.0].3 = env;

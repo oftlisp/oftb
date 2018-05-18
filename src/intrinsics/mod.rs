@@ -79,11 +79,20 @@ intrinsics! {
         }
 
         fn panic[store, _k](msg) {
-            panic!("{}", msg.display(store, true))
+            panic!("{}", msg.display(store, false))
         }
     }
 
     mod "convert" as convert {
+        fn string_of_symbol[store, _k](s) {
+            if let Value::Symbol(s) = s {
+                let (a, l) = store.store_str(s.as_str());
+                Value::String(a, l)
+            } else {
+                unimplemented!("TODO Type Error")
+            }
+        }
+
         fn symbol_of_string[store, _k](s) {
             if let Value::String(a, l) = s {
                 Value::Symbol(store.get_str(a, l).into())
@@ -251,26 +260,31 @@ intrinsics! {
         }
 
         fn slice[store, _k](start, end, s) {
-            let (start, end) = if let (
-                Value::Fixnum(start),
-                Value::Fixnum(end),
+            let (addr, len) = if let (
+                Value::Fixnum(start_n),
+                Value::Fixnum(end_n),
                 Value::String(a, l),
             ) = (start, end, s)
             {
                 let s = store.get_str(a, l);
-                let start = s.char_indices().nth(start as usize);
-                let end = s.char_indices().nth(end as usize);
+                let start_n = start_n as usize;
+                let end_n = end_n as usize;
+                let start = s.char_indices().nth(start_n);
+                let end = s.char_indices().nth(end_n);
+                let a: usize = a.into();
                 match (start, end) {
-                    (Some((start, _)), Some((end, _))) => (start, end),
+                    (Some((start, _)), Some((end, _))) => {
+                        (a + start, end - start)
+                    },
+                    (Some((start, _)), None) if end_n == s.chars().count() => {
+                        (a + start, end_n - start)
+                    },
                     _ => unimplemented!("TODO out of bounds"),
                 }
             } else {
                 unimplemented!("TODO Type Error")
             };
-
-            let length = end - start;
-            let addr = Addr::from(start);
-            Value::String(addr, length)
+            Value::String(addr.into(), len)
         }
     }
 
@@ -326,7 +340,7 @@ intrinsics! {
                 let n = n as usize;
                 if n < l {
                     let a: usize = a.into();
-                    store.get(Addr::from(a + n))
+                    store.get_vec_val(Addr::from(a + n))
                 } else {
                     unimplemented!("TODO out of bounds")
                 }

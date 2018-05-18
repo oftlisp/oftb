@@ -127,6 +127,7 @@ fn convert_block(body: Vec<AstExpr>, tail: AstExpr) -> Expr {
             let decl = *decl;
             match decl {
                 AstDecl::Def(name, expr) => {
+                    anf = save_lambdas(anf, &mut lambdas);
                     anf = Expr::Let(name, Box::new(expr.into()), Box::new(anf));
                 }
                 AstDecl::Defn(name, args, body, tail) => {

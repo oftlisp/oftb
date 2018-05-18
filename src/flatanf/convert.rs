@@ -75,12 +75,9 @@ fn compile_module(
                                  decls: &mut Vec<_>,
                                  context: &mut Context|
      -> Result<(), Error> {
-        batched_defns
-            .iter()
-            .map(|&(name, _, _)| name)
-            .for_each(|name| {
-                context.add_global(name, global(module_name, name))
-            });
+        batched_defns.iter().for_each(|&(name, _, _)| {
+            context.add_global(name, global(module_name, name))
+        });
         let defns = batched_defns
             .drain(..)
             .map(|(n, a, b)| {

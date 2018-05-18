@@ -1,5 +1,5 @@
 (module ministd/internal/prelude/conversions
-  [list<-vector symbol<-string]
+  [list<-vector string<-symbol symbol<-string]
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
@@ -7,6 +7,7 @@
 (import ministd/internal/prelude/vector
   vector-length vector-nth)
 
+(def string<-symbol intrinsics/convert:string_of_symbol)
 (def symbol<-string intrinsics/convert:symbol_of_string)
 
 (intrinsics:defn list<-vector (v)

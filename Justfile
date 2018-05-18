@@ -1,14 +1,24 @@
 all: check build doc test bootstrap
-bootstrap:
+bootstrap: make-prelude
 	@just macro-expand examples/do-notation list-monad
 	@just interpret examples/do-notation/build/list-monad.ofta
 hello-world:
 	@just run examples/hello-world hello-world
+make-prelude:
+	#!/usr/bin/env python3
+	import shutil, subprocess, tempfile
+	with tempfile.NamedTemporaryFile() as f:
+		code = subprocess.call(["just", "run", "macro-expander",
+		    "make-prelude", "ministd"], stdout=f)
+		assert code == 0
+		shutil.copy(f.name, "ministd/src/prelude.oft")
 
 build:
 	cargo build --all
 build-macro-expander:
 	@just compile macro-expander oftb-macro-expander
+build-release:
+	cargo build --all --release
 check:
 	cargo check --all
 doc:

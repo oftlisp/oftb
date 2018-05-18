@@ -1,8 +1,21 @@
 (module ministd/internal/prelude/vector
-  [vector-append vector-length vector-nth vector-slice]
+  [vector-append vector-each vector-length vector-nth vector-slice]
   no-prelude)
+
+(import ministd/internal/prelude/intrinsics
+  + = nil)
 
 (def vector-append intrinsics/vector:append)
 (def vector-length intrinsics/vector:length)
 (def vector-nth    intrinsics/vector:nth)
 (def vector-slice  intrinsics/vector:slice)
+
+(intrinsics:defn vector-each (f v)
+  (def l (vector-length v))
+  (intrinsics:defn helper (n)
+    (if (= l n)
+      nil
+      (progn
+        (f (vector-nth n v))
+        (helper (+ 1 n)))))
+  (helper 0))
