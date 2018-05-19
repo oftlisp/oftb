@@ -1,0 +1,71 @@
+(module ministd/data/tree-set
+  [empty-set])
+
+(def black 'black)
+(def red 'red)
+
+(def E 'E)
+(intrinsics:defn T (color l r x)
+  (cons 'T (cons color (cons l (cons r x)))))
+
+(intrinsics:defn E? (tree)
+  (eq E tree))
+(intrinsics:defn T? (tree)
+  (if (cons? tree)
+    (eq (car tree) 'T)))
+
+(intrinsics:defn get-color (tree)
+  (if (E? tree)
+    black
+    (nth 1 tree)))
+
+(intrinsics:defn red?   (tree) (eq (get-color tree) red))
+(intrinsics:defn black? (tree) (eq (get-color tree) black))
+
+(intrinsics:defn check-invariants (tree)
+  ; Returns false iff the tree is red and has a red child.
+  (intrinsics:defn check-red-children (tree)
+    (if (red? tree)
+      (and (black? (nth 2 tree)) (black? (nth 3 tree)))
+      true))
+
+  ; Applies check-red-children to all subtrees.
+  (intrinsics:defn check-all-red-children (tree)
+    (if (and (check-red-children tree) (T? tree))
+      (and
+        (check-all-red-children (nth 2 tree))
+        (check-all-red-children (nth 3 tree)))
+      false))
+
+  ; Returns nil iff the path-lengths-to-black of the tree's children are
+  ; different, and the path length if they are the same.
+  (intrinsics:defn check-paths (tree)
+    (if (E? tree)
+      1
+      (progn
+        (def l (check-paths (nth 2 tree)))
+        (def r (check-paths (nth 3 tree)))
+        (def f (if (red? tree) id 1+))
+        (if (and l r)
+          (if (= l r)
+            (f l)
+            false)
+          false))))
+
+  ; Run both checks.
+  (if (check-all-red-children tree)
+    (not (nil? (check-paths tree)))
+    false))
+
+(intrinsics:defn balance (tree)
+  'todo)
+
+(def empty-set E)
+(intrinsics:defn singleton-set (x)
+  (T black E E x))
+
+(intrinsics:defn set-contains? (x tree)
+  'todo)
+
+(intrinsics:defn set-insert (x tree)
+  'todo)
