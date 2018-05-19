@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
 use symbol::Symbol;
@@ -33,7 +34,7 @@ impl PartialEq for Intrinsic {
 }
 
 /// A value stored in the store.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub enum Value {
     Byte(u8),
     Bytes(Addr<Bytes>, usize),
@@ -173,5 +174,17 @@ impl<'store, 'program: 'store> Display for DisplayValue<'store, 'program> {
                 write!(fmt, "]")
             }
         }
+    }
+}
+
+impl PartialEq for Value {
+    fn eq(&self, other: &Value) -> bool {
+        self.partial_cmp(other) == Some(Ordering::Equal)
+    }
+}
+
+impl PartialOrd for Value {
+    fn partial_cmp(&self, other: &Value) -> Option<Ordering> {
+        unimplemented!()
     }
 }

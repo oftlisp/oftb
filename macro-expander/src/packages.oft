@@ -5,6 +5,8 @@
   load-package-from)
 (import macro-expander/packages/type
   package)
+(import ministd/data/tree-set
+  empty-set)
 (import ministd/monad/state
   state-bind state-pure state-read state-write)
 
@@ -13,4 +15,5 @@
   (println 'root '= root))
 
 (intrinsics:defn traverse-modules (pkgs starting-module)
+  (def initial-state (pair empty-set empty-set))
   'todo)
