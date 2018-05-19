@@ -22,4 +22,5 @@
   (if (none? opt)
     (panic msg)
     (if (some? opt)
-      (cdr opt))))
+      (cdr opt)
+      (panic "Invalid option"))))

@@ -1,29 +1,16 @@
 (module main
   [main])
 
-(import macro-expander/fs
-  walk-dir-files)
-(import ministd/internal/oftb
-  read-file)
+(import macro-expander/prelude-utils
+  get-prelude-exports)
 
 (intrinsics:defn main (args)
   (if (not (= (length args) 1))
     (panic "usage: make-prelude ministd-dir"))
-  (def prelude-pkg-path (nth 0 args))
-  (def prelude-srcs-path (string-append prelude-pkg-path "/src/internal/prelude"))
-  (def src-path-len (+ (string-length prelude-pkg-path) 4))
-  (def package-name (get-package-name prelude-pkg-path))
 
-  (def prelude-files (walk-dir-files prelude-srcs-path))
-  (intrinsics:defn to-import-name (path)
-    (def l (string-length path))
-    (def path (string-slice src-path-len (- l 4) path))
-    (symbol<-string (string-append
-      (string<-symbol package-name)
-      path)))
-  (def exports (map
-    (fn (m) (map-pair to-import-name exports-of m))
-    prelude-files))
+  (def tmp (get-prelude-exports (nth 0 args)))
+  (def package-name (fst tmp))
+  (def exports (snd tmp))
 
   (println (module-stmt-for package-name exports))
   (println)
@@ -34,13 +21,6 @@
       (println (list 'def name name)))
       v))
     (map snd exports)))
-
-(intrinsics:defn get-package-name (package-dir)
-  (def metadata (read-file (string-append package-dir "/package.oftd")))
-  (car (expect (assoc metadata 'name) "Package is missing a name")))
-
-(intrinsics:defn exports-of (src)
-  (car (cdr (cdr (car src)))))
 
 (intrinsics:defn module-stmt-for (package-name exports)
   (def module-name (symbol<-string (string-append

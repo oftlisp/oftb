@@ -1,0 +1,30 @@
+(module macro-expander/interpreter
+  [apply eval evaluate])
+
+(import macro-expander/interpreter/env
+  default-env)
+
+(intrinsics:defn evaluate (expr env)
+  (if (cons? expr)
+    (progn
+      (def func (evaluate (car expr) env))
+      (def args (map
+        (fn (e) (evaluate e env))
+        (cdr expr)))
+      (apply func args))
+    (if (vector? expr)
+      (panic "TODO Vectors")
+      (if (symbol? expr)
+        (expect (assoc expr env)
+          (string-append "Unbound variable: " (string<-symbol expr)))
+        (if (nil? expr)
+          (panic "Nil is not an expression")
+          expr)))))
+
+(intrinsics:defn apply (func args)
+  (if (function? func)
+    (panic "TODO: calls")
+    (panic (cons 'not-a-function func))))
+
+(intrinsics:defn eval (expr)
+  (evaluate expr default-env))

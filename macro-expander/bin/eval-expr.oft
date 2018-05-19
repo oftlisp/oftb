@@ -1,0 +1,24 @@
+(module main
+  [main])
+
+(import macro-expander/interpreter
+  eval)
+(import ministd/internal/oftb
+  read-file)
+
+(intrinsics:defn main (args)
+  (def argn (length args))
+  (def path
+    (if (= argn 0)
+      "/dev/stdin"
+      (if (= argn 1)
+        (nth 0 args)
+        (panic "usage: eval-expr [path]"))))
+
+  (def exprs (read-file path))
+  (each
+    (fn (expr)
+      (def v (eval expr))
+      (if (not (nil? v))
+        (println v)))
+    exprs))

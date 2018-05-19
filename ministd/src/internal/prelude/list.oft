@@ -19,12 +19,12 @@
       (helper (cdr l) (cons (car l) r))))
   (helper (reverse l) r))
 
-(intrinsics:defn assoc (l x)
-  (if (nil? x)
+(intrinsics:defn assoc (x l)
+  (if (nil? l)
     none
     (if (equals (car (car l)) x)
       (some (cdr (car l)))
-      (assoc (cdr l) x))))
+      (assoc x (cdr l)))))
 
 (intrinsics:defn each (f l)
   (if (nil? l)

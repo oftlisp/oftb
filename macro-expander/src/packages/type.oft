@@ -1,0 +1,5 @@
+(module macro-expander/packages/type
+  [package])
+
+(intrinsics:defn package (name path lib bins)
+  (list name path lib bins))

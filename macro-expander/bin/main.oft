@@ -11,4 +11,4 @@
   (def binary-name (nth 1 args))
 
   (def package (load-packages package-dir))
-  'todo)
+  package)

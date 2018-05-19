@@ -57,7 +57,7 @@ fn setup_panic(_: &Options) {}
 
 #[cfg(not(debug_assertions))]
 fn setup_panic(options: &Options) {
-    if options.verbose < 2 {
+    if options.verbose == 0 {
         setup_panic!();
     }
 }

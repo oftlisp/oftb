@@ -1,0 +1,26 @@
+(module ministd/monad/state
+  [eval-state exec-state run-state state-bind state-pure state-read
+   state-write])
+  
+(intrinsics:defn eval-state (state st)
+  (fst (st state)))
+  
+(intrinsics:defn exec-state (state st)
+  (snd (st state)))
+  
+(intrinsics:defn run-state (state st)
+  (st state))
+
+(intrinsics:defn state-pure (value)
+  (fn (state) (pair value state)))
+
+(intrinsics:defn state-bind (f st)
+  (fn (state)
+    (def tmp (st state))
+    ((f (fst tmp)) (snd tmp))))
+
+(intrinsics:defn state-read ()
+  (fn (state) (pair state state)))
+  
+(intrinsics:defn state-write (new-state)
+  (fn (state) (pair nil new-state)))

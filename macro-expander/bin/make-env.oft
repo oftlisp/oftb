@@ -1,0 +1,20 @@
+(module main
+  [main])
+
+(import macro-expander/prelude-utils
+  get-prelude-exports)
+
+(intrinsics:defn main (args)
+  (if (not (= (length args) 1))
+    (panic "usage: make-prelude ministd-dir"))
+  (def exports (snd (get-prelude-exports (nth 0 args))))
+
+  (println '(module macro-expander/interpreter/env [default-env]))
+  (println)
+  (println (list 'def 'default-env (make-env exports))))
+
+(intrinsics:defn make-env (exports)
+  (cons 'list (map to-env-entry (flat-map list<-vector (map snd exports)))))
+
+(intrinsics:defn to-env-entry (s)
+  (list 'cons (list 'quote s) s))

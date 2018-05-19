@@ -7,6 +7,12 @@
 (components
   (library)
   (binary
+    (name "eval-expr")
+    (path "bin/eval-expr.oft"))
+  (binary
+    (name "make-env")
+    (path "bin/make-env.oft"))
+  (binary
     (name "make-prelude")
     (path "bin/make-prelude.oft"))
   (binary

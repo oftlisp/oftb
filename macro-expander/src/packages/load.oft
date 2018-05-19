@@ -1,0 +1,48 @@
+(module macro-expander/packages/load
+  [load-package-from])
+
+(import macro-expander/fs
+  walk-dir-files)
+(import macro-expander/packages/type
+  package)
+(import ministd/internal/oftb
+  read-file)
+
+(intrinsics:defn load-package-from (path)
+  (def metadata-path (string-append path "/package.oftd"))
+  (def metadata (read-file metadata-path))
+
+  (def name (car (expect (assoc 'name metadata)
+    "Missing package name")))
+  (def components (expect (assoc 'components metadata)
+    "Missing package components list"))
+
+  (def components (partition (map
+    (fn (c)
+      (def type (car c))
+      (def c (cdr c))
+      (if (eq type 'library)
+        (left (load-lib-from path c))
+        (if (eq type 'binary)
+          (right (load-bin-from path c))
+          (panic (string-append "Unknown type: " (string<-symbol type))))))
+    components)))
+
+  (package name path (fst components) (snd components)))
+
+(intrinsics:defn load-bin-from (pkg-path component)
+  (def name (car (expect
+    (assoc 'name component)
+    "Binary component missing name")))
+  (def path (car (expect
+    (assoc 'path component)
+    "Binary component missing path")))
+  (def path (foldl string-append "" (list
+    pkg-path
+    "/"
+    path)))
+  (pair name (read-file path)))
+
+(intrinsics:defn load-lib-from (pkg-path component)
+  (def lib-files (walk-dir-files (string-append pkg-path "/src")))
+  (panic component))

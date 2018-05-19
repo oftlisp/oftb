@@ -95,6 +95,7 @@ intrinsics! {
 
         fn symbol_of_string[store, _k](s) {
             if let Value::String(a, l) = s {
+                // TODO Check the string for validity.
                 Value::Symbol(store.get_str(a, l).into())
             } else {
                 unimplemented!("TODO Type Error")

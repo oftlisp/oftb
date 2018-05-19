@@ -1,0 +1,6 @@
+(module ministd/internal/prelude/function
+  [.]
+  no-prelude)
+
+(intrinsics:defn . (f g)
+  (fn (x) (f (g x))))

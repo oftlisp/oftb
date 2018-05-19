@@ -1,0 +1,8 @@
+(module ministd/monad
+  [monad-while])
+
+(intrinsics:defn monad-while (bind pure cnd body)
+  (bind (fn (keep-going)
+    (if keep-going
+      (bind body (fn (_) (monad-while bind pure cnd body)))
+      (pure nil)))))
