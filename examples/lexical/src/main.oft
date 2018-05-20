@@ -1,0 +1,9 @@
+(module main
+  [main])
+
+(intrinsics:defn main (args)
+  (println
+    ((fn (x)
+      ((fn (x) (x 1))
+       (fn (y) (x 2))))
+     (fn (z) 42))))

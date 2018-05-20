@@ -1,6 +1,6 @@
 (module ministd/internal/prelude/list
-  [append assoc each flat-map foldl foldr length map nth partition reverse skip
-   split-at take]
+  [append assoc each first-nonnil first-some flat-map foldl foldr length map
+   nth partition reverse skip split-at take]
   no-prelude)
 
 (import ministd/internal/prelude/either
@@ -8,7 +8,7 @@
 (import ministd/internal/prelude/intrinsics
   + - = car cdr cons equals nil nil?)
 (import ministd/internal/prelude/option
-  none some)
+  none some some?)
 (import ministd/internal/prelude/pair
   map-pair pair)
 
@@ -32,6 +32,20 @@
     (progn
       (f (car l))
       (each f (cdr l)))))
+
+(intrinsics:defn first-nonnil (l)
+  (if (nil? l)
+    nil
+    (if (nil? (car l))
+      (first-nonnil (cdr l))
+      (car l))))
+
+(intrinsics:defn first-some (l)
+  (if (nil? l)
+    none
+    (if (some? (car l))
+      (car l)
+      (first-some (cdr l)))))
 
 (intrinsics:defn flat-map (f l)
   (intrinsics:defn helper (l acc)
@@ -64,8 +78,8 @@
     (if (nil? es)
       (pair ls rs)
       (either
-        (fn (l) (helper (cdr es) (cons l ls) rs))
-        (fn (r) (helper (cdr es) ls (cons r rs)))
+        \(helper (cdr es) (cons $ ls) rs)
+        \(helper (cdr es) ls (cons $ rs))
         (car es))))
   (map-pair reverse reverse (helper es nil nil)))
 

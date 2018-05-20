@@ -7,7 +7,7 @@
 (import ministd/internal/prelude/function
   id)
 (import ministd/internal/prelude/intrinsics
-  / = car cdr compare cons eq nil nil? vector?)
+  / = car cdr compare cons eq nil nil? vector? writeln)
 (import ministd/internal/prelude/list
   length map split-at)
 (import ministd/internal/prelude/option
@@ -50,9 +50,10 @@
       (progn
         (def tmp (split-at (/ len 2) lst))
         (merge (helper (fst tmp)) (helper (snd tmp))))))
-  (map car (helper (map (fn (x) (cons x (f x))) lst))))
+  (map car (helper (map \(cons $ (f $)) lst))))
 
 (intrinsics:defn sort-vector-by (f lst)
+  (writeln "TODO sort-vector-by")
   (intrinsics:defn helper (lst)
     (def len (vector-length lst))
     (if (= len 1)
@@ -60,4 +61,4 @@
       (progn
         (def tmp (split-at (/ len 2) lst))
         (merge (helper (fst tmp)) (helper (snd tmp))))))
-  (map car (helper (map (fn (x) (cons x (f x))) lst))))
+  (map car (helper (map \(cons $ (f $)) lst))))

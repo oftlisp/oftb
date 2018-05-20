@@ -24,7 +24,7 @@
     
   (def prelude-files (walk-dir-files prelude-srcs-path))
   (def exports (map
-    (fn (m) (map-pair to-import-name exports-of m))
+    \(map-pair to-import-name exports-of $)
     prelude-files))
 
   (pair package-name exports))

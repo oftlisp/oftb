@@ -9,7 +9,7 @@
     (progn
       (def func (evaluate (car expr) env))
       (def args (map
-        (fn (e) (evaluate e env))
+        \(evaluate $ env)
         (cdr expr)))
       (apply func args))
     (if (vector? expr)

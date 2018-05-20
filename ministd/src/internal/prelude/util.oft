@@ -1,0 +1,10 @@
+(module ministd/internal/prelude/util
+  [debug-trace]
+  no-prelude)
+
+(import ministd/internal/prelude/intrinsics
+  writeln)
+
+(intrinsics:defn debug-trace (x)
+  (writeln x)
+  x)

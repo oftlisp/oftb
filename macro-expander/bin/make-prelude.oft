@@ -16,10 +16,8 @@
   (println)
   (each print-import-for exports)
   (println)
-  (each (fn (v)
-    (vector-each (fn (name)
-      (println (list 'def name name)))
-      v))
+  (each
+    \(vector-each \(println (list 'def $ $)) $)
     (map snd exports)))
 
 (intrinsics:defn module-stmt-for (package-name exports)

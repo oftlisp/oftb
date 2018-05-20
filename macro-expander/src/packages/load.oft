@@ -18,13 +18,13 @@
     "Missing package components list"))
 
   (def components (partition (map
-    (fn (c)
-      (def type (car c))
-      (def c (cdr c))
+    (fn (component)
+      (def type (car component))
+      (def component (cdr component))
       (if (eq type 'library)
-        (left (load-lib-from path c))
+        (left (load-lib-from path component))
         (if (eq type 'binary)
-          (right (load-bin-from path c))
+          (right (load-bin-from path component))
           (panic (string-append "Unknown type: " (string<-symbol type))))))
     components)))
 

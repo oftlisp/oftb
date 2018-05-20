@@ -3,6 +3,6 @@
   no-prelude)
 
 (intrinsics:defn . (f g)
-  (fn (x) (f (g x))))
+  \(f (g $)))
 
 (intrinsics:defn id (x) x)

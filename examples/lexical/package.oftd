@@ -1,10 +1,10 @@
 (authors
   "Nathan Ringo <remexre@gmail.com>")
 (license "CC0-1.0")
-(name do-notation)
+(name lexical)
 (version "0.1.0")
 
 (components
   (binary
-    (name "state")
-    (path "src/state.oft")))
+    (name "lexical")
+    (path "src/main.oft")))

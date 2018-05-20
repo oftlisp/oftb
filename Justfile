@@ -4,8 +4,9 @@ all: check build doc test bootstrap
 bootstrap: make-prelude
 	@just macro-expand examples/do-notation list-monad
 	@just interpret examples/do-notation/build/list-monad.ofta
-hello-world:
+examples:
 	@just run examples/hello-world hello-world
+	@just run examples/lexical lexical
 make-env:
 	#!/usr/bin/env python3
 	import shutil, subprocess, tempfile
