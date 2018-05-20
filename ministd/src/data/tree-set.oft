@@ -18,6 +18,12 @@
   (if (E? tree)
     black
     (nth 1 tree)))
+(intrinsics:defn get-left (tree)
+  (nth 2 tree))
+(intrinsics:defn get-right (tree)
+  (nth 3 tree))
+(intrinsics:defn get-value (tree)
+  (cdr (cdr (cdr (cdr tree)))))
 
 (intrinsics:defn red?   (tree) (eq (get-color tree) red))
 (intrinsics:defn black? (tree) (eq (get-color tree) black))
@@ -26,16 +32,32 @@
   ; Returns false iff the tree is red and has a red child.
   (intrinsics:defn check-red-children (tree)
     (if (red? tree)
-      (and (black? (nth 2 tree)) (black? (nth 3 tree)))
+      (and (black? (get-left tree)) (black? (get-right tree)))
       true))
 
   ; Applies check-red-children to all subtrees.
   (intrinsics:defn check-all-red-children (tree)
     (if (and (check-red-children tree) (T? tree))
       (and
-        (check-all-red-children (nth 2 tree))
-        (check-all-red-children (nth 3 tree)))
+        (check-all-red-children (get-left  tree))
+        (check-all-red-children (get-right tree)))
       false))
+
+  ; Returns true iff the search tree property holds.
+  (intrinsics:defn check-ordering (tree)
+    (if (E? tree)
+      true
+      (progn
+        (def l (get-left  tree))
+        (def r (get-right tree))
+        (def v (get-value tree))
+        (and
+          (if (T? l)
+            (and (<= (get-value l) v) (check-ordering l))
+            true)
+          (if (T? (get-right tree))
+            (and (>  (get-value r) v) (check-ordering r))
+            true))))
 
   ; Returns nil iff the path-lengths-to-black of the tree's children are
   ; different, and the path length if they are the same.
@@ -43,8 +65,8 @@
     (if (E? tree)
       1
       (progn
-        (def l (check-paths (nth 2 tree)))
-        (def r (check-paths (nth 3 tree)))
+        (def l (check-paths (get-left  tree)))
+        (def r (check-paths (get-right tree)))
         (def f (if (red? tree) id 1+))
         (if (and l r)
           (if (= l r)
@@ -52,10 +74,12 @@
             false)
           false))))
 
-  ; Run both checks.
-  (if (check-all-red-children tree)
-    (not (nil? (check-paths tree)))
-    false))
+  ; Run all the checks.
+  (and
+    (check-all-red-children tree)
+    (and
+      (check-ordering tree)
+      (not (nil? (check-paths tree))))))
 
 (intrinsics:defn balance (tree)
   'todo)
@@ -65,7 +89,15 @@
   (T black E E x))
 
 (intrinsics:defn set-contains? (x tree)
-  'todo)
+  (if (E? tree)
+    false
+    (progn
+      (def y (get-value tree))
+      (if (equals x y)
+        true
+        (if (< x y)
+          (set-contains? x (get-left  tree))
+          (set-contains? x (get-right tree)))))))
 
 (intrinsics:defn set-insert (x tree)
   'todo)
