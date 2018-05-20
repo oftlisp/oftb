@@ -1,0 +1,63 @@
+(module ministd/internal/prelude/sort
+  [sort sort-by]
+  no-prelude)
+
+(import ministd/internal/prelude/compare
+  >)
+(import ministd/internal/prelude/function
+  id)
+(import ministd/internal/prelude/intrinsics
+  / = car cdr compare cons eq nil nil? vector?)
+(import ministd/internal/prelude/list
+  length map split-at)
+(import ministd/internal/prelude/option
+  none some)
+(import ministd/internal/prelude/pair
+  fst map-pair pair snd)
+(import ministd/internal/prelude/vector
+  vector-length vector-nth vector-slice)
+
+(intrinsics:defn merge (l r)
+  (intrinsics:defn rev-append (l r)
+    (if (nil? l)
+      r
+      (rev-append (cdr l) (cons (car l) r))))
+  (intrinsics:defn helper (l r acc)
+    (if (nil? l)
+      (rev-append acc r)
+      (if (nil? r)
+        (rev-append acc l)
+        (progn
+          (def lh (car l))
+          (def rh (car r))
+          (if (> (cdr lh) (cdr rh))
+            (helper l (cdr r) (cons rh acc))
+            (helper (cdr l) r (cons lh acc)))))))
+  (helper l r nil))
+
+(intrinsics:defn sort (l)
+  (sort-by id l))
+
+(intrinsics:defn sort-by (f l)
+  (def sorter (if (vector? l) sort-vector-by sort-list-by))
+  (sorter f l))
+
+(intrinsics:defn sort-list-by (f lst)
+  (intrinsics:defn helper (lst)
+    (def len (length lst))
+    (if (= len 1)
+      (car lst)
+      (progn
+        (def tmp (split-at (/ len 2) lst))
+        (merge (helper (fst tmp)) (helper (snd tmp))))))
+  (map car (helper (map (fn (x) (cons x (f x))) lst))))
+
+(intrinsics:defn sort-vector-by (f lst)
+  (intrinsics:defn helper (lst)
+    (def len (vector-length lst))
+    (if (= len 1)
+      (car lst)
+      (progn
+        (def tmp (split-at (/ len 2) lst))
+        (merge (helper (fst tmp)) (helper (snd tmp))))))
+  (map car (helper (map (fn (x) (cons x (f x))) lst))))

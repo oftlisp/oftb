@@ -1,7 +1,7 @@
 (module ministd/internal/prelude/intrinsics
-  [* + - = byte? bytes? car cdr cons cons? eq equals false fixnum? function?
-   list nil nil? panic print println string? symbol? true vector? write
-   write-bytes writeln]
+  [* + - / = byte? bytes? car cdr compare cons cons? eq equals false fixnum?
+   function? list mod nil nil? panic print println string? symbol? true vector?
+   write write-bytes writeln]
   no-prelude)
 
 ; Constants
@@ -10,14 +10,15 @@
 (def true  'true)
 
 ; Basic Functions
-(def =      intrinsics:eq_num)
-(def car    intrinsics:car)
-(def cdr    intrinsics:cdr)
-(def cons   intrinsics:cons)
-(def eq     intrinsics:eq)
-(def equals intrinsics:equals)
-(def list   intrinsics:list)
-(def panic  intrinsics:panic)
+(def =       intrinsics:eq_num)
+(def car     intrinsics:car)
+(def cdr     intrinsics:cdr)
+(def compare intrinsics:compare)
+(def cons    intrinsics:cons)
+(def eq      intrinsics:eq)
+(def equals  intrinsics:equals)
+(def list    intrinsics:list)
+(def panic   intrinsics:panic)
 
 ; I/O Functions
 (def print       intrinsics/io:print)
@@ -27,9 +28,11 @@
 (def write-bytes intrinsics/io:write_bytes)
 
 ; Math Functions
-(def * intrinsics/math:mul)
-(def + intrinsics/math:add)
-(def - intrinsics/math:sub)
+(def *   intrinsics/math:multiply)
+(def +   intrinsics/math:add)
+(def -   intrinsics/math:subtract)
+(def /   intrinsics/math:divide)
+(def mod intrinsics/math:modulo)
 
 ; Type-Test Functions
 (def byte?     intrinsics/types:is_byte)

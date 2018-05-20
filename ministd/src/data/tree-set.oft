@@ -1,5 +1,5 @@
 (module ministd/data/tree-set
-  [empty-set])
+  [empty-set set-contains? set-insert singleton-set])
 
 (def black 'black)
 (def red 'red)

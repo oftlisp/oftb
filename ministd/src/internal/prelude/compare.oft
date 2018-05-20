@@ -1,0 +1,14 @@
+(module ministd/internal/prelude/compare
+  [< <= > >=]
+  no-prelude)
+
+(import ministd/internal/prelude/intrinsics
+  compare eq)
+(import ministd/internal/prelude/logic
+  not)
+
+(intrinsics:defn < (l r) (eq (compare l r) 'lt))
+(intrinsics:defn > (l r) (eq (compare l r) 'gt))
+
+(intrinsics:defn <= (l r) (not (eq (compare l r) 'gt)))
+(intrinsics:defn >= (l r) (not (eq (compare l r) 'lt)))

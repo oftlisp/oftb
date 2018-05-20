@@ -1,6 +1,6 @@
 (module ministd/internal/prelude/list
   [append assoc each flat-map foldl foldr length map nth partition reverse skip
-   take]
+   split-at take]
   no-prelude)
 
 (import ministd/internal/prelude/either
@@ -76,6 +76,9 @@
   (if (= n 0)
     l
     (skip (- n 1) (cdr l))))
+
+(intrinsics:defn split-at (n l)
+  (pair (take n l) (skip n l)))
 
 (intrinsics:defn take (n l)
   (intrinsics:defn helper (n l acc)

@@ -3,6 +3,8 @@
 #[macro_use]
 mod macros;
 
+use std::cmp::Ordering;
+
 use interpreter::{Addr, Store, Value};
 use {parse_file, Literal};
 
@@ -41,6 +43,14 @@ intrinsics! {
             match l {
                 Value::Cons(_, t) => store.get(t),
                 _ => unimplemented!("Can't take cdr of {:?}", l)
+            }
+        }
+
+        fn compare[store, _k](a, b) {
+            match a.compare(b, store) {
+                Ordering::Greater => Value::Symbol("gt".into()),
+                Ordering::Equal => Value::Symbol("eq".into()),
+                Ordering::Less => Value::Symbol("lt".into()),
             }
         }
 
@@ -148,7 +158,23 @@ intrinsics! {
             }
         }
 
-        fn mul[_s, _k](l, r) {
+        fn divide[_s, _k](l, r) {
+            match (l, r) {
+                (Value::Byte(l), Value::Byte(r)) => Value::Byte(l / r),
+                (Value::Fixnum(l), Value::Fixnum(r)) => Value::Fixnum(l / r),
+                _ => panic!("TODO Math Type Error {:?} {:?}", l, r),
+            }
+        }
+
+        fn modulo[_s, _k](l, r) {
+            match (l, r) {
+                (Value::Byte(l), Value::Byte(r)) => Value::Byte(l % r),
+                (Value::Fixnum(l), Value::Fixnum(r)) => Value::Fixnum(l % r),
+                _ => panic!("TODO Math Type Error {:?} {:?}", l, r),
+            }
+        }
+
+        fn multiply[_s, _k](l, r) {
             match (l, r) {
                 (Value::Byte(l), Value::Byte(r)) => Value::Byte(l * r),
                 (Value::Fixnum(l), Value::Fixnum(r)) => Value::Fixnum(l * r),
@@ -156,7 +182,7 @@ intrinsics! {
             }
         }
 
-        fn sub[_s, _k](l, r) {
+        fn subtract[_s, _k](l, r) {
             match (l, r) {
                 (Value::Byte(l), Value::Byte(r)) => Value::Byte(l - r),
                 (Value::Fixnum(l), Value::Fixnum(r)) => Value::Fixnum(l - r),
