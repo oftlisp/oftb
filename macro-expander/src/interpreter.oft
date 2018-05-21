@@ -16,7 +16,7 @@
       (panic "TODO Vectors")
       (if (symbol? expr)
         (expect (assoc expr env)
-          (string-append "Unbound variable: " (string<-symbol expr)))
+          (string-append "Unbound variable: " (symbol->string expr)))
         (if (nil? expr)
           (panic "Nil is not an expression")
           expr)))))

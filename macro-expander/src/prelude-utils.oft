@@ -18,8 +18,8 @@
   (intrinsics:defn to-import-name (path)
     (def l (string-length path))
     (def path (string-slice src-path-len (- l 4) path))
-    (symbol<-string (string-append
-      (string<-symbol package-name)
+    (string->symbol (string-append
+      (symbol->string package-name)
       path)))
     
   (def prelude-files (walk-dir-files prelude-srcs-path))

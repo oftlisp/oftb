@@ -10,25 +10,25 @@
 
   (def tmp (get-prelude-exports (nth 0 args)))
   (def package-name (fst tmp))
-  (def exports (snd tmp))
+  (def exports (sort-by fst (snd tmp)))
 
   (println (module-stmt-for package-name exports))
   (println)
   (each print-import-for exports)
   (println)
   (each
-    \(vector-each \(println (list 'def $ $)) $)
+    \(vector-each \(println (list 'def $ $)) (sort $))
     (map snd exports)))
 
 (intrinsics:defn module-stmt-for (package-name exports)
-  (def module-name (symbol<-string (string-append
-    (string<-symbol package-name)
+  (def module-name (string->symbol (string-append
+    (symbol->string package-name)
     "/prelude")))
-  (def all-exports (foldl vector-append [] (map snd exports)))
+  (def all-exports (sort (foldl vector-append [] (map snd exports))))
   (list 'module module-name all-exports 'no-prelude))
 
 (intrinsics:defn print-import-for (m)
   (def module-name (fst m))
-  (def imports (list<-vector (snd m)))
+  (def imports (vector->list (snd m)))
   (def import-stmt (cons 'import (cons module-name imports)))
   (println import-stmt))

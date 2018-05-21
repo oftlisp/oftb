@@ -94,19 +94,34 @@ intrinsics! {
     }
 
     mod "convert" as convert {
-        fn string_of_symbol[store, _k](s) {
-            if let Value::Symbol(s) = s {
-                let (a, l) = store.store_str(s.as_str());
-                Value::String(a, l)
+        fn list_to_vector[store, _k](s) {
+            let mut lst = s;
+            let mut vec = Vec::new();
+            while let Value::Cons(hd, tl) = lst {
+                vec.push(hd);
+                lst = store.get(tl);
+            }
+            if lst == Value::Nil {
+                let (a, l) = store.store_vec(&vec);
+                Value::Vector(a, l)
+            } else {
+                panic!("TODO Type Error")
+            }
+        }
+
+        fn string_to_symbol[store, _k](s) {
+            if let Value::String(a, l) = s {
+                // TODO Check the string for validity.
+                Value::Symbol(store.get_str(a, l).into())
             } else {
                 unimplemented!("TODO Type Error")
             }
         }
 
-        fn symbol_of_string[store, _k](s) {
-            if let Value::String(a, l) = s {
-                // TODO Check the string for validity.
-                Value::Symbol(store.get_str(a, l).into())
+        fn symbol_to_string[store, _k](s) {
+            if let Value::Symbol(s) = s {
+                let (a, l) = store.store_str(s.as_str());
+                Value::String(a, l)
             } else {
                 unimplemented!("TODO Type Error")
             }

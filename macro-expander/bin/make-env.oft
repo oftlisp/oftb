@@ -14,7 +14,7 @@
   (println (list 'def 'default-env (make-env exports))))
 
 (intrinsics:defn make-env (exports)
-  (def exports (flat-map list<-vector (map snd exports)))
+  (def exports (flat-map vector->list (map snd exports)))
   (cons 'list (map to-env-entry (sort exports))))
 
 (intrinsics:defn to-env-entry (s)

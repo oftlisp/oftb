@@ -4,18 +4,18 @@
 
 (import ministd/internal/prelude/compare
   >)
+(import ministd/internal/prelude/conversions
+  list->vector vector->list)
 (import ministd/internal/prelude/function
   id)
 (import ministd/internal/prelude/intrinsics
-  / = car cdr compare cons eq nil nil? vector? writeln)
+  / = car cdr compare cons eq list nil nil? vector?)
 (import ministd/internal/prelude/list
   length map split-at)
 (import ministd/internal/prelude/option
   none some)
 (import ministd/internal/prelude/pair
   fst map-pair pair snd)
-(import ministd/internal/prelude/vector
-  vector-length vector-nth vector-slice)
 
 (intrinsics:defn merge (l r)
   (intrinsics:defn rev-append (l r)
@@ -46,19 +46,18 @@
   (intrinsics:defn helper (lst)
     (def len (length lst))
     (if (= len 1)
-      (car lst)
+      lst
       (progn
         (def tmp (split-at (/ len 2) lst))
         (merge (helper (fst tmp)) (helper (snd tmp))))))
   (map car (helper (map \(cons $ (f $)) lst))))
 
-(intrinsics:defn sort-vector-by (f lst)
-  (writeln "TODO sort-vector-by")
+(intrinsics:defn sort-vector-by (f v)
   (intrinsics:defn helper (lst)
-    (def len (vector-length lst))
+    (def len (length lst))
     (if (= len 1)
-      (car lst)
+      lst
       (progn
         (def tmp (split-at (/ len 2) lst))
         (merge (helper (fst tmp)) (helper (snd tmp))))))
-  (map car (helper (map \(cons $ (f $)) lst))))
+  (list->vector (map car (helper (map \(cons $ (f $)) (vector->list v))))))

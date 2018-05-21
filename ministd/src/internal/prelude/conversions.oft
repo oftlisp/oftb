@@ -1,16 +1,17 @@
 (module ministd/internal/prelude/conversions
-  [list<-vector string<-symbol symbol<-string]
+  [list->vector string->symbol symbol->string vector->list]
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
-  - = cons nil)
+  - = cons nil panic)
 (import ministd/internal/prelude/vector
   vector-length vector-nth)
 
-(def string<-symbol intrinsics/convert:string_of_symbol)
-(def symbol<-string intrinsics/convert:symbol_of_string)
+(def list->vector   intrinsics/convert:list_to_vector)
+(def string->symbol intrinsics/convert:string_to_symbol)
+(def symbol->string intrinsics/convert:symbol_to_string)
 
-(intrinsics:defn list<-vector (v)
+(intrinsics:defn vector->list (v)
   (intrinsics:defn helper (n acc)
     (if (= n 0)
       (cons (vector-nth 0 v) acc)

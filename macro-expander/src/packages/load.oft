@@ -25,7 +25,7 @@
         (left (load-lib-from path component))
         (if (eq type 'binary)
           (right (load-bin-from path component))
-          (panic (string-append "Unknown type: " (string<-symbol type))))))
+          (panic (string-append "Unknown type: " (symbol->string type))))))
     components)))
 
   (package name path (fst components) (snd components)))
