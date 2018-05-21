@@ -1,7 +1,2 @@
 (module macro-expander
-  [load-packages])
-
-(import macro-expander/packages
-  load-packages)
-
-(def load-packages load-packages)
+  [])

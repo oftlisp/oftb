@@ -1,5 +1,13 @@
 (module macro-expander/packages/type
-  [package])
+  [binary-component library-component package])
+
+(intrinsics:defn binary-component (pkg name)
+  (def bins (nth 3 pkg))
+  (expect (assoc name bins)
+    "Missing binary component"))
+
+(intrinsics:defn library-component (pkg)
+  (nth 2 pkg))
 
 (intrinsics:defn package (name path lib bins)
   (list name path lib bins))

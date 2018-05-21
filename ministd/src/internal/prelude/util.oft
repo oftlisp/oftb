@@ -1,10 +1,15 @@
 (module ministd/internal/prelude/util
-  [debug-trace]
+  [debug-trace shl?]
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
-  writeln)
+  car cons? eq false writeln)
 
 (intrinsics:defn debug-trace (x)
   (writeln x)
   x)
+
+(intrinsics:defn shl? (sym value)
+  (if (cons? value)
+    (eq (car value) sym)
+    false))

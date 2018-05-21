@@ -1,14 +1,17 @@
 (module main
   [main])
 
-(import macro-expander
-  load-packages)
+(import macro-expander/packages
+  load-packages traverse-modules)
 
 (intrinsics:defn main (args)
-  (if (not (= (length args) 2))
-    (panic "usage: oftb-macro-expander package-dir binary-name"))
-  (def package-dir (nth 0 args))
-  (def binary-name (nth 1 args))
+  (if (not (= (length args) 3))
+    (panic "usage: oftb-macro-expander std-path package-dir binary-name"))
+  (def std-path    (nth 0 args))
+  (def package-dir (nth 1 args))
+  (def binary-name (nth 2 args))
 
-  (def package (load-packages package-dir))
-  package)
+  (def packages (load-packages std-path package-dir binary-name))
+  (def modules (traverse-modules packages 'main))
+
+  packages)

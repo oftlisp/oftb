@@ -1,9 +1,20 @@
 (module ministd/internal/prelude/string
-  [string-append string-length string-nth string-slice]
+  [string-append string-length string-nth string-search string-slice
+   string-split-on string-split-on-1]
   no-prelude)
 
+(import ministd/internal/prelude/compare
+  >=)
+(import ministd/internal/prelude/intrinsics
+  + - cons equals nil)
+(import ministd/internal/prelude/list
+  reverse)
 (import ministd/internal/prelude/math
   1+)
+(import ministd/internal/prelude/option
+  none option-cases some)
+(import ministd/internal/prelude/pair
+  fst snd pair)
 
 (def string-append intrinsics/strings:append)
 (def string-length intrinsics/strings:length)
@@ -11,3 +22,33 @@
 
 (intrinsics:defn string-nth (n s)
   (string-slice n (1+ n) s))
+
+; TODO: Use Boyer-Moore instead. For now, this is O(mn) naive string search.
+(intrinsics:defn string-search (needle haystack)
+  (def needle-len (string-length needle))
+  (def last-n (- (string-length haystack) needle-len))
+
+  (intrinsics:defn match? (n)
+    (equals (string-slice n (+ n needle-len) haystack) needle))
+  (intrinsics:defn helper (n)
+    (if (match? n)
+      n
+      (if (>= n last-n)
+        nil
+        (helper (1+ n)))))
+  (helper 0))
+
+(intrinsics:defn string-split-on (needle s)
+  (intrinsics:defn helper (s acc)
+    (def tmp (string-split-on-1 needle s))
+    (option-cases (string-split-on-1 needle s)
+      \(helper (snd $) (cons (fst $) acc))
+      (fn () (reverse (cons s acc))))))
+
+(intrinsics:defn string-split-on-1 (needle s)
+  (def n (string-search needle s))
+  (if (n)
+    (some (pair
+      (string-slice 0      n                 s)
+      (string-slice (1+ n) (string-length s) s)))
+    none))

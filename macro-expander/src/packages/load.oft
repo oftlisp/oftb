@@ -45,4 +45,4 @@
 
 (intrinsics:defn load-lib-from (pkg-path component)
   (def lib-files (walk-dir-files (string-append pkg-path "/src")))
-  (panic component))
+  (panic (cons component lib-files)))

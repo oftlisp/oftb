@@ -4,16 +4,34 @@
 (import macro-expander/packages/load
   load-package-from)
 (import macro-expander/packages/type
-  package)
+  library-component package)
 (import ministd/data/tree-set
   empty-set)
 (import ministd/monad/state
-  state-bind state-pure state-read state-write)
+  run-state state-bind state-modify state-pure)
 
-(intrinsics:defn load-packages (root-package-path)
+(intrinsics:defn load-packages (std-path root-package-path binary-name)
+  ; TODO: Dependencies. I guess this is getting tossed out once it bootstraps
+  ; oftc, so it doesn't _really_ matter, but /shrug.
   (def root (load-package-from root-package-path))
-  (println 'root '= root))
+  (def std (load-package-from std-path))
 
+  (def unprocessed-packages (list root std))
+  unprocessed-packages)
+
+; Performs a post-order traversal over the modules, returning a result with
+; the modules in order if the modules are acyclic, or the module involved in
+; the cycle if they are not.
 (intrinsics:defn traverse-modules (pkgs starting-module)
-  (def initial-state (pair empty-set empty-set))
-  'todo)
+  ; Traverses to the given module. Returns a state-monadic computation with an
+  ; ok value of nil on success, and a symbol (the module involved in the cycle)
+  ; on error.
+  (intrinsics:defn helper (goal)
+    'todo)
+
+  ; The state is the pair (closed set, module list).
+  (def initial-state (pair empty-set nil))
+  (def tmp (run-state initial-state (helper starting-module)))
+  (if (nil? (fst tmp))
+    (ok (snd (snd tmp)))
+    (err (fst tmp))))

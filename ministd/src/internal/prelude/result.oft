@@ -1,0 +1,29 @@
+(module ministd/internal/prelude/result
+  [err err? must ok ok?]
+  no-prelude)
+
+(import ministd/internal/prelude/intrinsics
+  car cdr cons cons? eq false panic)
+
+(intrinsics:defn err (x)
+  (cons 'err x))
+
+(intrinsics:defn err? (opt)
+  (if (cons? opt)
+    (eq (car opt) 'err)
+    false))
+
+(intrinsics:defn must (r)
+  (if (err? r)
+    (panic (cdr r))
+    (if (ok? r)
+      (cdr r)
+      (panic "Not a result"))))
+
+(intrinsics:defn ok (x)
+  (cons 'ok x))
+
+(intrinsics:defn ok? (opt)
+  (if (cons? opt)
+    (eq (car opt) 'ok)
+    false))
