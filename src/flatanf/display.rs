@@ -48,7 +48,11 @@ impl Display for CExpr {
                 write!(fmt, "if {} then {} else {} endif", c, t, e)
             }
             CExpr::LetRec(ref bound, ref body) => {
-                write!(fmt, "letrec todo\n{}", body)
+                writeln!(fmt, "letrec")?;
+                for (argn, ref body) in bound {
+                    writeln!(fmt, "  lam({}). {}", argn, body)?;
+                }
+                write!(fmt, "{}", body)
             }
         }
     }
@@ -63,7 +67,21 @@ impl Display for AExpr {
             }
             AExpr::Literal(ref lit) => write!(fmt, "{}", lit),
             AExpr::Local(n) => write!(fmt, "${}", n),
-            AExpr::Vector(ref vals) => unimplemented!(),
+            AExpr::Vector(ref vals) => {
+                write!(fmt, "[")?;
+
+                let mut first = true;
+                for val in vals {
+                    if first {
+                        first = false;
+                    } else {
+                        write!(fmt, ", ")?;
+                    }
+                    write!(fmt, "{}", val)?;
+                }
+
+                write!(fmt, "]")
+            }
         }
     }
 }

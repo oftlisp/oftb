@@ -369,7 +369,7 @@ intrinsics! {
             }
         }
 
-        fn length[store, _k](s) {
+        fn length[_s, _k](s) {
             if let Value::Vector(_, l) = s {
                 Value::Fixnum(l as isize)
             } else {
@@ -391,7 +391,7 @@ intrinsics! {
             }
         }
 
-        fn slice[store, _k](start, end, s) {
+        fn slice[_s, _k](start, end, s) {
             let (a, l) = if let (
                 Value::Fixnum(start),
                 Value::Fixnum(end),

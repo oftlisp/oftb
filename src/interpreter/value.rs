@@ -183,7 +183,6 @@ impl Value {
                 }
                 l.len().cmp(&r.len())
             }
-            (Value::Vector(la, ln), _) => Ordering::Greater,
         }
     }
 

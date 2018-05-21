@@ -191,7 +191,7 @@ fn compile_cexpr(
             context.bracket_many(names, |context| {
                 let lambdas = lambdas
                     .into_iter()
-                    .map(|(name, args, body)| {
+                    .map(|(_, args, body)| {
                         let argn = args.len();
                         let body = context.bracket_many(args, |context| {
                             compile_expr(context, body)
