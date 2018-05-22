@@ -1,0 +1,10 @@
+(module main
+  [main])
+
+(import structure
+  hello-world)
+
+(defn main (args)
+  (println "Got arguments:" args)
+  (hello-world)
+  (println "Goodbye, world!"))

@@ -1,0 +1,11 @@
+(authors
+  "Nathan Ringo <remexre@gmail.com>")
+(license "CC0-1.0")
+(name structure)
+(version "0.1.0")
+
+(components
+  (library)
+  (binary
+    (name "structure")
+    (path "bin/main.oft")))

@@ -1,0 +1,5 @@
+(module structure
+  [hello-world])
+
+(defn hello-world ()
+  (println "Hello, world!"))
