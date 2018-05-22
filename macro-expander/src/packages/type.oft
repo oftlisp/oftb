@@ -3,8 +3,8 @@
 
 (intrinsics:defn binary-component (pkg name)
   (def bins (nth 3 pkg))
-  (expect (assoc name bins)
-    "Missing binary component"))
+  (list (expect (assoc name bins)
+    (string-append "Missing binary component " name))))
 
 (intrinsics:defn library-component (pkg)
   (nth 2 pkg))

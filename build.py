@@ -42,7 +42,7 @@ def run(pkg_dir, bin_name, args, redirect=None):
     oftb(args, redirect=redirect)
 
 def build_and_self_test():
-    print_cyan("Building oftb...")
+    print_cyan("build oftb")
     cargo("check")
     cargo("doc")
     cargo("build", mode="release")
@@ -52,8 +52,9 @@ def bootstrap():
     run("macro-expander", "make-prelude", ["ministd"],
         redirect="ministd/src/prelude.oft")
     compile("macro-expander", "oftb-macro-expander")
-    macro_expand("examples/do-notation", "list-monad")
-    interpret("examples/do-notation", "list-monad")
+    macro_expand("examples/structure", "structure")
+    macro_expand("examples/do-notation", "state")
+    interpret("examples/do-notation", "state")
 
 if __name__ == "__main__":
     build_and_self_test()

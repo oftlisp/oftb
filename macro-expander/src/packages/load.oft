@@ -2,7 +2,7 @@
   [load-package-from])
 
 (import macro-expander/fs
-  walk-dir-files)
+  walk-dir)
 (import macro-expander/packages/type
   package)
 (import ministd/internal/oftb
@@ -28,7 +28,10 @@
           (panic (string-append "Unknown type: " (symbol->string type))))))
     components)))
 
-  (package name path (fst components) (snd components)))
+  (def libs (fst components))
+  (if (not (= (length libs) 1))
+    (panic "Only one library component is allowed"))
+  (package name path (car libs) (snd components)))
 
 (intrinsics:defn load-bin-from (pkg-path component)
   (def name (car (expect
@@ -44,5 +47,4 @@
   (pair name (read-file path)))
 
 (intrinsics:defn load-lib-from (pkg-path component)
-  (def lib-files (walk-dir-files (string-append pkg-path "/src")))
-  (panic (cons component lib-files)))
+  (map read-file (walk-dir (string-append pkg-path "/src"))))
