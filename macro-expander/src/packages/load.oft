@@ -29,9 +29,12 @@
     components)))
 
   (def libs (fst components))
-  (if (not (= (length libs) 1))
-    (panic "Only one library component is allowed"))
-  (package name path (car libs) (snd components)))
+  (def lib (if (nil? libs)
+    nil
+    (if (= (length libs) 1)
+      (car libs)
+      (panic "Only one library component is allowed"))))
+  (package name path lib (snd components)))
 
 (intrinsics:defn load-bin-from (pkg-path component)
   (def name (car (expect

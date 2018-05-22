@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
-import shutil, subprocess, tempfile
+from argparse import ArgumentParser
+import shutil
+import subprocess
+import tempfile
 
 def command(cmd, redirect=None):
     if redirect == None:
@@ -41,7 +44,7 @@ def run(pkg_dir, bin_name, args, redirect=None):
     args = ["run", "--std", "ministd", pkg_dir, bin_name] + args
     oftb(args, redirect=redirect)
 
-def build_and_self_test():
+def build_oftb():
     print_cyan("build oftb")
     cargo("check")
     cargo("doc")
@@ -52,10 +55,14 @@ def bootstrap():
     run("macro-expander", "make-prelude", ["ministd"],
         redirect="ministd/src/prelude.oft")
     compile("macro-expander", "oftb-macro-expander")
-    macro_expand("examples/structure", "structure")
+    # macro_expand("examples/structure", "structure")
     macro_expand("examples/do-notation", "state")
     interpret("examples/do-notation", "state")
 
 if __name__ == "__main__":
-    build_and_self_test()
+    parser = ArgumentParser()
+    parser.add_argument("--no-oftb-build", action="store_true")
+    args = parser.parse_args()
+    if not args.no_oftb_build:
+        build_oftb()
     bootstrap()
