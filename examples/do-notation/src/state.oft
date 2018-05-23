@@ -2,7 +2,7 @@
   [main])
 
 (import ministd/data/tree-set
-  empty-set set-contains? set-insert)
+  empty-set set-has? set-insert)
 (import ministd/monad/state
   exec-state state-modify)
 
@@ -26,5 +26,5 @@
       (state-modify (curry (set-insert 3)))
       (state-modify (curry (set-insert 5))))))
   (each
-    \(println (cons (set-contains? $ set) $))
+    \(println (cons (set-has? $ set) $))
     (range 1 10)))

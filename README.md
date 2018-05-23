@@ -7,11 +7,39 @@ The OftLisp bootstrapper.
 
 Requires Rust version 1.26.0 or later.
 
-## oftb-macro-expander
+## Bootstrapping Process
 
-There's also a macro expander written in OftLisp here, for bootstrapping.
+Note that `build.py` performs all of these steps.
 
-## ministd
+### Stage 0: `oftb`
+
+First, `oftb` is built.
+This is a potentially time-consuming process; Rust code takes a long time to build.
+You can skip this step (if you've already run it) by passing `--no-oftb-build` to `build.py`.
+
+`oftb` performs bytecode compilation to `ofta` files, and interprets `ofta` files.
+It does not (currently) include a garbage collector.
+
+### Stage 0.5: Generate `ministd/prelude` and `macro-expander/interpreter/env`
+
+Since these two modules both rely on every export from the prelude (and are therefore a pain to update), they're generated.
+To ensure that up-to-date versions are used, the generation process runs every time `build.py` is run.
+
+### Stage 1: `macro-expander`
+
+`macro-expander` is an interpreter that performs macro expansion.
+
+### Stage 2: `oftc` bootstrap
+
+### Stage 3: `oftc`
+
+## Subprojects
+
+### macro-expander
+
+There's also a macro expanding interpreter written in OftLisp here, for bootstrapping.
+
+### ministd
 
 This repo also contains ministd, the trimmed-down version of the standard library used when bootstrapping.
 Notably, ministd does not provide any macros.

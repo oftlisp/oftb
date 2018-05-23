@@ -11,7 +11,7 @@
   (def package-dir (nth 1 args))
   (def binary-name (nth 2 args))
 
-  (def packages (load-packages std-path package-dir binary-name))
-  (def modules (traverse-modules packages 'main))
+  (def modules (load-packages std-path package-dir binary-name))
+  (def modules (traverse-modules modules 'main))
 
-  packages)
+  modules)

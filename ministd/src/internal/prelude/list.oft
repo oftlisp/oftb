@@ -1,10 +1,12 @@
 (module ministd/internal/prelude/list
-  [append assoc each first-nonnil first-some flat-map foldl foldr length map
-   nth partition reverse skip split-at take]
+  [append assoc each filter find first-nonnil first-some flat-map foldl foldr
+   index-into length map nth partition reverse skip split-at take take-while]
   no-prelude)
 
 (import ministd/internal/prelude/either
   either)
+(import ministd/internal/prelude/function
+  flip)
 (import ministd/internal/prelude/intrinsics
   + - = car cdr cons equals nil nil?)
 (import ministd/internal/prelude/option
@@ -33,6 +35,24 @@
       (f (car l))
       (each f (cdr l)))))
 
+(intrinsics:defn filter (pred l)
+  (intrinsics:defn helper (l acc)
+    (if (nil? l)
+      acc
+      (helper
+        (cdr l)
+        (if (pred (car l))
+          (cons (car l) acc)
+          acc))))
+  (reverse (helper l nil)))
+
+(intrinsics:defn find (pred l)
+  (if (nil? l)
+    none
+    (if (pred (car l))
+      (some (car l))
+      (find pred (cdr l)))))
+
 (intrinsics:defn first-nonnil (l)
   (if (nil? l)
     nil
@@ -51,8 +71,8 @@
   (intrinsics:defn helper (l acc)
     (if (nil? l)
       acc
-      (helper (cdr l) (append (f (car l)) acc))))
-  (helper l nil))
+      (helper (cdr l) (append (reverse (f (car l))) acc))))
+  (reverse (helper l nil)))
 
 (intrinsics:defn foldl (f x l)
   (if (nil? l)
@@ -63,6 +83,9 @@
   (if (nil? l)
     x
     (f (car l) (foldr f x (cdr l)))))
+
+(intrinsics:defn index-into (indices l)
+  (foldl (flip nth) l indices))
 
 (intrinsics:defn length (l)
   (foldl (fn (l _) (+ l 1)) 0 l))
@@ -100,3 +123,12 @@
       acc
       (helper (- n 1) (cdr l) (cons (car l) acc))))
   (reverse (helper n l nil)))
+
+(intrinsics:defn take-while (pred l)
+  (intrinsics:defn helper (l acc)
+    (if (nil? l)
+      acc
+      (if (pred (car l))
+        (helper (cdr l) (cons (car l) acc))
+        acc)))
+  (reverse (helper l nil)))

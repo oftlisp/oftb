@@ -1,8 +1,12 @@
 (module ministd/internal/prelude/function
-  [. id]
+  [. flip id]
   no-prelude)
 
 (intrinsics:defn . (f g)
   \(f (g $)))
+
+(intrinsics:defn flip (f)
+  (fn (a b)
+    (f b a)))
 
 (intrinsics:defn id (x) x)

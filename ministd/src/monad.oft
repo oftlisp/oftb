@@ -1,5 +1,18 @@
 (module ministd/monad
-  [monad-while])
+  [monad-for monad-map monad-while])
+
+(intrinsics:defn monad-for (bind pure body lst)
+  (if (nil? lst)
+    (pure nil)
+    (bind
+      (fn (h)
+        (monad-map bind pure
+          (fn (t) (cons h t))
+          (monad-for bind pure body (cdr lst))))
+      (body (car lst)))))
+
+(intrinsics:defn monad-map (bind pure f m)
+  (bind (. pure f) m))
 
 (intrinsics:defn monad-while (bind pure cnd body)
   (bind (fn (keep-going)

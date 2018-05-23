@@ -7,6 +7,8 @@
   binary-component library-component package)
 (import ministd/data/tree-set
   empty-set)
+(import ministd/monad
+  monad-for)
 (import ministd/monad/state
   run-state state-bind state-modify state-pure)
 
@@ -16,21 +18,27 @@
   ; oftc, so it doesn't _really_ matter, but /shrug.
   (def root (load-package-from root-package-path))
 
-  (def bin (binary-component root binary-name))
-  (cons bin (append
-    (library-component root)
-    (library-component std))))
+  (append
+    (binary-component root binary-name)
+    (append
+      (library-component root)
+      (library-component std))))
 
 ; Performs a post-order traversal over the modules, returning a result with
 ; the modules in order if the modules are acyclic, or the module involved in
 ; the cycle if they are not.
-(intrinsics:defn traverse-modules (pkgs starting-module)
+(intrinsics:defn traverse-modules (mods starting-module)
   ; Traverses to the given module. Returns a state-monadic computation with an
   ; ok value of nil on success, and a symbol (the module involved in the cycle)
   ; on error.
   (intrinsics:defn helper (goal)
-    (panic pkgs)
-    'todo)
+    (def m (expect
+      (find
+        \(eq (index-into '(0 1) $) goal)
+        mods)
+      (string-append "No such module: " (symbol->string goal))))
+    (def deps (map \(nth 1 $) (take-while \(shl? 'import $) (cdr m))))
+    (panic deps))
 
   ; The state is the pair (closed set, module list).
   (def initial-state (pair empty-set nil))

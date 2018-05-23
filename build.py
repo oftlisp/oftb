@@ -50,12 +50,12 @@ def build_oftb():
     cargo("doc")
     cargo("build", mode="release")
 def bootstrap():
-    run("macro-expander", "make-env", ["ministd"],
-        redirect="macro-expander/src/interpreter/env.oft")
     run("macro-expander", "make-prelude", ["ministd"],
         redirect="ministd/src/prelude.oft")
+    run("macro-expander", "make-env", ["ministd"],
+        redirect="macro-expander/src/interpreter/env.oft")
     compile("macro-expander", "oftb-macro-expander")
-    # macro_expand("examples/structure", "structure")
+    macro_expand("examples/structure", "structure")
     macro_expand("examples/do-notation", "state")
     interpret("examples/do-notation", "state")
 
