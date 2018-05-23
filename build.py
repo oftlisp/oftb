@@ -26,8 +26,10 @@ def cargo(subcmd, mode="debug"):
     if mode == "release":
         flags.append("--release")
     command(["cargo", "-q", subcmd] + flags)
+
+oftb_exec = "target/release/oftb"
 def oftb(args, redirect=None):
-    command(["target/release/oftb", "-v"] + args, redirect=redirect)
+    command([oftb_exec, "-v"] + args, redirect=redirect)
 
 def compile(pkg_dir, bin_name):
     print_cyan("compile", bin_name)
@@ -62,7 +64,10 @@ def bootstrap():
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--no-oftb-build", action="store_true")
+    parser.add_argument("--use-system-oftb", action="store_true")
     args = parser.parse_args()
-    if not args.no_oftb_build:
+    if args.use_system_oftb:
+        oftb_exec = "oftb"
+    elif not args.no_oftb_build:
         build_oftb()
     bootstrap()
