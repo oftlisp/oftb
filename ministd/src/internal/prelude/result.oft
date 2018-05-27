@@ -1,7 +1,9 @@
 (module ministd/internal/prelude/result
-  [err err? must ok ok?]
+  [err err? map-err map-ok map-result must ok ok?]
   no-prelude)
 
+(import ministd/internal/prelude/function
+  id)
 (import ministd/internal/prelude/intrinsics
   car cdr cons cons? eq false panic)
 
@@ -13,12 +15,21 @@
     (eq (car opt) 'err)
     false))
 
-(intrinsics:defn must (r)
+(intrinsics:defn map-err (f r)
+  (map-result id f r))
+
+(intrinsics:defn map-ok (f r)
+  (map-result f id r))
+
+(intrinsics:defn map-result (on-ok on-err r)
   (if (err? r)
-    (panic (cdr r))
+    (err (on-err (cdr r)))
     (if (ok? r)
-      (cdr r)
+      (ok (on-ok (cdr r)))
       (panic "Not a result"))))
+
+(intrinsics:defn must (r)
+  (cdr (map-result id panic r)))
 
 (intrinsics:defn ok (x)
   (cons 'ok x))

@@ -12,6 +12,6 @@
   (def binary-name (nth 2 args))
 
   (def modules (load-packages std-path package-dir binary-name))
-  (def modules (traverse-modules modules 'main))
+  (def modules (must (traverse-modules modules 'main)))
 
   modules)

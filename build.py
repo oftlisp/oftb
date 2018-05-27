@@ -34,16 +34,16 @@ def oftb(args, redirect=None):
 def compile(pkg_dir, bin_name):
     print_cyan("compile", bin_name)
     oftb(["compile", "--std", "ministd", pkg_dir, bin_name])
-def interpret(pkg_dir, bin_name, args, redirect=None):
+def interpret(pkg_dir, bin_name, *args, redirect=None):
     print_cyan("interpret", bin_name, *args)
-    args = ["interpret", "{}/build/{}.ofta".format(pkg_dir, bin_name)] + args
+    args = ["interpret", "{}/build/{}.ofta".format(pkg_dir, bin_name)] + list(args)
     oftb(args, redirect=redirect)
 def macro_expand(pkg_dir, bin_name):
-    interpret("macro-expander", "oftb-macro-expander",
-        ["ministd", pkg_dir, bin_name])
-def run(pkg_dir, bin_name, args, redirect=None):
+    interpret("macro-expander", "oftb-macro-expander", "ministd", pkg_dir,
+        bin_name)
+def run(pkg_dir, bin_name, *args, redirect=None):
     print_cyan("run", bin_name, *args)
-    args = ["run", "--std", "ministd", pkg_dir, bin_name] + args
+    args = ["run", "--std", "ministd", pkg_dir, bin_name] + list(args)
     oftb(args, redirect=redirect)
 
 def build_oftb():
@@ -52,14 +52,13 @@ def build_oftb():
     cargo("doc")
     cargo("build", mode="release")
 def bootstrap():
-    run("macro-expander", "make-prelude", ["ministd"],
+    run("macro-expander", "make-prelude", "ministd",
         redirect="ministd/src/prelude.oft")
-    run("macro-expander", "make-env", ["ministd"],
+    run("macro-expander", "make-env", "ministd",
         redirect="macro-expander/src/interpreter/env.oft")
     compile("macro-expander", "oftb-macro-expander")
     macro_expand("examples/structure", "structure")
-    macro_expand("examples/do-notation", "state")
-    interpret("examples/do-notation", "state")
+    interpret("examples/structure", "structure")
 
 if __name__ == "__main__":
     parser = ArgumentParser()

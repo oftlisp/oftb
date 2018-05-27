@@ -2,6 +2,8 @@
   [fst map-fst map-pair map-snd pair snd]
   no-prelude)
 
+(import ministd/internal/prelude/function
+  id)
 (import ministd/internal/prelude/intrinsics
   car cdr cons cons? eq false panic)
 
@@ -9,13 +11,13 @@
   (car p))
 
 (intrinsics:defn map-fst (f p)
-  (pair (f (fst p)) (snd p)))
+  (map-pair f id p))
 
 (intrinsics:defn map-pair (l r p)
-  (cons (l (car p)) (r (cdr p))))
+  (pair (l (fst p)) (r (snd p))))
 
 (intrinsics:defn map-snd (f p)
-  (pair (fst p) (f (snd p))))
+  (map-pair id f p))
 
 (intrinsics:defn pair (l r)
   (cons l r))

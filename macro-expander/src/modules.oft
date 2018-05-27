@@ -1,0 +1,5 @@
+(module macro-expander/modules
+  [module-name])
+
+(intrinsics:defn module-name (m)
+  (index-into '(0 1) m))
