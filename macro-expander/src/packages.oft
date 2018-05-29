@@ -2,13 +2,13 @@
   [load-packages traverse-modules])
 
 (import macro-expander/modules
-  module-name)
+  [module-name])
 (import macro-expander/packages/load
-  load-package-from)
+  [load-package-from])
 (import macro-expander/packages/type
-  binary-component library-component package)
+  [binary-component library-component package])
 (import ministd/data/tree-set
-  empty-set set-has?)
+  [empty-set set-has?])
 
 (intrinsics:defn load-packages (std-path root-package-path binary-name)
   (def std (load-package-from std-path))

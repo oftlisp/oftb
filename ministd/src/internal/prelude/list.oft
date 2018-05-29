@@ -5,15 +5,15 @@
   no-prelude)
 
 (import ministd/internal/prelude/either
-  either)
+  [either])
 (import ministd/internal/prelude/function
-  flip)
+  [flip])
 (import ministd/internal/prelude/intrinsics
-  + - = car cdr cons equals false nil nil? true)
+  [+ - = car cdr cons equals false nil nil? true])
 (import ministd/internal/prelude/option
-  none some some?)
+  [none some some?])
 (import ministd/internal/prelude/pair
-  map-pair pair)
+  [map-pair pair])
 
 (intrinsics:defn all (f l)
   (if (nil? l)

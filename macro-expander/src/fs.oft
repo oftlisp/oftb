@@ -2,7 +2,7 @@
   [walk-dir walk-dir-files])
 
 (import ministd/internal/oftb
-  read-dir read-file)
+  [read-dir read-file])
 
 (intrinsics:defn walk-dir (root)
   (def entries (partition (map

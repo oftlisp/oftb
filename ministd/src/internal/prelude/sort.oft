@@ -3,19 +3,19 @@
   no-prelude)
 
 (import ministd/internal/prelude/compare
-  < >)
+  [< >])
 (import ministd/internal/prelude/conversions
-  list->vector vector->list)
+  [list->vector vector->list])
 (import ministd/internal/prelude/function
-  id)
+  [id])
 (import ministd/internal/prelude/intrinsics
-  / car cdr compare cons eq list nil nil? vector?)
+  [/ car cdr compare cons eq list nil nil? vector?])
 (import ministd/internal/prelude/list
-  length map split-at)
+  [length map split-at])
 (import ministd/internal/prelude/option
-  none some)
+  [none some])
 (import ministd/internal/prelude/pair
-  fst map-pair pair snd)
+  [fst map-pair pair snd])
 
 (intrinsics:defn merge (l r)
   (intrinsics:defn rev-append (l r)

@@ -3,7 +3,7 @@
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
-  false true)
+  [false true])
 
 (intrinsics:defn and (l r)
   (if l r false))

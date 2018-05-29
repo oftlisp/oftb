@@ -3,7 +3,7 @@
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
-  car cons? eq false writeln)
+  [car cons? eq false writeln])
 
 (intrinsics:defn debug-trace (x)
   (writeln x)

@@ -2,9 +2,9 @@
   [main])
 
 (import macro-expander/interpreter
-  eval)
+  [eval])
 (import ministd/internal/oftb
-  read-file)
+  [read-file])
 
 (intrinsics:defn main (args)
   (def argn (length args))

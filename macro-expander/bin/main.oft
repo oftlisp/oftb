@@ -2,9 +2,9 @@
   [main])
 
 (import macro-expander
-  expand-modules)
+  [expand-modules])
 (import macro-expander/packages
-  load-packages traverse-modules)
+  [load-packages traverse-modules])
 
 (intrinsics:defn main (args)
   (if (not (= (length args) 3))

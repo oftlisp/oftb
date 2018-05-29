@@ -2,7 +2,7 @@
   [apply eval evaluate])
 
 ; (import macro-expander/interpreter/env
-;   default-env)
+;   [default-env])
 
 (intrinsics:defn evaluate (expr env)
   (if (cons? expr)

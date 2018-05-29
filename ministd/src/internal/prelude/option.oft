@@ -3,9 +3,9 @@
   no-prelude)
 
 (import ministd/internal/prelude/function
-  id)
+  [id])
 (import ministd/internal/prelude/intrinsics
-  car cdr cons cons? eq false nil nil? panic true)
+  [car cdr cons cons? eq false nil nil? panic true])
 
 (def none 'none)
 

@@ -3,9 +3,9 @@
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
-  - = cons nil panic)
+  [- = cons nil panic])
 (import ministd/internal/prelude/vector
-  vector-length vector-nth)
+  [vector-length vector-nth])
 
 (def list->vector   intrinsics/convert:list_to_vector)
 (def string->symbol intrinsics/convert:string_to_symbol)

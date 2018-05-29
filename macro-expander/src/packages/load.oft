@@ -2,11 +2,11 @@
   [load-metadata-for load-package-from])
 
 (import macro-expander/fs
-  walk-dir)
+  [walk-dir])
 (import macro-expander/packages/type
-  package)
+  [package])
 (import ministd/internal/oftb
-  read-file)
+  [read-file])
 
 (intrinsics:defn load-metadata-for (path)
   (def metadata-path (string-append path "/package.oftd"))

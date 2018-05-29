@@ -3,9 +3,9 @@
   no-prelude)
 
 (import ministd/internal/prelude/function
-  id)
+  [id])
 (import ministd/internal/prelude/intrinsics
-  car cdr cons cons? eq false panic)
+  [car cdr cons cons? eq false panic])
 
 (intrinsics:defn fst (p)
   (car p))

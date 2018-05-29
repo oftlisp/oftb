@@ -2,13 +2,13 @@
   [main])
 
 (import macro-expander/fs
-  walk-dir)
+  [walk-dir])
 (import macro-expander/packages/load
-  load-package-from)
+  [load-package-from])
 (import ministd/data/tree-set
-  empty-set set->list set-insert)
+  [empty-set set->list set-insert])
 (import ministd/internal/oftb
-  read-file)
+  [read-file])
 
 (intrinsics:defn main (args)
   (if (not (= (length args) 1))

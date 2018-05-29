@@ -2,9 +2,9 @@
   [main])
 
 (import macro-expander/fs
-  walk-dir-files)
+  [walk-dir-files])
 (import macro-expander/packages/load
-  load-metadata-for)
+  [load-metadata-for])
 
 (intrinsics:defn main (args)
   (if (not (= (length args) 1))
@@ -55,7 +55,4 @@
   (list 'module module-name all-exports 'no-prelude))
 
 (intrinsics:defn print-import-for (m)
-  (def module-name (fst m))
-  (def imports (vector->list (snd m)))
-  (def import-stmt (cons 'import (cons module-name imports)))
-  (println import-stmt))
+  (println (list 'import (fst m) (snd m))))

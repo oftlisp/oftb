@@ -3,9 +3,9 @@
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
-  compare eq)
+  [compare eq])
 (import ministd/internal/prelude/logic
-  not)
+  [not])
 
 (intrinsics:defn < (l r) (eq (compare l r) 'lt))
 (intrinsics:defn > (l r) (eq (compare l r) 'gt))

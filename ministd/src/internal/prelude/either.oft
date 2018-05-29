@@ -3,7 +3,7 @@
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
-  car cdr cons cons? eq false panic)
+  [car cdr cons cons? eq false panic])
 
 (intrinsics:defn either (l r e)
   (if (left? e)

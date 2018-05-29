@@ -4,17 +4,17 @@
   no-prelude)
 
 (import ministd/internal/prelude/compare
-  <= >=)
+  [<= >=])
 (import ministd/internal/prelude/intrinsics
-  + - car cdr cons equals false list nil nil? panic)
+  [+ - car cdr cons equals false list nil nil? panic])
 (import ministd/internal/prelude/list
-  reverse)
+  [reverse])
 (import ministd/internal/prelude/math
-  1+)
+  [1+])
 (import ministd/internal/prelude/option
-  none option-cases some)
+  [none option-cases some])
 (import ministd/internal/prelude/pair
-  fst snd pair)
+  [fst snd pair])
 
 (def string-append intrinsics/strings:append)
 (def string-length intrinsics/strings:length)

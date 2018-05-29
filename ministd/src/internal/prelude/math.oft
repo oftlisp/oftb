@@ -3,7 +3,7 @@
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
-  + - =)
+  [+ - =])
 
 (intrinsics:defn 0? (x) (= x 0))
 (intrinsics:defn 1+ (x) (+ x 1))

@@ -3,7 +3,7 @@
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
-  + = nil)
+  [+ = nil])
 
 (def vector-append intrinsics/vector:append)
 (def vector-length intrinsics/vector:length)
