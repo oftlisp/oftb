@@ -20,7 +20,7 @@ script:
 deploy:
   provider: releases
   api_key: $GITHUB_TOKEN
-  file: target/release/oftb
+  file: oftb.tar.gz
   skip_cleanup: true
   on:
     branch: master

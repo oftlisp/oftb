@@ -3,6 +3,7 @@
 from argparse import ArgumentParser
 import shutil
 import subprocess
+import tarfile
 import tempfile
 
 def command(cmd, redirect=None):
@@ -59,6 +60,12 @@ def bootstrap():
     compile("macro-expander", "oftb-macro-expander")
     macro_expand("examples/structure", "structure")
     interpret("examples/structure", "structure")
+    raise "TODO"
+def make_archive():
+    with tarfile.open("oftb.tar.gz", "x:gz") as tar:
+        tar.add(oftb_exec, arcname="oftb")
+        tar.add("macro-expander")
+        tar.add("ministd")
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -70,3 +77,4 @@ if __name__ == "__main__":
     elif not args.no_oftb_build:
         build_oftb()
     bootstrap()
+    make_archive()

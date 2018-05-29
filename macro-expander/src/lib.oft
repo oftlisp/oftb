@@ -5,7 +5,8 @@
   'todo)
 
 (intrinsics:defn expand-module (target-module mods)
+  (panic (cons target-module mods))
   'todo)
 
 (intrinsics:defn expand-modules (mods)
-  'todo)
+  (expand-module 'main mods))

@@ -16,4 +16,6 @@
   (def modules (load-packages std-path package-dir binary-name))
   (def modules (must (traverse-modules modules 'main)))
 
-  (expand-modules modules))
+  (panic (expand-modules modules))
+  
+  'todo)
