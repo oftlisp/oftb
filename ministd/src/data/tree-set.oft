@@ -1,5 +1,5 @@
 (module ministd/data/tree-set
-  [empty-set set-has? set-insert singleton-set])
+  [empty-set set->list set-has? set-insert singleton-set])
 
 (def black 'black)
 (def red 'red)
@@ -164,6 +164,15 @@
 (intrinsics:defn singleton-set (x)
   (T black E E x))
 
+(intrinsics:defn set->list (tree)
+  (if (T? tree)
+    (append
+      (set->list (get-left tree))
+      (cons
+        (get-value tree)
+        (set->list (get-right tree))))
+    nil))
+
 (intrinsics:defn set-has? (x tree)
   (if (E? tree)
     false
@@ -185,9 +194,9 @@
         (def r (get-right tree))
         (def y (get-value tree))
         (if (< x y)
-          (balance c (ins l) r y)
+          (balance (T c (ins l) r y))
           (if (> x y)
-            (balance c l (ins r) y)
+            (balance (T c l (ins r) y))
             tree)))))
   (def tree (ins tree))
   (def l (get-left  tree))

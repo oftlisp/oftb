@@ -66,7 +66,7 @@ intrinsics! {
                 (Value::Byte(l), Value::Fixnum(r)) => l as isize == r,
                 (Value::Fixnum(l), Value::Byte(r)) => l == r as isize,
                 (Value::Fixnum(l), Value::Fixnum(r)) => l == r,
-                _ => unimplemented!("type error"),
+                _ => unimplemented!("type error in eq_num"),
             })
         }
 
@@ -105,7 +105,7 @@ intrinsics! {
                 let (a, l) = store.store_vec(&vec);
                 Value::Vector(a, l)
             } else {
-                panic!("TODO Type Error")
+                unimplemented!("TODO Type Error in list->vector")
             }
         }
 
@@ -114,7 +114,7 @@ intrinsics! {
                 // TODO Check the string for validity.
                 Value::Symbol(store.get_str(a, l).into())
             } else {
-                unimplemented!("TODO Type Error")
+                unimplemented!("TODO Type Error in string->symbol")
             }
         }
 
@@ -123,7 +123,7 @@ intrinsics! {
                 let (a, l) = store.store_str(s.as_str());
                 Value::String(a, l)
             } else {
-                unimplemented!("TODO Type Error")
+                unimplemented!("TODO Type Error in symbol->string")
             }
         }
     }
@@ -157,7 +157,7 @@ intrinsics! {
             let bytes = if let Value::Bytes(addr, len) = bytes {
                 store.get_bytes(addr, len)
             } else {
-                unimplemented!("TODO Type Error")
+                unimplemented!("TODO Type Error in write-bytes")
             };
             stdout().write_all(bytes).unwrap();
             Value::Nil
@@ -214,7 +214,7 @@ intrinsics! {
                 let path = if let Value::String(addr, len) = path {
                     store.get_str(addr, len)
                 } else {
-                    unimplemented!("TODO Type Error")
+                    unimplemented!("TODO Type Error in read-dir")
                 };
 
                 let r = (|| {
@@ -255,7 +255,7 @@ intrinsics! {
                 let path = if let Value::String(addr, len) = path {
                     store.get_str(addr, len)
                 } else {
-                    unimplemented!("TODO Type Error")
+                    unimplemented!("TODO Type Error in read-file")
                 };
                 match parse_file(path) {
                     Ok(data) => Literal::list(data),
@@ -273,7 +273,7 @@ intrinsics! {
                 (Value::String(la, ll), Value::String(ra, rl)) => {
                     (la, ll, ra, rl)
                 },
-                _ => unimplemented!("TODO Type Error"),
+                _ => unimplemented!("TODO Type Error in string-append"),
             };
 
             let lan: usize = la.into();
@@ -297,7 +297,7 @@ intrinsics! {
                 let n = s.chars().count();
                 Value::Fixnum(n as isize)
             } else {
-                unimplemented!("TODO Type Error")
+                unimplemented!("TODO Type Error in string-length")
             }
         }
 
@@ -321,10 +321,15 @@ intrinsics! {
                     (Some((start, _)), None) if end_n == s.chars().count() => {
                         (a + start, end_n - start)
                     },
-                    _ => unimplemented!("TODO out of bounds"),
+                    _ => unimplemented!(
+                        "TODO out of bounds in string-slice (bounds of [{}, {}) on string {:?})",
+                        start_n,
+                        end_n,
+                        s,
+                    ),
                 }
             } else {
-                unimplemented!("TODO Type Error")
+                unimplemented!("TODO Type Error in string-slice")
             };
             Value::String(addr.into(), len)
         }
@@ -373,7 +378,7 @@ intrinsics! {
             if let Value::Vector(_, l) = s {
                 Value::Fixnum(l as isize)
             } else {
-                unimplemented!("TODO Type Error")
+                unimplemented!("TODO Type Error in vector-length")
             }
         }
 
@@ -384,10 +389,10 @@ intrinsics! {
                     let a: usize = a.into();
                     store.get_vec_val(Addr::from(a + n))
                 } else {
-                    unimplemented!("TODO out of bounds")
+                    unimplemented!("TODO out of bounds in vector-nth")
                 }
             } else {
-                unimplemented!("TODO Type Error")
+                unimplemented!("TODO Type Error in vector-nth")
             }
         }
 
@@ -395,19 +400,24 @@ intrinsics! {
             let (a, l) = if let (
                 Value::Fixnum(start),
                 Value::Fixnum(end),
-                Value::String(a, l),
+                Value::Vector(a, l),
             ) = (start, end, s)
             {
                 let start = start as usize;
                 let end = end as usize;
-                if start < l && end < l {
+                if start <= l && end <= l && start <= end {
                     let a: usize = a.into();
                     (a + start as usize, end - start)
                 } else {
-                    unimplemented!("TODO out of bounds")
+                    unimplemented!(
+                        "TODO out of bounds in vector-slice (bounds of [{}, {}) on vector of length {})",
+                        start,
+                        end,
+                        l,
+                    )
                 }
             } else {
-                unimplemented!("TODO Type Error")
+                unimplemented!("TODO Type Error in vector-slice")
             };
 
             Value::Vector(a.into(), l)

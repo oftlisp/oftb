@@ -1,2 +1,11 @@
 (module macro-expander
-  [])
+  [expand-modules])
+
+(intrinsics:defn expand-decl (decl interp-values interp-macros)
+  'todo)
+
+(intrinsics:defn expand-module (target-module mods)
+  'todo)
+
+(intrinsics:defn expand-modules (mods)
+  'todo)

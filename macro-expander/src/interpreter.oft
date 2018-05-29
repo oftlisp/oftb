@@ -1,8 +1,8 @@
 (module macro-expander/interpreter
   [apply eval evaluate])
 
-(import macro-expander/interpreter/env
-  default-env)
+; (import macro-expander/interpreter/env
+;   default-env)
 
 (intrinsics:defn evaluate (expr env)
   (if (cons? expr)
@@ -27,4 +27,4 @@
     (panic (cons 'not-a-function func))))
 
 (intrinsics:defn eval (expr)
-  (evaluate expr default-env))
+  (evaluate expr 'todo))

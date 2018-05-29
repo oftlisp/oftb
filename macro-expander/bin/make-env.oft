@@ -1,21 +1,80 @@
 (module main
   [main])
 
-(import macro-expander/prelude-utils
-  get-prelude-exports)
+(import macro-expander/fs
+  walk-dir)
+(import macro-expander/packages/load
+  load-package-from)
+(import ministd/data/tree-set
+  empty-set set->list set-insert)
+(import ministd/internal/oftb
+  read-file)
 
 (intrinsics:defn main (args)
   (if (not (= (length args) 1))
-    (panic "usage: make-prelude ministd-dir"))
-  (def exports (snd (get-prelude-exports (nth 0 args))))
+    (panic "usage: make-env ministd-dir"))
+  (def intrinsics (search-for-intrinsics (nth 0 args)))
 
-  (println '(module macro-expander/interpreter/env [default-env]))
+  (println '(module macro-expander/interpreter/env [intrinsics]))
   (println)
-  (println (list 'def 'default-env (make-env exports))))
+  (println (list 'def 'intrinsics (make-env intrinsics))))
 
-(intrinsics:defn make-env (exports)
-  (def exports (flat-map vector->list (map snd exports)))
-  (cons 'list (map to-env-entry (sort exports))))
+; If the symbol is a global name from the `intrinsics` package, returns a some
+; value containing a pair (MODULE-NAME | NAME). Otherwise, returns none.
+(intrinsics:defn as-intrinsic (sym)
+  (option-cases
+    (fn (tmp)
+      ; Technically, this should use a regex...
+      (def is-intrinsic (if (> (string-length (fst tmp)) 10)
+        (equals (string-slice 0 10 (fst tmp)) "intrinsics")
+        false))
+      (if is-intrinsic
+        (some (map-pair string->symbol string->symbol tmp))
+        none))
+    (fn () none)
+    (string-split-on-1 ":" (symbol->string sym))))
 
-(intrinsics:defn to-env-entry (s)
-  (list 'cons (list 'quote s) s))
+(intrinsics:defn extract-intrinsics (value set)
+  (if (symbol? value)
+    (option-cases
+      \(set-insert (pair value $) set)
+      (fn () set)
+      (as-intrinsic value))
+    (if (cons? value)
+      (extract-intrinsics
+        (car value)
+        (extract-intrinsics
+          (cdr value)
+          set))
+      (if (vector? value)
+        (if (= (vector-length value) 0)
+          set
+          (extract-intrinsics
+            (vector-nth 0 value)
+            (extract-intrinsics
+              (vector-slice 1 (vector-length value) value)
+              set)))
+        set))))
+
+(intrinsics:defn make-env (intrinsics)
+  (cons 'list (map
+    \(list 'cons
+      (list 'quote (map-snd (. string->symbol name-for-intrinsic) (snd $)))
+      (fst $))
+    (sort (set->list intrinsics)))))
+
+; Converts a name like `string_to_symbol` to `string->symbol`.
+(intrinsics:defn name-for-intrinsic (sym)
+  (def str (string-replace "_" "-" (string-replace "_to_" "->"
+      (symbol->string sym))))
+  (if (> (string-length str) 3)
+    (if (equals (string-slice 0 3 str) "is-")
+      (string-append
+        (string-slice 3 (string-length str) str)
+        "?")
+      str)
+    str))
+
+(intrinsics:defn search-for-intrinsics (path)
+  (def files (map read-file (walk-dir (string-append path "/src/internal/prelude"))))
+  (extract-intrinsics files empty-set))

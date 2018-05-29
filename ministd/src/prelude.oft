@@ -1,4 +1,4 @@
-(module ministd/prelude [* + - . / 0? 1+ 1- < <= = > >= all and any append assoc byte? bytes? car cdr compare cons cons? debug-trace each either eq equals err err? expect false filter find first-nonnil first-some fixnum? flat-map flip foldl foldr fst function? id index-into left left? length list list->vector map map-err map-fst map-ok map-pair map-result map-snd mod must nil nil? none none? not nth nullable->option ok ok? option->nullable option-cases or pair panic partition print println reverse right right? shl? skip snd some some? sort sort-by split-at string->symbol string-append string-length string-nth string-search string-slice string-split-on string-split-on-1 string? symbol->string symbol? take take-while true vector->list vector-append vector-each vector-length vector-nth vector-slice vector? write write-bytes writeln] no-prelude)
+(module ministd/prelude [* + - . / 0? 1+ 1- < <= = > >= all and any append assoc byte? bytes? car cdr compare cons cons? debug-trace each either eq equals err err? expect false filter find first-nonnil first-some fixnum? flat-map flip foldl foldr fst function? id index-into left left? length list list->vector map map-err map-fst map-ok map-pair map-result map-snd mod must nil nil? none none? not nth nullable->option ok ok? option->nullable option-cases or pair panic partition print println reverse right right? shl? skip snd some some? sort sort-by split-at string->symbol string-append string-join string-length string-nth string-replace string-search string-slice string-split-on string-split-on-1 string? symbol->string symbol? take take-while true vector->list vector-append vector-each vector-length vector-nth vector-slice vector? write write-bytes writeln] no-prelude)
 
 (import ministd/internal/prelude/compare < <= > >=)
 (import ministd/internal/prelude/conversions list->vector string->symbol symbol->string vector->list)
@@ -12,7 +12,7 @@
 (import ministd/internal/prelude/pair fst map-fst map-pair map-snd pair snd)
 (import ministd/internal/prelude/result err err? map-err map-ok map-result must ok ok?)
 (import ministd/internal/prelude/sort sort sort-by)
-(import ministd/internal/prelude/string string-append string-length string-nth string-search string-slice string-split-on string-split-on-1)
+(import ministd/internal/prelude/string string-append string-join string-length string-nth string-replace string-search string-slice string-split-on string-split-on-1)
 (import ministd/internal/prelude/util debug-trace shl?)
 (import ministd/internal/prelude/vector vector-append vector-each vector-length vector-nth vector-slice)
 
@@ -116,8 +116,10 @@
 (def sort sort)
 (def sort-by sort-by)
 (def string-append string-append)
+(def string-join string-join)
 (def string-length string-length)
 (def string-nth string-nth)
+(def string-replace string-replace)
 (def string-search string-search)
 (def string-slice string-slice)
 (def string-split-on string-split-on)

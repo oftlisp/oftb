@@ -1,5 +1,5 @@
 (module macro-expander/packages/load
-  [load-package-from])
+  [load-metadata-for load-package-from])
 
 (import macro-expander/fs
   walk-dir)
@@ -8,9 +8,12 @@
 (import ministd/internal/oftb
   read-file)
 
-(intrinsics:defn load-package-from (path)
+(intrinsics:defn load-metadata-for (path)
   (def metadata-path (string-append path "/package.oftd"))
-  (def metadata (read-file metadata-path))
+  (read-file metadata-path))
+
+(intrinsics:defn load-package-from (path)
+  (def metadata (load-metadata-for path))
 
   (def name (car (expect (assoc 'name metadata)
     "Missing package name")))

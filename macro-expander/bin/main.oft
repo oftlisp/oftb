@@ -1,6 +1,8 @@
 (module main
   [main])
 
+(import macro-expander
+  expand-modules)
 (import macro-expander/packages
   load-packages traverse-modules)
 
@@ -14,4 +16,4 @@
   (def modules (load-packages std-path package-dir binary-name))
   (def modules (must (traverse-modules modules 'main)))
 
-  modules)
+  (expand-modules modules))
