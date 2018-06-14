@@ -33,7 +33,11 @@
       (panic '(todo expand top-level progn))
       (if (expandable? decl interp-macros)
         (expand-decl (macro-expand decl interp-macros) interp-env interp-macros top-level)
-        (panic (list 'todo (list 'expand-decl decl 'interp-env 'interp-macros)))))))
+        (if (shl? 'def decl)
+          (panic '(todo | def-decl))
+          (if (shl? 'defn decl)
+            (panic '(todo | defn-decl))
+            (panic (cons 'not-a-decl decl))))))))
 
 ; Performs macro-expansion on an arbitrary number of decls. Returns a list
 ; (EXPANDED-DECLS INTERP-ENV INTERP-MACROS).
