@@ -67,7 +67,7 @@ pub fn convert_module(
 pub fn convert_import(lit: &Literal) -> Option<(Symbol, Vec<Symbol>)> {
     convert_modulish(lit).and_then(|(hd, name, imports, attrs)| {
         if hd.as_str() == "import" {
-            if attrs.len == 0 {
+            if attrs.len() == 0 {
                 Some((name, imports))
             } else {
                 panic!("Import attributes not supported: {}", lit)

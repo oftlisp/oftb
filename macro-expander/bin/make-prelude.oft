@@ -23,7 +23,7 @@
     (map snd exports)))
 
 (intrinsics:defn exports-of (src)
-  (car (cdr (cdr (car src)))))
+  (index-into '(0 2) src))
 
 (intrinsics:defn get-prelude-exports (prelude-pkg-path)
   (def prelude-srcs-path (string-append prelude-pkg-path "/src/internal/prelude"))

@@ -54,9 +54,20 @@ fn convert_list(pairs: Pairs<Rule>) -> Result<Literal, Error<Rule>> {
     // TODO: https://github.com/pest-parser/pest/issues/205
     let pairs = pairs.collect::<Vec<_>>().into_iter().rev();
     for pair in pairs {
-        assert_eq!(pair.as_rule(), Rule::value);
-        let val = Box::new(convert_value(pair.into_inner())?);
-        head = Literal::Cons(val, Box::new(head));
+        match pair.as_rule() {
+            Rule::value => {
+                let val = Box::new(convert_value(pair.into_inner())?);
+                head = Literal::Cons(val, Box::new(head));
+            }
+            Rule::cons_split => {
+                if let Literal::Cons(h, _) = head {
+                    head = *h;
+                } else {
+                    panic!("Invalid CST")
+                }
+            }
+            r => panic!("Invalid rule: {:?}", r),
+        }
     }
     Ok(head)
 }

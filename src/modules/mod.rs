@@ -11,7 +11,6 @@ use std::path::{Path, PathBuf};
 use failure::ResultExt;
 use symbol::Symbol;
 
-use BuiltinPackage;
 use anf::Module;
 use ast::Attr;
 use error::{Error, ErrorKind};
@@ -20,6 +19,7 @@ pub use modules::metadata::{BinaryComponentMetadata, ComponentsMetadata,
                             DependencyMetadata, LibraryComponentMetadata,
                             PackageMetadata};
 use parser::parse_file;
+use BuiltinPackage;
 
 #[derive(Clone, Debug)]
 enum Package {
@@ -63,7 +63,15 @@ impl Packages {
             warn!("TODO Load {} {:#?}", dep_name, dep_meta);
             // TODO Load dependencies.
         }
-        self.add_package_from(root_meta.name, path, false)?;
+        let main_files = root_meta
+            .components
+            .binaries
+            .iter()
+            .map(|c| &c.path as &str)
+            .filter(|p| p.starts_with("src/"))
+            .map(|p| &p[4..])
+            .collect::<Vec<_>>();
+        self.add_package_from(root_meta.name, path, false, &main_files)?;
         Ok(root_meta.name)
     }
 
@@ -74,6 +82,7 @@ impl Packages {
         package_name: Symbol,
         path: PathBuf,
         require_library: bool,
+        main_files: &[&str],
     ) -> Result<(), Error> {
         let meta = self.load_metadata_from(&path)?;
         if package_name != meta.name {
@@ -102,6 +111,7 @@ impl Packages {
             mod_stack: &mut Vec<Symbol>,
             base: PathBuf,
             lib_oft_path: &Path,
+            main_files: &[&str],
         ) -> Result<(), Error> {
             // TODO: This could use a good catch block...
             for entry in base.read_dir().with_context(|_| {
@@ -135,10 +145,18 @@ impl Packages {
                         mod_stack,
                         entry.path(),
                         lib_oft_path,
+                        main_files,
                     )?;
                     assert_eq!(mod_stack.pop(), Some(name));
                 } else if file_type.is_file() {
                     let file_name: PathBuf = entry.file_name().into();
+                    if main_files.iter().any(|p| {
+                        let p: &Path = p.as_ref();
+                        p == file_name
+                    }) {
+                        debug!("Skipping src/{}...", file_name.display());
+                        continue;
+                    }
                     if file_name.extension() != Some("oft".as_ref()) {
                         continue;
                     }
@@ -182,6 +200,7 @@ impl Packages {
             &mut vec![package_name],
             src_path,
             &lib_oft_path,
+            main_files,
         )?;
 
         self.pkgs.insert(
@@ -195,10 +214,19 @@ impl Packages {
     /// Loads the stdlib from the given directory. Will panic if any
     /// dependencies are requested.
     pub fn add_stdlib_from(&mut self, path: PathBuf) -> Result<(), Error> {
+        // TODO: This is a DRY violation with add_modules_from.
         let root_meta = self.load_metadata_from(&path)?;
         assert!(root_meta.dependencies.is_empty());
         self.std_name = Some(root_meta.name);
-        self.add_package_from(root_meta.name, path, true)
+        let main_files = root_meta
+            .components
+            .binaries
+            .iter()
+            .map(|c| &c.path as &str)
+            .filter(|p| p.starts_with("src/"))
+            .map(|p| &p[4..])
+            .collect::<Vec<_>>();
+        self.add_package_from(root_meta.name, path, true, &main_files)
     }
 
     /// Compiles a binary from a given module into a `flatanf::Program`.

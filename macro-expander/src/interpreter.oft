@@ -27,4 +27,4 @@
     (panic (cons 'not-a-function func))))
 
 (intrinsics:defn eval (expr)
-  (evaluate expr 'todo))
+  (evaluate expr (panic 'todo)))

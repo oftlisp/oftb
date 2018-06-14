@@ -1,9 +1,18 @@
 (module ministd/internal/prelude/util
-  [debug-trace shl?]
+  [as-shl debug-trace shl?]
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
-  [car cons? eq false writeln])
+  [car cons? eq false nil symbol? writeln])
+
+(intrinsics:defn as-shl (value)
+  (if (cons? value)
+    (progn
+      (def tmp (car value))
+      (if (symbol? tmp)
+        tmp
+        nil))
+    nil))
 
 (intrinsics:defn debug-trace (x)
   (writeln x)

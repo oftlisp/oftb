@@ -14,7 +14,8 @@ bytes_raw_ch = { !("\\" | "\"") ~ ' '..'~' }
 bytes_esc_ch = { "\\" ~ (hex_esc | predef_esc) }
 
 // Lists and Vectors
-list = { "(" ~ value* ~ ("|" ~ value)? ~ ")" }
+list = { "(" ~ value* ~ (cons_split ~ value)? ~ ")" }
+cons_split = { "|" }
 vector = { "[" ~ value* ~ "]" }
 
 // Reader Macros

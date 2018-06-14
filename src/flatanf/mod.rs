@@ -74,7 +74,5 @@ pub enum AExpr {
     Local(usize),
 
     /// A vector creation.
-    ///
-    /// TODO: Should this actually exist?
     Vector(Vec<AExpr>),
 }

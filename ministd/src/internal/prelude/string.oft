@@ -1,6 +1,6 @@
 (module ministd/internal/prelude/string
-  [string-append string-join string-length string-nth string-replace 
-   string-search string-slice string-split-on string-split-on-1]
+  [string-append string-concat string-join string-length string-nth
+   string-replace string-search string-slice string-split-on string-split-on-1]
   no-prelude)
 
 (import ministd/internal/prelude/compare
@@ -19,6 +19,13 @@
 (def string-append intrinsics/strings:append)
 (def string-length intrinsics/strings:length)
 (def string-slice  intrinsics/strings:slice)
+
+(intrinsics:defn string-concat (ss)
+  (intrinsics:defn helper (ss acc)
+    (if (nil? ss)
+      acc
+      (helper (cdr ss) (string-append acc (car ss)))))
+  (helper ss ""))
 
 (intrinsics:defn string-join (delim ss)
   (intrinsics:defn helper (ss acc)

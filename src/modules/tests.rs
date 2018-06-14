@@ -27,12 +27,10 @@ fn parses_blogpost_package_oftd() {
         authors: vec!["Nathan Ringo <remexre@gmail.com>".to_string()],
         components: ComponentsMetadata {
             library: Some(LibraryComponentMetadata),
-            binaries: vec![
-                BinaryComponentMetadata {
-                    name: "foo".to_string(),
-                    path: "src/main.oft".to_string(),
-                },
-            ],
+            binaries: vec![BinaryComponentMetadata {
+                name: "foo".to_string(),
+                path: "src/main.oft".to_string(),
+            }],
         },
         dependencies: vec![
             (

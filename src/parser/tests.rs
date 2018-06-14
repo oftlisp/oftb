@@ -4,6 +4,20 @@ use literal::Literal;
 use parser::{parse_program, Rule};
 
 #[test]
+fn improper_list() {
+    let r = parse_program("(a | b)");
+    assert_eq!(
+        r,
+        Ok(vec![
+            Literal::Cons(
+                Box::new(Literal::Symbol("a".into())),
+                Box::new(Literal::Symbol("b".into())),
+            ),
+        ])
+    );
+}
+
+#[test]
 fn invalid_bytes_escape() {
     let src = r#"b"\x01\x23\u4567""#;
     let r = parse_program(src);

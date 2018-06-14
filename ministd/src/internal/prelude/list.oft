@@ -1,7 +1,7 @@
 (module ministd/internal/prelude/list
-  [all any append assoc each filter find first-nonnil first-some flat-map foldl
-   foldr index-into length map nth partition reverse skip split-at take
-   take-while]
+  [all all-some any append assoc each filter find first-nonnil first-some
+   flat-map foldl foldr index-into length map nth partition reverse skip
+   skip-while split-at take take-while]
   no-prelude)
 
 (import ministd/internal/prelude/either
@@ -11,7 +11,7 @@
 (import ministd/internal/prelude/intrinsics
   [+ - = car cdr cons equals false nil nil? true])
 (import ministd/internal/prelude/option
-  [none some some?])
+  [none option-cases some some?])
 (import ministd/internal/prelude/pair
   [map-pair pair])
 
@@ -21,6 +21,17 @@
     (if (f (car l))
       (all f (cdr l))
       false)))
+
+(intrinsics:defn all-some (l)
+  (intrinsics:defn helper (l acc)
+    (if (nil? l)
+      acc
+      (progn
+        (def acc (option-cases
+          (fn (x) (cons x acc))
+          (fn () acc)))
+        (helper (cdr l) acc))))
+  (reverse (helper l nil)))
 
 (intrinsics:defn any (f l)
   (if (nil? l)
@@ -128,6 +139,13 @@
   (if (= n 0)
     l
     (skip (- n 1) (cdr l))))
+
+(intrinsics:defn skip-while (pred l)
+  (if (nil? l)
+    nil
+    (if (pred (car l))
+      (skip-while pred (cdr l))
+      l)))
 
 (intrinsics:defn split-at (n l)
   (pair (take n l) (skip n l)))
