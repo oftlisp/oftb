@@ -76,14 +76,8 @@ macro_rules! __intrinsics_mod {
         ) -> $crate::interpreter::State<'program> {
             __intrinsics_argn!(args, $($args)*);
             __intrinsics_args!(args, $($args)*);
-            let kontinue = |value| {
-                $crate::interpreter::eval::kontinue(value, $konts)
-            };
-            let body = || $body;
-
-            #[allow(unused_mut)]
-            let mut body = body;
-            kontinue(body())
+            #[allow(unreachable_code)] 
+            $crate::interpreter::eval::kontinue($body, $konts)
         })*
 
         lazy_static! {

@@ -1,0 +1,26 @@
+(module macro-expander/expand
+  [expand-decls])
+
+; Returns whether the value is directly macro-expandable with any of the given macros.
+(intrinsics:defn expandable? (value macros)
+  (def s (as-shl value))
+  (if s
+    (some? (assoc s macros))
+    false))
+
+; Macro-expands an arbitrary value, returning the expanded value.
+(intrinsics:defn expand-expr (value env macros)
+  (if (shl? 'defmacro value)
+    (panic '(todo expand-expr defmacro))
+    (if (shl? 'quote value)
+      value
+      (if (expandable? value macros)
+        (panic '(todo | expand-expr))
+        (if (cons? value)
+          (panic '(todo expand-expr list))
+          (if (vector? value)
+            (panic '(todo expand-expr vector))
+            value))))))
+
+(intrinsics:defn expand-decls (decls env macros)
+  (panic '(todo | expand-decls)))

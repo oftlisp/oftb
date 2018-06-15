@@ -1,17 +1,17 @@
 (module macro-expander/interpreter
-  [apply eval evaluate])
+  [eval evaluate])
 
-; (import macro-expander/interpreter/env
-;   [default-env])
+(import macro-expander/interpreter/env
+  [intrinsics])
 
-(intrinsics:defn evaluate (expr env)
+(intrinsics:defn eval (expr env)
   (if (cons? expr)
     (progn
       (def func (evaluate (car expr) env))
       (def args (map
         \(evaluate $ env)
         (cdr expr)))
-      (apply func args))
+      ('apply func args))
     (if (vector? expr)
       (panic "TODO Vectors")
       (if (symbol? expr)
@@ -21,10 +21,5 @@
           (panic "Nil is not an expression")
           expr)))))
 
-(intrinsics:defn apply (func args)
-  (if (function? func)
-    (panic "TODO: calls")
-    (panic (cons 'not-a-function func))))
-
-(intrinsics:defn eval (expr)
-  (evaluate expr (panic 'todo)))
+(intrinsics:defn evaluate (expr)
+  (eval expr intrinsics))

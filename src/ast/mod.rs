@@ -44,7 +44,7 @@ impl Module {
         let imports = {
             let i = l.iter()
                 .position(|l| !helpers::is_import(l))
-                .unwrap_or(0);
+                .unwrap_or(l.len());
             l.drain(0..i)
                 .map(|l| helpers::convert_import(&l).unwrap())
                 .flat_map(|(m, vs)| vs.into_iter().map(move |v| (m, v)))
@@ -163,8 +163,7 @@ impl Expr {
                     Some(t) => t,
                     None => {
                         return Err(ErrorKind::InvalidExpr(Literal::Cons(
-                            h,
-                            t_lit,
+                            h, t_lit,
                         )).into())
                     }
                 };
@@ -180,8 +179,7 @@ impl Expr {
                     Literal::Symbol(s) if s.as_str() == "fn" => {
                         if t.len() < 2 {
                             return Err(ErrorKind::InvalidExpr(Literal::Cons(
-                                h,
-                                t_lit,
+                                h, t_lit,
                             )).into());
                         }
 
@@ -196,8 +194,7 @@ impl Expr {
                             args
                         } else {
                             return Err(ErrorKind::InvalidExpr(Literal::Cons(
-                                h,
-                                t_lit,
+                                h, t_lit,
                             )).into());
                         };
 
@@ -206,8 +203,7 @@ impl Expr {
                     Literal::Symbol(s) if s.as_str() == "if" => {
                         if t.len() < 2 || t.len() > 3 {
                             return Err(ErrorKind::InvalidExpr(Literal::Cons(
-                                h,
-                                t_lit,
+                                h, t_lit,
                             )).into());
                         }
 
@@ -228,8 +224,7 @@ impl Expr {
                     Literal::Symbol(s) if s.as_str() == "quote" => {
                         if t.len() != 1 {
                             return Err(ErrorKind::InvalidExpr(Literal::Cons(
-                                h,
-                                t_lit,
+                                h, t_lit,
                             )).into());
                         }
 

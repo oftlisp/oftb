@@ -3,7 +3,7 @@
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
-  [car cons? eq false nil symbol? writeln])
+  [car cdr cons? eq false nil symbol? writeln])
 
 (intrinsics:defn as-shl (value)
   (if (cons? value)
