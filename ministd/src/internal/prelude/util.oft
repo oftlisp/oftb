@@ -8,7 +8,7 @@
 (intrinsics:defn as-shl (value)
   (if (cons? value)
     (progn
-      (def tmp (car value))
+      (intrinsics:def tmp (car value))
       (if (symbol? tmp)
         tmp
         nil))

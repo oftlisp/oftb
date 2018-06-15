@@ -5,13 +5,13 @@
 (import ministd/internal/prelude/intrinsics
   [+ = nil])
 
-(def vector-append intrinsics/vector:append)
-(def vector-length intrinsics/vector:length)
-(def vector-nth    intrinsics/vector:nth)
-(def vector-slice  intrinsics/vector:slice)
+(intrinsics:def vector-append intrinsics/vector:append)
+(intrinsics:def vector-length intrinsics/vector:length)
+(intrinsics:def vector-nth    intrinsics/vector:nth)
+(intrinsics:def vector-slice  intrinsics/vector:slice)
 
 (intrinsics:defn vector-each (f v)
-  (def l (vector-length v))
+  (intrinsics:def l (vector-length v))
   (intrinsics:defn helper (n)
     (if (= l n)
       nil

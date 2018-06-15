@@ -7,9 +7,9 @@
 (import ministd/internal/prelude/vector
   [vector-length vector-nth])
 
-(def list->vector   intrinsics/convert:list_to_vector)
-(def string->symbol intrinsics/convert:string_to_symbol)
-(def symbol->string intrinsics/convert:symbol_to_string)
+(intrinsics:def list->vector   intrinsics/convert:list_to_vector)
+(intrinsics:def string->symbol intrinsics/convert:string_to_symbol)
+(intrinsics:def symbol->string intrinsics/convert:symbol_to_string)
 
 (intrinsics:defn vector->list (v)
   (intrinsics:defn helper (n acc)

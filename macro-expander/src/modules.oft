@@ -9,13 +9,13 @@
 ; Expands all the declarations in a module, returning a list of expanded modules.
 (intrinsics:defn expand-module (target-module mod-srcs mods)
   ; The source of the target module.
-  (def mod-src (expect
+  (intrinsics:def mod-src (expect
     (find \(equals (module-name $) target-module) mod-srcs)
     (string-append "Module not found: " (symbol->string target-module))))
   ; All import decls.
-  (def imports (find-imports mod-src))
+  (intrinsics:def imports (find-imports mod-src))
   ; A list of modules not yet in the mods assoc.
-  (def missing-modules (filter
+  (intrinsics:def missing-modules (filter
     \(none? (assoc $ mods))
     (map
       \(nth 1 $)
@@ -25,21 +25,23 @@
     ; module. Then, return the environment, as created from only the declarations inside the module
     ; (i.e. not including imports).
     (progn
-      (def tmp (build-initial-env imports mods))
-      (def interp-env (fst tmp))
-      (def interp-macros (snd tmp))
-      (def decls (find-decls mod-src))
-      (expand-decls decls interp-env interp-macros))
+      (intrinsics:def tmp (build-initial-env imports mods))
+      (intrinsics:def interp-env (fst tmp))
+      (intrinsics:def interp-macros (snd tmp))
+      (intrinsics:def decls (find-decls mod-src))
+
+      (intrinsics:def tmp (expand-decls decls interp-env interp-macros))
+      (panic (cons 'todo tmp)))
     ; If there are missing modules, try expanding the first one, then try again with that one
     ; added.
     (progn
-      (def new-mods (expand-module (car missing-modules) mod-srcs mods))
+      (intrinsics:def new-mods (expand-module (car missing-modules) mod-srcs mods))
       (expand-module target-module mod-srcs new-mods))))
 
 ; Builds an initial environment from a list of import decls and an assoc of expanded module
 ; environments. Returns a pair (INTERP-ENV INTERP-MACROS).
 (intrinsics:defn build-initial-env (imports mods)
-  (def tmp (map \(process-import $ mods) imports))
+  (intrinsics:def tmp (map \(process-import $ mods) imports))
   (if (nil? tmp)
     (pair nil nil)
     (panic (list 'todo (list 'build-initial-env imports 'mods)))))
@@ -60,22 +62,22 @@
 ; fst is the imported value name and the snd is an either.  The left of the either is a value from
 ; interpreting the module. The right of the either is a function that runs the macro.
 (intrinsics:defn process-import (imp mods)
-  (def mod-name (nth 1 imp))
-  (def plain-imports (vector->list (nth 2 imp)))
-  (def attrs (skip 3 imp))
+  (intrinsics:def mod-name (nth 1 imp))
+  (intrinsics:def plain-imports (vector->list (nth 2 imp)))
+  (intrinsics:def attrs (skip 3 imp))
 
-  (def m (expect
+  (intrinsics:def m (expect
     (assoc mod-name mods)
     "Module not found, but this should've been caught already?"))
 
-  (def no-import-decls (list->set (option->nullable
+  (intrinsics:def no-import-decls (list->set (option->nullable
     (assoc 'no-import-decl attrs))))
-  (def no-import-macros (list->set (option->nullable
+  (intrinsics:def no-import-macros (list->set (option->nullable
     (assoc 'no-import-macro attrs))))
 
   (map
     \(progn
-      (def f
+      (intrinsics:def f
         (if (set-has? $ no-import-decls)
           (if (set-has? $ no-import-macros)
             (panic (string-concat (list
@@ -100,8 +102,8 @@
   (panic '(todo | process-import-decl)))
 
 (intrinsics:defn process-import-either (m name mods)
-  (def decl (process-import-decl m name mods))
-  (def macro (process-import-macro m name mods))
+  (intrinsics:def decl (process-import-decl m name mods))
+  (intrinsics:def macro (process-import-macro m name mods))
   (panic '(todo | process-import-either)))
 
 (intrinsics:defn process-import-macro (m name mods)

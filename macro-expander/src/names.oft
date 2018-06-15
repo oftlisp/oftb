@@ -4,7 +4,7 @@
 (intrinsics:defn global-name? (sym)
   ('option-cases (string-split-on-1 ":" sym)
     \(0)
-    (fn () 0)))
+    (intrinsics:fn () 0)))
 
 (intrinsics:defn local-name? (sym)
   (not (global-name? sym)))
@@ -12,5 +12,5 @@
 ; Goes from a module name (as a string or symbol) to a pair
 ; (package name, module name).
 (intrinsics:defn split-module-name (name)
-  (def name (if (symbol? name) (symbol->string name) name))
+  (intrinsics:def name (if (symbol? name) (symbol->string name) name))
   (string-split-on-1 "/" name))

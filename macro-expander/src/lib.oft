@@ -4,4 +4,4 @@
 (import macro-expander/modules
   [expand-modules])
 
-(def expand-modules expand-modules)
+(intrinsics:def expand-modules expand-modules)

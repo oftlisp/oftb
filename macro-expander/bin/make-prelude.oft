@@ -10,48 +10,48 @@
   (if (not (= (length args) 1))
     (panic "usage: make-prelude ministd-dir"))
 
-  (def tmp (get-prelude-exports (nth 0 args)))
-  (def package-name (fst tmp))
-  (def exports (sort-by fst (snd tmp)))
+  (intrinsics:def tmp (get-prelude-exports (nth 0 args)))
+  (intrinsics:def package-name (fst tmp))
+  (intrinsics:def exports (sort-by fst (snd tmp)))
 
   (println (module-stmt-for package-name exports))
   (println)
   (each print-import-for exports)
   (println)
   (each
-    \(vector-each \(println (list 'def $ $)) (sort $))
+    \(vector-each \(println (list 'intrinsics:def $ $)) (sort $))
     (map snd exports)))
 
 (intrinsics:defn exports-of (src)
   (index-into '(0 2) src))
 
 (intrinsics:defn get-prelude-exports (prelude-pkg-path)
-  (def prelude-srcs-path (string-append prelude-pkg-path "/src/internal/prelude"))
-  (def src-path-len (+ (string-length prelude-pkg-path) 4))
+  (intrinsics:def prelude-srcs-path (string-append prelude-pkg-path "/src/internal/prelude"))
+  (intrinsics:def src-path-len (+ (string-length prelude-pkg-path) 4))
 
-  (def package-name (car (expect
+  (intrinsics:def package-name (car (expect
     (assoc 'name (load-metadata-for prelude-pkg-path))
     "Package is missing a name")))
 
   (intrinsics:defn to-import-name (path)
-    (def l (string-length path))
-    (def path (string-slice src-path-len (- l 4) path))
+    (intrinsics:def l (string-length path))
+    (intrinsics:def path (string-slice src-path-len (- l 4) path))
     (string->symbol (string-append
       (symbol->string package-name)
       path)))
     
-  (def prelude-files (walk-dir-files prelude-srcs-path))
-  (def exports (map
+  (intrinsics:def prelude-files (walk-dir-files prelude-srcs-path))
+  (intrinsics:def exports (map
     \(map-pair to-import-name exports-of $)
     prelude-files))
 
   (pair package-name exports))
 
 (intrinsics:defn module-stmt-for (package-name exports)
-  (def module-name (string->symbol (string-append
+  (intrinsics:def module-name (string->symbol (string-append
     (symbol->string package-name)
     "/prelude")))
-  (def all-exports (sort (foldl vector-append [] (map snd exports))))
+  (intrinsics:def all-exports (sort (foldl vector-append [] (map snd exports))))
   (list 'module module-name all-exports 'no-prelude))
 
 (intrinsics:defn print-import-for (m)

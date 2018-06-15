@@ -7,7 +7,7 @@
 (import ministd/internal/prelude/intrinsics
   [car cdr cons cons? eq false nil nil? panic true])
 
-(def none 'none)
+(intrinsics:def none 'none)
 
 (intrinsics:defn nullable->option (x)
   (if (nil? x)
@@ -15,7 +15,7 @@
     (some x)))
 
 (intrinsics:defn option->nullable (opt)
-  (option-cases id (fn () nil) opt))
+  (option-cases id (intrinsics:fn () nil) opt))
 
 (intrinsics:defn option-cases (s n opt)
   (if (some? opt)
@@ -36,4 +36,4 @@
   (eq opt 'none))
 
 (intrinsics:defn expect (opt msg)
-  (option-cases id (fn () (panic msg)) opt))
+  (option-cases id (intrinsics:fn () (panic msg)) opt))

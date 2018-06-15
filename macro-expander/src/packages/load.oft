@@ -9,21 +9,21 @@
   [read-file])
 
 (intrinsics:defn load-metadata-for (path)
-  (def metadata-path (string-append path "/package.oftd"))
+  (intrinsics:def metadata-path (string-append path "/package.oftd"))
   (read-file metadata-path))
 
 (intrinsics:defn load-package-from (path)
-  (def metadata (load-metadata-for path))
+  (intrinsics:def metadata (load-metadata-for path))
 
-  (def name (car (expect (assoc 'name metadata)
+  (intrinsics:def name (car (expect (assoc 'name metadata)
     "Missing package name")))
-  (def components (expect (assoc 'components metadata)
+  (intrinsics:def components (expect (assoc 'components metadata)
     "Missing package components list"))
 
-  (def components (partition (map
-    (fn (component)
-      (def type (car component))
-      (def component (cdr component))
+  (intrinsics:def components (partition (map
+    (intrinsics:fn (component)
+      (intrinsics:def type (car component))
+      (intrinsics:def component (cdr component))
       (if (eq type 'library)
         (left (load-lib-from path component))
         (if (eq type 'binary)
@@ -31,8 +31,8 @@
           (panic (string-append "Unknown type: " (symbol->string type))))))
     components)))
 
-  (def libs (fst components))
-  (def lib (if (nil? libs)
+  (intrinsics:def libs (fst components))
+  (intrinsics:def lib (if (nil? libs)
     nil
     (if (= (length libs) 1)
       (car libs)
@@ -40,13 +40,13 @@
   (package name path lib (snd components)))
 
 (intrinsics:defn load-bin-from (pkg-path component)
-  (def name (car (expect
+  (intrinsics:def name (car (expect
     (assoc 'name component)
     "Binary component missing name")))
-  (def path (car (expect
+  (intrinsics:def path (car (expect
     (assoc 'path component)
     "Binary component missing path")))
-  (def path (foldl string-append "" (list
+  (intrinsics:def path (foldl string-append "" (list
     pkg-path
     "/"
     path)))

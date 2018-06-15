@@ -3,7 +3,7 @@
 
 (intrinsics:defn main (args)
   (println
-    ((fn (x)
-      ((fn (x) (x 1))
-       (fn (y) (x 2))))
-     (fn (z) 42))))
+    ((intrinsics:fn (x)
+      ((intrinsics:fn (x) (x 1))
+       (intrinsics:fn (y) (x 2))))
+     (intrinsics:fn (z) 42))))

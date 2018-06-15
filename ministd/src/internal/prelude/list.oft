@@ -27,9 +27,9 @@
     (if (nil? l)
       acc
       (progn
-        (def acc (option-cases
-          (fn (x) (cons x acc))
-          (fn () acc)))
+        (intrinsics:def acc (option-cases
+          (intrinsics:fn (x) (cons x acc))
+          (intrinsics:fn () acc)))
         (helper (cdr l) acc))))
   (reverse (helper l nil)))
 
@@ -114,10 +114,10 @@
   (foldl (flip nth) l indices))
 
 (intrinsics:defn length (l)
-  (foldl (fn (l _) (+ l 1)) 0 l))
+  (foldl (intrinsics:fn (l _) (+ l 1)) 0 l))
 
 (intrinsics:defn map (f l)
-  (reverse (foldl (fn (a x) (cons (f x) a)) '() l)))
+  (reverse (foldl (intrinsics:fn (a x) (cons (f x) a)) '() l)))
 
 (intrinsics:defn nth (n l)
   (car (skip n l)))
@@ -133,7 +133,7 @@
   (map-pair reverse reverse (helper es nil nil)))
 
 (intrinsics:defn reverse (l)
-  (foldl (fn (a x) (cons x a)) '() l))
+  (foldl (intrinsics:fn (a x) (cons x a)) '() l))
 
 (intrinsics:defn skip (n l)
   (if (= n 0)

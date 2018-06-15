@@ -7,8 +7,8 @@
 (intrinsics:defn eval (expr env)
   (if (cons? expr)
     (progn
-      (def func (evaluate (car expr) env))
-      (def args (map
+      (intrinsics:def func (evaluate (car expr) env))
+      (intrinsics:def args (map
         \(evaluate $ env)
         (cdr expr)))
       ('apply func args))

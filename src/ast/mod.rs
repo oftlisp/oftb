@@ -90,7 +90,7 @@ pub enum Decl {
 impl Decl {
     /// Creates a declaration from a literal.
     pub fn from_value(lit: Literal) -> Result<Decl, Error> {
-        if lit.is_shl("def".into()) {
+        if lit.is_shl("intrinsics:def".into()) {
             let mut l = lit.as_list().unwrap();
             if l.len() != 3 {
                 return Err(ErrorKind::InvalidDecl(lit).into());
@@ -169,14 +169,14 @@ impl Expr {
                 };
                 match *h {
                     Literal::Symbol(s)
-                        if s.as_str() == "def"
+                        if s.as_str() == "intrinsics:def"
                             || s.as_str() == "intrinsics:defn" =>
                     {
                         let lit = Literal::Cons(h, t_lit);
                         let decl = Decl::from_value(lit)?;
                         Ok(Expr::Decl(Box::new(decl)))
                     }
-                    Literal::Symbol(s) if s.as_str() == "fn" => {
+                    Literal::Symbol(s) if s.as_str() == "intrinsics:fn" => {
                         if t.len() < 2 {
                             return Err(ErrorKind::InvalidExpr(Literal::Cons(
                                 h, t_lit,

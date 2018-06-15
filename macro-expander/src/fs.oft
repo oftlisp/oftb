@@ -5,10 +5,10 @@
   [read-dir read-file])
 
 (intrinsics:defn walk-dir (root)
-  (def entries (partition (map
-    (fn (entry)
-      (def path (car entry))
-      (def type (cdr entry))
+  (intrinsics:def entries (partition (map
+    (intrinsics:fn (entry)
+      (intrinsics:def path (car entry))
+      (intrinsics:def type (cdr entry))
       (if (eq type 'file)
         (left path)
         (if (eq type 'dir)
@@ -19,5 +19,5 @@
 
 (intrinsics:defn walk-dir-files (root)
   (map
-    (fn (path) (pair path (read-file path)))
+    (intrinsics:fn (path) (pair path (read-file path)))
     (walk-dir root)))

@@ -28,8 +28,8 @@
       (if (nil? r)
         (rev-append acc l)
         (progn
-          (def lh (car l))
-          (def rh (car r))
+          (intrinsics:def lh (car l))
+          (intrinsics:def rh (car r))
           (if (> (cdr lh) (cdr rh))
             (helper l (cdr r) (cons rh acc))
             (helper (cdr l) r (cons lh acc)))))))
@@ -39,25 +39,25 @@
   (sort-by id l))
 
 (intrinsics:defn sort-by (f l)
-  (def sorter (if (vector? l) sort-vector-by sort-list-by))
+  (intrinsics:def sorter (if (vector? l) sort-vector-by sort-list-by))
   (sorter f l))
 
 (intrinsics:defn sort-list-by (f lst)
   (intrinsics:defn helper (lst)
-    (def len (length lst))
+    (intrinsics:def len (length lst))
     (if (< len 2)
       lst
       (progn
-        (def tmp (split-at (/ len 2) lst))
+        (intrinsics:def tmp (split-at (/ len 2) lst))
         (merge (helper (fst tmp)) (helper (snd tmp))))))
   (map car (helper (map \(cons $ (f $)) lst))))
 
 (intrinsics:defn sort-vector-by (f v)
   (intrinsics:defn helper (lst)
-    (def len (length lst))
+    (intrinsics:def len (length lst))
     (if (< len 2)
       lst
       (progn
-        (def tmp (split-at (/ len 2) lst))
+        (intrinsics:def tmp (split-at (/ len 2) lst))
         (merge (helper (fst tmp)) (helper (snd tmp))))))
   (list->vector (map car (helper (map \(cons $ (f $)) (vector->list v))))))

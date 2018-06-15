@@ -9,12 +9,12 @@
 (intrinsics:defn main (args)
   (if (not (= (length args) 3))
     (panic "usage: oftb-macro-expander std-path package-dir binary-name"))
-  (def std-path    (nth 0 args))
-  (def package-dir (nth 1 args))
-  (def binary-name (nth 2 args))
+  (intrinsics:def std-path    (nth 0 args))
+  (intrinsics:def package-dir (nth 1 args))
+  (intrinsics:def binary-name (nth 2 args))
 
-  (def modules (load-packages std-path package-dir binary-name))
-  (def modules (must (traverse-modules modules 'main)))
+  (intrinsics:def modules (load-packages std-path package-dir binary-name))
+  (intrinsics:def modules (must (traverse-modules modules 'main)))
 
   (panic (expand-modules modules))
   

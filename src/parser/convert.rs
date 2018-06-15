@@ -1,9 +1,9 @@
-use pest::Error;
 use pest::iterators::{Pair, Pairs};
+use pest::Error;
 
 use literal::Literal;
-use parser::Rule;
 use parser::symbolish::parse_symbolish;
+use parser::Rule;
 use util::convert_hex_digit;
 
 pub fn convert_program(
@@ -113,7 +113,7 @@ fn convert_rmacro(
         ",@" => simple_macro("unquote-splicing", value),
         "," => simple_macro("unquote", value),
         "\\" => Literal::Cons(
-            Box::new(Literal::Symbol("fn".into())),
+            Box::new(Literal::Symbol("intrinsics:fn".into())),
             Box::new(Literal::Cons(
                 Box::new(Literal::Cons(
                     Box::new(Literal::Symbol("$".into())),

@@ -16,9 +16,9 @@
 (import ministd/internal/prelude/pair
   [fst snd pair])
 
-(def string-append intrinsics/strings:append)
-(def string-length intrinsics/strings:length)
-(def string-slice  intrinsics/strings:slice)
+(intrinsics:def string-append intrinsics/strings:append)
+(intrinsics:def string-length intrinsics/strings:length)
+(intrinsics:def string-slice  intrinsics/strings:slice)
 
 (intrinsics:defn string-concat (ss)
   (intrinsics:defn helper (ss acc)
@@ -44,11 +44,11 @@
 
 ; TODO: Use Boyer-Moore instead. For now, this is O(mn) naive string search.
 (intrinsics:defn string-search (needle haystack)
-  (def needle-len (string-length needle))
-  (def last-n (- (string-length haystack) needle-len))
+  (intrinsics:def needle-len (string-length needle))
+  (intrinsics:def last-n (- (string-length haystack) needle-len))
 
   (intrinsics:defn match? (n)
-    (def upper (+ n needle-len))
+    (intrinsics:def upper (+ n needle-len))
     (if (<= upper (string-length haystack))
       (equals (string-slice n (+ n needle-len) haystack) needle)
       false))
@@ -62,16 +62,16 @@
 
 (intrinsics:defn string-split-on (needle s)
   (intrinsics:defn helper (s acc)
-    (def tmp (string-split-on-1 needle s))
+    (intrinsics:def tmp (string-split-on-1 needle s))
     (option-cases
       \(helper (snd $) (cons (fst $) acc))
-      (fn () (reverse (cons s acc)))
+      (intrinsics:fn () (reverse (cons s acc)))
       (string-split-on-1 needle s)))
   (helper s nil))
 
 (intrinsics:defn string-split-on-1 (needle s)
-  (def n (string-search needle s))
-  (def nl (string-length needle))
+  (intrinsics:def n (string-search needle s))
+  (intrinsics:def nl (string-length needle))
   (if n
     (some (pair
       (string-slice 0        n                 s)

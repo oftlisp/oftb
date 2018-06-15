@@ -1,10 +1,10 @@
 (module ministd/data/tree-set
   [empty-set list->set set->list set-has? set-insert singleton-set])
 
-(def black 'black)
-(def red 'red)
+(intrinsics:def black 'black)
+(intrinsics:def red 'red)
 
-(def E 'E)
+(intrinsics:def E 'E)
 (intrinsics:defn T (color l r x)
   (cons 'T (cons color (cons l (cons r x)))))
 
@@ -48,9 +48,9 @@
     (if (E? tree)
       true
       (progn
-        (def l (get-left  tree))
-        (def r (get-right tree))
-        (def v (get-value tree))
+        (intrinsics:def l (get-left  tree))
+        (intrinsics:def r (get-right tree))
+        (intrinsics:def v (get-value tree))
         (and
           (if (T? l)
             (and (<= (get-value l) v) (check-ordering l))
@@ -65,9 +65,9 @@
     (if (E? tree)
       1
       (progn
-        (def l (check-paths (get-left  tree)))
-        (def r (check-paths (get-right tree)))
-        (def f (if (red? tree) id 1+))
+        (intrinsics:def l (check-paths (get-left  tree)))
+        (intrinsics:def r (check-paths (get-right tree)))
+        (intrinsics:def f (if (red? tree) id 1+))
         (if (and l r)
           (if (= l r)
             (f l)
@@ -91,10 +91,10 @@
   (intrinsics:defn case-1 (tree)
     (if (and (T? tree) (black? tree))
       (progn
-        (def l (get-left tree))
+        (intrinsics:def l (get-left tree))
         (if (red? l)
           (progn
-            (def ll (get-left l))
+            (intrinsics:def ll (get-left l))
             (if (red? ll)
               (list (get-left ll) (get-right ll) (get-right l) (get-right tree)
                 (get-value ll) (get-value l) (get-value tree))
@@ -106,10 +106,10 @@
   (intrinsics:defn case-2 (tree)
     (if (and (T? tree) (black? tree))
       (progn
-        (def l (get-left tree))
+        (intrinsics:def l (get-left tree))
         (if (red? l)
           (progn
-            (def lr (get-right l))
+            (intrinsics:def lr (get-right l))
             (if (red? lr)
               (list (get-left l) (get-left lr) (get-right lr) (get-right tree)
                 (get-value l) (get-value lr) (get-value tree))
@@ -121,10 +121,10 @@
   (intrinsics:defn case-3 (tree)
     (if (and (T? tree) (black? tree))
       (progn
-        (def r (get-right tree))
+        (intrinsics:def r (get-right tree))
         (if (red? r)
           (progn
-            (def rl (get-left r))
+            (intrinsics:def rl (get-left r))
             (if (red? rl)
               (list (get-left tree) (get-left rl) (get-right rl) (get-right r)
                 (get-value tree) (get-value rl) (get-value r))
@@ -136,10 +136,10 @@
   (intrinsics:defn case-4 (tree)
     (if (and (T? tree) (black? tree))
       (progn
-        (def r (get-right tree))
+        (intrinsics:def r (get-right tree))
         (if (red? r)
           (progn
-            (def rr (get-right r))
+            (intrinsics:def rr (get-right r))
             (if (red? rr)
               (list (get-left tree) (get-left r) (get-left rr) (get-right rr)
                 (get-value tree) (get-value r) (get-value rr))
@@ -147,20 +147,20 @@
           nil))
       nil))
 
-  (def pat (first-nonnil (map \($ tree) (list case-1 case-2 case-3 case-4))))
+  (intrinsics:def pat (first-nonnil (map \($ tree) (list case-1 case-2 case-3 case-4))))
   (if pat
     (progn
-      (def a (nth 0 pat))
-      (def b (nth 1 pat))
-      (def c (nth 2 pat))
-      (def d (nth 3 pat))
-      (def x (nth 4 pat))
-      (def y (nth 5 pat))
-      (def z (nth 6 pat))
+      (intrinsics:def a (nth 0 pat))
+      (intrinsics:def b (nth 1 pat))
+      (intrinsics:def c (nth 2 pat))
+      (intrinsics:def d (nth 3 pat))
+      (intrinsics:def x (nth 4 pat))
+      (intrinsics:def y (nth 5 pat))
+      (intrinsics:def z (nth 6 pat))
       (T red (T black a b x) (T black c d z) y))
     tree))
 
-(def empty-set E)
+(intrinsics:def empty-set E)
 (intrinsics:defn singleton-set (x)
   (T black E E x))
 
@@ -180,7 +180,7 @@
   (if (E? tree)
     false
     (progn
-      (def y (get-value tree))
+      (intrinsics:def y (get-value tree))
       (if (< x y)
         (set-has? x (get-left  tree))
         (if (> x y)
@@ -192,17 +192,17 @@
     (if (E? tree)
       (T red E E x)
       (progn
-        (def c (get-color tree))
-        (def l (get-left  tree))
-        (def r (get-right tree))
-        (def y (get-value tree))
+        (intrinsics:def c (get-color tree))
+        (intrinsics:def l (get-left  tree))
+        (intrinsics:def r (get-right tree))
+        (intrinsics:def y (get-value tree))
         (if (< x y)
           (balance (T c (ins l) r y))
           (if (> x y)
             (balance (T c l (ins r) y))
             tree)))))
-  (def tree (ins tree))
-  (def l (get-left  tree))
-  (def r (get-right tree))
-  (def y (get-value tree))
+  (intrinsics:def tree (ins tree))
+  (intrinsics:def l (get-left  tree))
+  (intrinsics:def r (get-right tree))
+  (intrinsics:def y (get-value tree))
   (T black l r y))

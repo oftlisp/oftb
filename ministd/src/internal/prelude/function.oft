@@ -6,7 +6,7 @@
   \(f (g $)))
 
 (intrinsics:defn flip (f)
-  (fn (a b)
+  (intrinsics:fn (a b)
     (f b a)))
 
 (intrinsics:defn id (x) x)

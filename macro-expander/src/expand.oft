@@ -3,24 +3,38 @@
 
 ; Returns whether the value is directly macro-expandable with any of the given macros.
 (intrinsics:defn expandable? (value macros)
-  (def s (as-shl value))
+  (intrinsics:def s (as-shl value))
   (if s
     (some? (assoc s macros))
     false))
 
-; Macro-expands an arbitrary value, returning the expanded value.
-(intrinsics:defn expand-expr (value env macros)
+; Macro-expands an arbitrary value, returning the expanded value. Will panic if a defmacro is
+; encountered.
+(intrinsics:defn expand-value (value env macros)
   (if (shl? 'defmacro value)
-    (panic '(todo expand-expr defmacro))
+    (panic "defmacros must appear at the top level of a module")
     (if (shl? 'quote value)
       value
       (if (expandable? value macros)
-        (panic '(todo | expand-expr))
+        (panic '(todo | expand-value))
         (if (cons? value)
-          (panic '(todo expand-expr list))
+          (map \(expand-value $ env macros) value)
           (if (vector? value)
-            (panic '(todo expand-expr vector))
+            (panic '(todo expand-value vector))
             value))))))
 
+; Expands the decls at the top level of a module, expanding progns and evaluating defmacros and
+; decls. Returns a list (EXPANDED-DECLS ENV MACROS).
 (intrinsics:defn expand-decls (decls env macros)
-  (panic '(todo | expand-decls)))
+  ; This loop lets us accumulate defns.
+  (intrinsics:defn loop (decls acc-defns env macros)
+    (if (nil? decls)
+      (panic 'todo)
+      (progn
+        (intrinsics:def value (car decls))
+        (if (shl? 'defmacro value)
+          (panic '(todo expand-decls defmacro))
+          (progn
+            (intrinsics:def expanded (expand-value value env macros))
+            (panic (list 'todo 'expand-decls expanded)))))))
+  (loop decls nil env macros))

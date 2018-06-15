@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentParser
+from os import chdir
+from os.path import dirname
 import shutil
 import subprocess
 import tarfile
-import tempfile
+from tempfile import NamedTemporaryFile
 
 
 def command(cmd, redirect=None):
@@ -12,7 +14,7 @@ def command(cmd, redirect=None):
         code = subprocess.call(cmd)
         assert code == 0
     else:
-        with tempfile.NamedTemporaryFile() as f:
+        with NamedTemporaryFile() as f:
             code = subprocess.call(cmd, stdout=f)
             assert code == 0
             shutil.copy(f.name, redirect)
@@ -89,6 +91,7 @@ def make_archive():
 
 
 if __name__ == "__main__":
+    chdir(dirname(__file__))
     parser = ArgumentParser()
     parser.add_argument("--no-oftb-build", action="store_true")
     parser.add_argument("--use-system-oftb", action="store_true")

@@ -11,10 +11,10 @@
   [empty-set set-has?])
 
 (intrinsics:defn load-packages (std-path root-package-path binary-name)
-  (def std (load-package-from std-path))
+  (intrinsics:def std (load-package-from std-path))
   ; TODO: Dependencies. I guess this is getting tossed out once it bootstraps
   ; oftc, so it doesn't _really_ matter, but /shrug.
-  (def root (load-package-from root-package-path))
+  (intrinsics:def root (load-package-from root-package-path))
 
   (append
     (binary-component root binary-name)
@@ -37,10 +37,10 @@
         (ok (pair seen-set resolved-list))
         (err goal))
       (progn
-        (def m (expect
+        (intrinsics:def m (expect
           (find goal? mods)
           (string-append "No such module: " (symbol->string goal))))
-        (def deps (map \(nth 1 $) (take-while \(shl? 'import $) (cdr m))))
+        (intrinsics:def deps (map \(nth 1 $) (take-while \(shl? 'import $) (cdr m))))
         (map-ok
           \(map-snd \(cons m $) $)
           (helper* deps seen-set resolved-list)))))
@@ -48,12 +48,12 @@
     (if (nil? goals)
       (ok (pair seen-set resolved-list))
       (progn
-        (def tmp (helper (car goals) seen-set resolved-list))
+        (intrinsics:def tmp (helper (car goals) seen-set resolved-list))
         (if (ok? tmp)
           (progn
-            (def tmp (cdr tmp))
-            (def seen-set (fst tmp))
-            (def resolved-list (snd tmp))
+            (intrinsics:def tmp (cdr tmp))
+            (intrinsics:def seen-set (fst tmp))
+            (intrinsics:def resolved-list (snd tmp))
             (helper* (cdr goals) seen-set resolved-list))
           tmp))))
 
