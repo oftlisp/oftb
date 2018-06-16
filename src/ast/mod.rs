@@ -142,7 +142,12 @@ pub enum Expr {
     Call(Box<Expr>, Vec<Expr>),
     Decl(Box<Decl>),
     If(Box<Expr>, Box<Expr>, Box<Expr>),
-    Lambda(Vec<Symbol>, Vec<Expr>, Box<Expr>),
+    Lambda(
+        Option<Symbol>,
+        Vec<Symbol>,
+        Vec<Expr>,
+        Box<Expr>,
+    ),
     Literal(Literal),
     Progn(Vec<Expr>, Box<Expr>),
     Var(Symbol),
@@ -198,7 +203,46 @@ impl Expr {
                             )).into());
                         };
 
-                        Ok(Expr::Lambda(args, body, Box::new(tail)))
+                        Ok(Expr::Lambda(None, args, body, Box::new(tail)))
+                    }
+                    Literal::Symbol(s)
+                        if s.as_str() == "intrinsics:named-fn" =>
+                    {
+                        if t.len() < 3 {
+                            return Err(ErrorKind::InvalidExpr(Literal::Cons(
+                                h, t_lit,
+                            )).into());
+                        }
+
+                        let tail = Expr::from_value(t.pop().unwrap())?;
+                        let body = t.drain(2..)
+                            .map(Expr::from_value)
+                            .collect::<Result<_, _>>()?;
+
+                        let args = if let Some(args) =
+                            t.pop().unwrap().as_symbol_list()
+                        {
+                            args
+                        } else {
+                            return Err(ErrorKind::InvalidExpr(Literal::Cons(
+                                h, t_lit,
+                            )).into());
+                        };
+                        let name =
+                            if let Literal::Symbol(name) = t.pop().unwrap() {
+                                name
+                            } else {
+                                return Err(ErrorKind::InvalidExpr(
+                                    Literal::Cons(h, t_lit),
+                                ).into());
+                            };
+
+                        Ok(Expr::Lambda(
+                            Some(name),
+                            args,
+                            body,
+                            Box::new(tail),
+                        ))
                     }
                     Literal::Symbol(s) if s.as_str() == "if" => {
                         if t.len() < 2 || t.len() > 3 {

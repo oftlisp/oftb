@@ -67,9 +67,9 @@ impl From<AstExpr> for Expr {
                     context,
                 )
             }
-            AstExpr::Lambda(args, body, tail) => {
+            AstExpr::Lambda(name, args, body, tail) => {
                 let body = Box::new(convert_block(body, *tail));
-                Expr::AExpr(AExpr::Lambda(None, args, body))
+                Expr::AExpr(AExpr::Lambda(name, args, body))
             }
             AstExpr::Literal(lit) => Expr::AExpr(AExpr::Literal(lit)),
             AstExpr::Progn(body, tail) => convert_block(body, *tail),
@@ -98,8 +98,8 @@ fn apply_context(mut expr: Expr, mut context: Vec<(Symbol, Expr)>) -> Expr {
 /// `ast::Expr` back if it's not possible.
 fn convert_aexpr(expr: AstExpr) -> Result<AExpr, AstExpr> {
     match expr {
-        AstExpr::Lambda(args, body, tail) => Ok(AExpr::Lambda(
-            None,
+        AstExpr::Lambda(name, args, body, tail) => Ok(AExpr::Lambda(
+            name,
             args,
             Box::new(convert_block(body, *tail)),
         )),
