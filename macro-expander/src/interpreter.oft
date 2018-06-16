@@ -1,5 +1,5 @@
 (module macro-expander/interpreter
-  [eval evaluate])
+  [eval evaluate make-letrec-env])
 
 (import macro-expander/interpreter/env
   [intrinsics])
@@ -7,11 +7,11 @@
 (intrinsics:defn eval (expr env)
   (if (cons? expr)
     (progn
-      (intrinsics:def func (evaluate (car expr) env))
+      (intrinsics:def func (eval (car expr) env))
       (intrinsics:def args (map
-        \(evaluate $ env)
+        \(eval $ env)
         (cdr expr)))
-      ('apply func args))
+      (func args))
     (if (vector? expr)
       (panic "TODO Vectors")
       (if (symbol? expr)
@@ -23,3 +23,13 @@
 
 (intrinsics:defn evaluate (expr)
   (eval expr intrinsics))
+
+(intrinsics:defn make-lambda (args body get-env)
+  (panic (list make-lambda args body get-env)))
+
+(intrinsics:defn make-letrec-env (defns env)
+  (intrinsics:defn helper (f)
+    (cons (nth 1 f) (make-lambda (nth 2 f) (skip 3 f) get-env)))
+  (intrinsics:defn get-env ()
+    (append (map helper defns) env))
+  (get-env))

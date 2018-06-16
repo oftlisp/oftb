@@ -39,7 +39,7 @@ impl CExpr {
                 .collect(),
             CExpr::LetRec(ref bound, ref body) => bound
                 .iter()
-                .flat_map(|&(_, ref b)| b.global_vars())
+                .flat_map(|&(_, _, ref b)| b.global_vars())
                 .chain(body.global_vars())
                 .collect(),
         }
@@ -56,7 +56,7 @@ impl AExpr {
                 s.insert(name);
                 s
             }
-            AExpr::Lambda(_, ref body) => body.global_vars(),
+            AExpr::Lambda(_, _, ref body) => body.global_vars(),
             AExpr::Literal(_) => BTreeSet::new(),
             AExpr::Local(_) => BTreeSet::new(),
             AExpr::Vector(ref vec) => vec.iter()

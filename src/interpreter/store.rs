@@ -3,9 +3,9 @@ use std::marker::PhantomData;
 
 use symbol::Symbol;
 
-use Literal;
 use flatanf::Expr;
 use interpreter::{Env, Value};
+use Literal;
 
 /// A phantom type for `Addr<Bytes>`.
 pub enum Bytes {}
@@ -117,10 +117,11 @@ impl<'program> Store<'program> {
         &mut self,
         argn: usize,
         body: &'program Expr,
+        name: Option<Symbol>,
         env: Env,
     ) -> Addr<Closure> {
         let n = self.clos.len();
-        self.clos.push((argn, body, None, env));
+        self.clos.push((argn, body, name, env));
         Addr(n, PhantomData)
     }
 

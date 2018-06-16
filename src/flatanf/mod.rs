@@ -54,7 +54,7 @@ pub enum CExpr {
     If(AExpr, Box<Expr>, Box<Expr>),
 
     /// A letrec, which only handles (mutually) recursive functions.
-    LetRec(Vec<(usize, Expr)>, Box<Expr>),
+    LetRec(Vec<(Symbol, usize, Expr)>, Box<Expr>),
 }
 
 /// An atomic expression, which must immediately evaluate to a value without
@@ -65,7 +65,7 @@ pub enum AExpr {
     Global(Symbol),
 
     /// A function abstraction.
-    Lambda(usize, Box<Expr>),
+    Lambda(Option<Symbol>, usize, Box<Expr>),
 
     /// A literal value.
     Literal(Literal),

@@ -73,7 +73,8 @@ impl CExpr {
             CExpr::LetRec(ref lambdas, ref body) => {
                 w.write_u8(0x04)?;
                 serialize_usize_as_u64(lambdas.len(), w)?;
-                for &(argn, ref lbody) in lambdas {
+                for &(name, argn, ref lbody) in lambdas {
+                    serialize_str(name.as_str(), w)?;
                     serialize_usize_as_u64(argn, w)?;
                     lbody.serialize_to(w)?;
                 }
@@ -90,8 +91,16 @@ impl AExpr {
                 w.write_u8(0x05)?;
                 serialize_str(name.as_str(), w)
             }
-            AExpr::Lambda(argn, ref body) => {
+            AExpr::Lambda(name, argn, ref body) => {
                 w.write_u8(0x06)?;
+                serialize_str(
+                    if let Some(name) = name {
+                        name.as_str()
+                    } else {
+                        ""
+                    },
+                    w,
+                )?;
                 serialize_usize_as_u64(argn, w)?;
                 body.serialize_to(w)
             }

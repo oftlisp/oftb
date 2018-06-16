@@ -141,7 +141,11 @@ fn compile_decl(
                 compile_expr(context, body)
             })?;
             let name = global(mod_name, name);
-            let expr = Expr::AExpr(AExpr::Lambda(args.len(), Box::new(body)));
+            let expr = Expr::AExpr(AExpr::Lambda(
+                Some(name),
+                args.len(),
+                Box::new(body),
+            ));
             Ok((name, expr))
         }
     }
@@ -191,12 +195,12 @@ fn compile_cexpr(
             context.bracket_many(names, |context| {
                 let lambdas = lambdas
                     .into_iter()
-                    .map(|(_, args, body)| {
+                    .map(|(name, args, body)| {
                         let argn = args.len();
                         let body = context.bracket_many(args, |context| {
                             compile_expr(context, body)
                         })?;
-                        Ok((argn, body))
+                        Ok((name, argn, body))
                     })
                     .collect::<Result<Vec<_>, Error>>()?;
                 let body = compile_expr(context, *body)?;
@@ -211,11 +215,11 @@ fn compile_aexpr(
     expr: AnfAExpr,
 ) -> Result<AExpr, Error> {
     match expr {
-        AnfAExpr::Lambda(args, body) => {
+        AnfAExpr::Lambda(name, args, body) => {
             let argn = args.len();
             let body = context
                 .bracket_many(args, |context| compile_expr(context, *body))?;
-            Ok(AExpr::Lambda(argn, Box::new(body)))
+            Ok(AExpr::Lambda(name, argn, Box::new(body)))
         }
         AnfAExpr::Literal(lit) => Ok(AExpr::Literal(lit)),
         AnfAExpr::Var(var) if var.contains(':') => {

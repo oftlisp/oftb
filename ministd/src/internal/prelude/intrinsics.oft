@@ -1,5 +1,5 @@
 (module ministd/internal/prelude/intrinsics
-  [* + - / = apply byte? bytes? car cdr compare cons cons? eq equals false fixnum? function? list
+  [* + - / = byte? bytes? car cdr compare cons cons? eq equals false fixnum? function? list
    mod nil nil? panic print println string? symbol? true vector? write write-bytes writeln]
   no-prelude)
 
@@ -10,7 +10,6 @@
 
 ; Basic Functions
 (intrinsics:def =       intrinsics:eq_num)
-(intrinsics:def apply   intrinsics:apply)
 (intrinsics:def car     intrinsics:car)
 (intrinsics:def cdr     intrinsics:cdr)
 (intrinsics:def compare intrinsics:compare)

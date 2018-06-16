@@ -1,6 +1,9 @@
 (module macro-expander/expand
   [expand-decls])
 
+(import macro-expander/interpreter
+  [make-letrec-env])
+
 ; Returns whether the value is directly macro-expandable with any of the given macros.
 (intrinsics:defn expandable? (value macros)
   (intrinsics:def s (as-shl value))
@@ -29,7 +32,7 @@
   ; This loop lets us accumulate defns.
   (intrinsics:defn loop (decls acc-expanded acc-defns env macros)
     (if (nil? decls)
-      (list acc-expanded (interp-defns acc-defns env) macros)
+      (list (reverse acc-expanded) (make-letrec-env acc-defns env) macros)
       (progn
         (intrinsics:def value (car decls))
         (intrinsics:def decls (cdr decls))
@@ -43,15 +46,3 @@
                 (loop decls (cons expanded acc-expanded) (cons expanded acc-defns) env macros)
                 (panic (list 'todo 'expand-decls expanded)))))))))
   (loop decls nil nil env macros))
-
-; This letrecs together a group of defns by using a fixed-point combinator.
-(intrinsics:defn interp-defns (defns env)
-  (intrinsics:defn fix (f)
-    (intrinsics:fn (x) (f (fix f) x)))
-  (intrinsics:defn Z (f)
-    ((intrinsics:fn (x) (f (intrinsics:fn (v) ((x x) v))))
-     (intrinsics:fn (x) (f (intrinsics:fn (v) ((x x) v))))))
-  (intrinsics:defn make-near-defns (near-defns)
-    (intrinsics:def env (append near-defns env))
-    (panic 'todo))
-  (panic (list 'todo defns env)))

@@ -32,10 +32,6 @@ intrinsics! {
     pkg "intrinsics" as Intrinsics;
 
     mod "" as root {
-        fn apply[store, konts](func, *args) {
-            return ::interpreter::eval::apply(func, args.to_owned(), store, konts);
-        }
-
         fn car[store, _k](l) {
             match l {
                 Value::Cons(h, _) => store.get(h),

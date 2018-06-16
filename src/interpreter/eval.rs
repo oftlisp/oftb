@@ -36,8 +36,13 @@ pub fn step<'program>(
                 }
                 CExpr::LetRec(ref lambdas, ref body) => {
                     let mut addrs = Vec::new();
-                    for &(argn, ref body) in lambdas {
-                        let a = store.store_closure(argn, body, Env::new());
+                    for &(name, argn, ref body) in lambdas {
+                        let a = store.store_closure(
+                            argn,
+                            body,
+                            Some(name),
+                            Env::new(),
+                        );
                         addrs.push(a);
                         env = env.push(Value::Closure(a));
                     }
@@ -104,8 +109,8 @@ pub fn atomic<'program>(
 ) -> Value {
     match *expr {
         AExpr::Global(name) => globals[&name],
-        AExpr::Lambda(argn, ref body) => {
-            Value::Closure(store.store_closure(argn, body, env.clone()))
+        AExpr::Lambda(name, argn, ref body) => {
+            Value::Closure(store.store_closure(argn, body, name, env.clone()))
         }
         AExpr::Literal(ref lit) => store.store_literal(lit),
         AExpr::Local(n) => env.local(n),

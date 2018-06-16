@@ -108,9 +108,10 @@ impl CExpr {
                 let len = deserialize_u64_as_usize(r)?;
                 let mut lambdas = Vec::new();
                 for _ in 0..len {
+                    let name = deserialize_string(r)?;
                     let argn = deserialize_u64_as_usize(r)?;
                     let body = Expr::deserialize_from(r)?;
-                    lambdas.push((argn, body));
+                    lambdas.push((name.into(), argn, body));
                 }
                 let body = Expr::deserialize_from(r)?;
                 Ok(CExpr::LetRec(lambdas, Box::new(body)))
@@ -135,9 +136,15 @@ impl AExpr {
                 Ok(AExpr::Global(name.into()))
             }
             0x06 => {
+                let name = deserialize_string(r)?;
+                let name = if name == "" {
+                    None
+                } else {
+                    Some(name.into())
+                };
                 let argn = deserialize_u64_as_usize(r)?;
                 let body = Expr::deserialize_from(r)?;
-                Ok(AExpr::Lambda(argn, Box::new(body)))
+                Ok(AExpr::Lambda(name, argn, Box::new(body)))
             }
             0x07 => {
                 let lit = Literal::deserialize_from(r)?;

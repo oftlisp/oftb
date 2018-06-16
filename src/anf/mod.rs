@@ -59,7 +59,7 @@ pub enum CExpr {
 /// side effects, popping from the continuation stack.
 #[derive(Clone, Debug, PartialEq)]
 pub enum AExpr {
-    Lambda(Vec<Symbol>, Box<Expr>),
+    Lambda(Option<Symbol>, Vec<Symbol>, Box<Expr>),
     Literal(Literal),
     Var(Symbol),
     Vector(Vec<AExpr>),

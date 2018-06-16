@@ -31,7 +31,7 @@ fn check_expr<'a>(depth: usize, expr: &'a Expr) -> FailRecord<'a> {
 
 fn check_aexpr<'a>(depth: usize, expr: &'a AExpr) -> FailRecord<'a> {
     match *expr {
-        AExpr::Lambda(argn, ref body) => check_expr(depth + argn, body),
+        AExpr::Lambda(_, argn, ref body) => check_expr(depth + argn, body),
         AExpr::Local(n) if n >= depth => FailRecord::err(n, depth),
         AExpr::Local(_) => FailRecord::ok(),
         AExpr::Vector(ref es) => {
@@ -53,7 +53,7 @@ fn check_cexpr<'a>(depth: usize, expr: &'a CExpr) -> FailRecord<'a> {
             FailRecord::all(
                 bound
                     .iter()
-                    .map(|&(argn, ref body)| check_expr(depth + argn, body)),
+                    .map(|&(_, argn, ref body)| check_expr(depth + argn, body)),
             ).or_else(|| check_expr(depth, body))
         }
     }.chain_c(expr)
