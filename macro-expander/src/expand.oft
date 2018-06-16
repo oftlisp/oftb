@@ -5,7 +5,7 @@
 (intrinsics:defn expandable? (value macros)
   (intrinsics:def s (as-shl value))
   (if s
-    (some? (assoc s macros))
+    (some? (lookup s macros))
     false))
 
 ; Macro-expands an arbitrary value, returning the expanded value. Will panic if a defmacro is
@@ -27,14 +27,31 @@
 ; decls. Returns a list (EXPANDED-DECLS ENV MACROS).
 (intrinsics:defn expand-decls (decls env macros)
   ; This loop lets us accumulate defns.
-  (intrinsics:defn loop (decls acc-defns env macros)
+  (intrinsics:defn loop (decls acc-expanded acc-defns env macros)
     (if (nil? decls)
-      (panic 'todo)
+      (list acc-expanded (interp-defns acc-defns env) macros)
       (progn
         (intrinsics:def value (car decls))
+        (intrinsics:def decls (cdr decls))
         (if (shl? 'defmacro value)
           (panic '(todo expand-decls defmacro))
           (progn
             (intrinsics:def expanded (expand-value value env macros))
-            (panic (list 'todo 'expand-decls expanded)))))))
-  (loop decls nil env macros))
+            (if (shl? 'progn expanded)
+              (loop (append (cdr expanded) decls) acc-expanded acc-defns env macros)
+              (if (shl? 'defn expanded)
+                (loop decls (cons expanded acc-expanded) (cons expanded acc-defns) env macros)
+                (panic (list 'todo 'expand-decls expanded)))))))))
+  (loop decls nil nil env macros))
+
+; This letrecs together a group of defns by using a fixed-point combinator.
+(intrinsics:defn interp-defns (defns env)
+  (intrinsics:defn fix (f)
+    (intrinsics:fn (x) (f (fix f) x)))
+  (intrinsics:defn Z (f)
+    ((intrinsics:fn (x) (f (intrinsics:fn (v) ((x x) v))))
+     (intrinsics:fn (x) (f (intrinsics:fn (v) ((x x) v))))))
+  (intrinsics:defn make-near-defns (near-defns)
+    (intrinsics:def env (append near-defns env))
+    (panic 'todo))
+  (panic (list 'todo defns env)))

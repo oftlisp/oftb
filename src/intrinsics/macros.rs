@@ -12,14 +12,14 @@ macro_rules! __intrinsics_count {
 /// TODO: Return a real error.
 macro_rules! __intrinsics_argn {
     // These two cases are just to silence a warning.
-    ($args_var:ident,) => {};
-    ($args_var:ident, *$rest:ident) => {};
+    ($name:ident, $args_var:ident,) => {};
+    ($name:ident, $args_var:ident, *$rest:ident) => {};
 
-    ($args_var:ident, $($args:ident),*) => {
-        assert_eq!($args_var.len(), __intrinsics_count!($($args)*), "bad argn");
+    ($name:ident, $args_var:ident, $($args:ident),*) => {
+        assert_eq!($args_var.len(), __intrinsics_count!($($args)*), concat!("bad argn to ", stringify!($name)));
     };
-    ($args_var:ident, $($args:ident,)* *$rest:ident) => {
-        assert!($args_var.len() >= __intrinsics_count!($($args)*), "bad argn");
+    ($name:ident, $args_var:ident, $($args:ident,)* *$rest:ident) => {
+        assert!($args_var.len() >= __intrinsics_count!($($args)*), concat!("bad argn to ", stringify!($name)));
     };
 }
 
@@ -74,7 +74,7 @@ macro_rules! __intrinsics_mod {
             $store: &mut $crate::interpreter::Store<'program>,
             $konts: $crate::std::vec::Vec<$crate::interpreter::Kont<'program>>,
         ) -> $crate::interpreter::State<'program> {
-            __intrinsics_argn!(args, $($args)*);
+            __intrinsics_argn!($name, args, $($args)*);
             __intrinsics_args!(args, $($args)*);
             #[allow(unreachable_code)] 
             $crate::interpreter::eval::kontinue($body, $konts)

@@ -3,7 +3,9 @@
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
-  [+ = nil])
+  [= nil])
+(import ministd/internal/prelude/math
+  [1+])
 
 (intrinsics:def vector-append intrinsics/vector:append)
 (intrinsics:def vector-length intrinsics/vector:length)
@@ -17,5 +19,5 @@
       nil
       (progn
         (f (vector-nth n v))
-        (helper (+ 1 n)))))
+        (helper (1+ n)))))
   (helper 0))

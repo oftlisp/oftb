@@ -16,7 +16,7 @@
   (intrinsics:def imports (find-imports mod-src))
   ; A list of modules not yet in the mods assoc.
   (intrinsics:def missing-modules (filter
-    \(none? (assoc $ mods))
+    \(none? (lookup $ mods))
     (map
       \(nth 1 $)
       imports)))
@@ -66,14 +66,12 @@
   (intrinsics:def plain-imports (vector->list (nth 2 imp)))
   (intrinsics:def attrs (skip 3 imp))
 
-  (intrinsics:def m (expect
-    (assoc mod-name mods)
-    "Module not found, but this should've been caught already?"))
+  (intrinsics:def m (assoc mod-name mods))
 
   (intrinsics:def no-import-decls (list->set (option->nullable
-    (assoc 'no-import-decl attrs))))
+    (lookup 'no-import-decl attrs))))
   (intrinsics:def no-import-macros (list->set (option->nullable
-    (assoc 'no-import-macro attrs))))
+    (lookup 'no-import-macro attrs))))
 
   (map
     \(progn

@@ -3,7 +3,9 @@
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
-  [- = cons nil panic])
+  [cons nil panic])
+(import ministd/internal/prelude/math
+  [0? 1-])
 (import ministd/internal/prelude/vector
   [vector-length vector-nth])
 
@@ -13,7 +15,7 @@
 
 (intrinsics:defn vector->list (v)
   (intrinsics:defn helper (n acc)
-    (if (= n 0)
+    (if (0? n)
       (cons (vector-nth 0 v) acc)
-      (helper (- n 1) (cons (vector-nth n v) acc))))
-  (helper (- (vector-length v) 1) nil))
+      (helper (1- n) (cons (vector-nth n v) acc))))
+  (helper (1- (vector-length v)) nil))

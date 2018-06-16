@@ -64,13 +64,17 @@ intrinsics! {
             Value::Cons(h, t)
         }
 
-        fn eq_num[_s, _k](l, r) {
+        fn eq_num[store, _k](l, r) {
             boolify(match (l, r) {
                 (Value::Byte(l), Value::Byte(r)) => l == r,
                 (Value::Byte(l), Value::Fixnum(r)) => l as isize == r,
                 (Value::Fixnum(l), Value::Byte(r)) => l == r as isize,
                 (Value::Fixnum(l), Value::Fixnum(r)) => l == r,
-                _ => unimplemented!("type error in eq_num"),
+                _ => panic!(
+                    "type error in (eq_num {} {})",
+                    l.display(store, false),
+                    r.display(store, false),
+                ),
             })
         }
 

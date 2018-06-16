@@ -1,0 +1,13 @@
+(authors
+  "Nathan Ringo <remexre@gmail.com>")
+(license "CC0-1.0")
+(name fixed-point)
+(version "0.1.0")
+
+(components
+  (binary
+    (name "fac")
+    (path "src/fac.oft"))
+  (binary
+    (name "letrec")
+    (path "src/letrec.oft")))

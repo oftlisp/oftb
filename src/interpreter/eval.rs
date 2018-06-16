@@ -78,7 +78,11 @@ pub fn apply<'program>(
                         args.len()
                     );
                 } else {
-                    unimplemented!("Bad argn, {} vs {}", argn, args.len());
+                    unimplemented!(
+                        "Bad argn in call to a closure, {} vs {}",
+                        argn,
+                        args.len()
+                    );
                 }
             }
             for arg in args {

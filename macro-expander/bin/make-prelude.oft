@@ -30,7 +30,7 @@
   (intrinsics:def src-path-len (+ (string-length prelude-pkg-path) 4))
 
   (intrinsics:def package-name (car (expect
-    (assoc 'name (load-metadata-for prelude-pkg-path))
+    (lookup 'name (load-metadata-for prelude-pkg-path))
     "Package is missing a name")))
 
   (intrinsics:defn to-import-name (path)

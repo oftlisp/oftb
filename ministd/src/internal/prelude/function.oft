@@ -1,9 +1,12 @@
 (module ministd/internal/prelude/function
-  [. flip id]
+  [. fix flip id]
   no-prelude)
 
 (intrinsics:defn . (f g)
   \(f (g $)))
+
+(intrinsics:defn fix (f)
+  (intrinsics:fn (x) (f (fix f) x)))
 
 (intrinsics:defn flip (f)
   (intrinsics:fn (a b)

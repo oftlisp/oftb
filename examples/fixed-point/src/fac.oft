@@ -1,0 +1,13 @@
+(module main
+  [main])
+
+(intrinsics:def fac-helper
+  (intrinsics:fn (f x)
+    (if (= x 0)
+      1
+      (* x (f (1- x))))))
+
+(intrinsics:def fac (fix fac-helper))
+
+(intrinsics:defn main (args)
+  (println "fac 5 =" (fac 5)))

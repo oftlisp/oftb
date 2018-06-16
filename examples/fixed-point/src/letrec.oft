@@ -1,0 +1,47 @@
+(module main
+  [main])
+
+(intrinsics:defn eval (expr env)
+  (if (fixnum? expr)
+    expr
+    (if (symbol? expr)
+      (assoc expr env)
+      (if (shl? 'fn expr)
+        (intrinsics:fn (arg)
+          (eval (nth 2 expr) (cons (cons (nth 1 expr) arg) env)))
+        (if (shl? 'if expr)
+          (progn
+            (intrinsics:def c (eval (nth 1 expr) env))
+            (eval (nth (if (0? c) 3 2) expr) env))
+          (if (shl? 'let expr)
+            (eval (nth 3 expr) (cons (cons (nth 1 expr) (eval (nth 2 expr) env)) env))
+            (if (shl? 'letrec expr)
+              (eval (last expr) (make-letrec-env (cdr (init expr)) env))
+              (if (cons? expr)
+                ((eval (car expr) env) (eval (cdr expr) env))
+                (panic (cons 'unknown-expr expr))))))))))
+
+(intrinsics:defn make-letrec-env (fns env)
+  (intrinsics:defn helper (f)
+    (cons
+      (car f)
+      (intrinsics:fn (arg)
+        (eval (nth 2 f) (cons (cons (nth 1 f) arg) (get-env))))))
+  (intrinsics:defn get-env ()
+    (append (map helper fns) env))
+  (get-env))
+
+(intrinsics:def expr
+  '(letrec (even? x (if (0? | x) 1 (odd?  | (1- | x))))
+           (odd?  x (if (0? | x) 0 (even? | (1- | x))))
+    (let y 11
+      (odd? | y))))
+
+(intrinsics:defn main (args)
+  ; The environment to use for evaluation.
+  (intrinsics:def default-env
+    (list (cons '0? (intrinsics:fn (x) (if (0? x) 1 0)))
+          (cons '1+ 1+)
+          (cons '1- 1-)))
+  ; Should print 1.
+  (println (eval expr default-env)))

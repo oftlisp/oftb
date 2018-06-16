@@ -1,7 +1,7 @@
 (module ministd/internal/prelude/list
   [1st 2nd 3rd 4th 5th 6th 7th 8th 9th all all-some any append assoc each filter find first-nonnil
-   first-some flat-map foldl foldr index-into length map nth partition reverse skip skip-while
-   split-at take take-while]
+   first-some flat-map foldl foldr index-into init last length lookup map nth partition reverse
+   skip skip-while split-at take take-while]
   no-prelude)
 
 (import ministd/internal/prelude/either
@@ -9,7 +9,9 @@
 (import ministd/internal/prelude/function
   [flip])
 (import ministd/internal/prelude/intrinsics
-  [+ - = car cdr cons equals false nil nil? true])
+  [car cdr cons equals false nil nil? panic true])
+(import ministd/internal/prelude/math
+  [0? 1+ 1-])
 (import ministd/internal/prelude/option
   [none option-cases some some?])
 (import ministd/internal/prelude/pair
@@ -49,10 +51,17 @@
 
 (intrinsics:defn assoc (x l)
   (if (nil? l)
+    (panic (cons 'assoc-failed x))
+    (if (equals (car (car l)) x)
+      (cdr (car l))
+      (assoc x (cdr l)))))
+
+(intrinsics:defn lookup (x l)
+  (if (nil? l)
     none
     (if (equals (car (car l)) x)
       (some (cdr (car l)))
-      (assoc x (cdr l)))))
+      (lookup x (cdr l)))))
 
 (intrinsics:defn each (f l)
   (if (nil? l)
@@ -113,8 +122,24 @@
 (intrinsics:defn index-into (indices l)
   (foldl (flip nth) l indices))
 
+(intrinsics:defn init (l)
+  (intrinsics:defn helper (l acc)
+    (if (nil? l)
+      (panic "can't take init of nil")
+      (if (nil? (cdr l))
+        (reverse acc)
+        (helper (cdr l) (cons (car l) acc)))))
+  (helper l nil))
+
+(intrinsics:defn last (l)
+  (if (nil? l)
+    (panic "can't take last of nil")
+    (if (nil? (cdr l))
+      (car l)
+      (last (cdr l)))))
+
 (intrinsics:defn length (l)
-  (foldl (intrinsics:fn (l _) (+ l 1)) 0 l))
+  (foldl (intrinsics:fn (l _) (1+ l)) 0 l))
 
 (intrinsics:defn map (f l)
   (reverse (foldl (intrinsics:fn (a x) (cons (f x) a)) '() l)))
@@ -136,9 +161,9 @@
   (foldl (intrinsics:fn (a x) (cons x a)) '() l))
 
 (intrinsics:defn skip (n l)
-  (if (= n 0)
+  (if (0? n)
     l
-    (skip (- n 1) (cdr l))))
+    (skip (1- n) (cdr l))))
 
 (intrinsics:defn skip-while (pred l)
   (if (nil? l)
@@ -152,9 +177,9 @@
 
 (intrinsics:defn take (n l)
   (intrinsics:defn helper (n l acc)
-    (if (= n 0)
+    (if (0? n)
       acc
-      (helper (- n 1) (cdr l) (cons (car l) acc))))
+      (helper (1- n) (cdr l) (cons (car l) acc))))
   (reverse (helper n l nil)))
 
 (intrinsics:defn take-while (pred l)

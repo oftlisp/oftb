@@ -15,9 +15,9 @@
 (intrinsics:defn load-package-from (path)
   (intrinsics:def metadata (load-metadata-for path))
 
-  (intrinsics:def name (car (expect (assoc 'name metadata)
+  (intrinsics:def name (car (expect (lookup 'name metadata)
     "Missing package name")))
-  (intrinsics:def components (expect (assoc 'components metadata)
+  (intrinsics:def components (expect (lookup 'components metadata)
     "Missing package components list"))
 
   (intrinsics:def components (partition (map
@@ -41,10 +41,10 @@
 
 (intrinsics:defn load-bin-from (pkg-path component)
   (intrinsics:def name (car (expect
-    (assoc 'name component)
+    (lookup 'name component)
     "Binary component missing name")))
   (intrinsics:def path (car (expect
-    (assoc 'path component)
+    (lookup 'path component)
     "Binary component missing path")))
   (intrinsics:def path (foldl string-append "" (list
     pkg-path
