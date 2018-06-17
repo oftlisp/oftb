@@ -16,8 +16,9 @@ pub struct CompileOptions {
     pub binary_name: String,
 
     /// The path to write the output file to.
-    #[structopt(short = "o", long = "output", name = "OUTPUT-PATH",
-                parse(from_os_str))]
+    #[structopt(
+        short = "o", long = "output", name = "OUTPUT-PATH", parse(from_os_str)
+    )]
     pub output_path: Option<PathBuf>,
 
     /// The path to the `std` package. If not present, defaults to

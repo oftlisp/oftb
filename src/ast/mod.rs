@@ -3,6 +3,7 @@
 mod helpers;
 
 use std::collections::BTreeSet;
+use std::path::Path;
 
 use error::{Error, ErrorKind};
 use literal::Literal;
@@ -20,13 +21,20 @@ pub struct Module {
 
 impl Module {
     /// Creates a module from literals.
-    pub fn from_values(mut l: Vec<Literal>) -> Result<Module, Error> {
+    pub fn from_values(
+        path: &Path,
+        mut l: Vec<Literal>,
+    ) -> Result<Module, Error> {
         if l.len() == 0 {
-            return Err(ErrorKind::NoModuleForm.into());
+            return Err(
+                ErrorKind::NoModuleForm(path.display().to_string()).into(),
+            );
         }
 
         let (name, exports, attrs) = helpers::convert_module(&l.remove(0))
-            .ok_or_else(|| ErrorKind::NoModuleForm)?;
+            .ok_or_else(|| {
+                ErrorKind::NoModuleForm(path.display().to_string())
+            })?;
         let attrs = attrs
             .into_iter()
             .map(|(n, v)| {

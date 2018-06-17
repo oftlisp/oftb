@@ -7,11 +7,8 @@
 (intrinsics:defn eval (expr env)
   (if (cons? expr)
     (progn
-      (intrinsics:def func (eval (car expr) env))
-      (intrinsics:def args (map
-        \(eval $ env)
-        (cdr expr)))
-      (func args))
+      (intrinsics:def evald (map \(eval $ env) expr))
+      ((car evald) (cdr evald)))
     (if (vector? expr)
       (panic "TODO Vectors")
       (if (symbol? expr)
@@ -24,8 +21,9 @@
 (intrinsics:defn evaluate (expr)
   (eval expr intrinsics))
 
-(intrinsics:defn make-lambda (args body get-env)
-  (panic (list make-lambda args body get-env)))
+(intrinsics:defn make-lambda (params body get-env)
+  (intrinsics:fn (args)
+    (eval body (append (match-arguments params args) (get-env)))))
 
 (intrinsics:defn make-letrec-env (defns env)
   (intrinsics:defn helper (f)
@@ -33,3 +31,6 @@
   (intrinsics:defn get-env ()
     (append (map helper defns) env))
   (get-env))
+
+(intrinsics:defn match-arguments (params args)
+  (panic '(todo | match-arguments)))

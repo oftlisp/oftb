@@ -347,8 +347,8 @@ impl Packages {
 
     /// Loads an `anf::Module` from the given path.
     pub fn load_module<P: AsRef<Path>>(path: P) -> Result<Module, Error> {
-        let lits = parse_file(path)?;
-        let ast_mod = ::ast::Module::from_values(lits)?;
+        let lits = parse_file(path.as_ref())?;
+        let ast_mod = ::ast::Module::from_values(path.as_ref(), lits)?;
         if let Some(name) = ast_mod
             .body
             .iter()

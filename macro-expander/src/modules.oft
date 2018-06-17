@@ -22,16 +22,27 @@
       imports)))
   (if (nil? missing-modules)
     ; If no modules are missing, build the environment and expand the declarations inside the
-    ; module. Then, return the environment, as created from only the declarations inside the module
-    ; (i.e. not including imports).
+    ; module. Then, return the module list with this module added.
     (progn
       (intrinsics:def tmp (build-initial-env imports mods))
-      (intrinsics:def interp-env (fst tmp))
-      (intrinsics:def interp-macros (snd tmp))
+      (intrinsics:def env (fst tmp))
+      (intrinsics:def macros (snd tmp))
       (intrinsics:def decls (find-decls mod-src))
 
-      (intrinsics:def tmp (expand-decls decls interp-env interp-macros))
-      (panic (cons 'todo tmp)))
+      (intrinsics:def initial-env-length (length env))
+      (intrinsics:def initial-macros-length (length macros))
+
+      (intrinsics:def tmp (expand-decls decls env macros))
+      (intrinsics:def decls (nth 0 tmp))
+      (intrinsics:def env (nth 1 tmp))
+      (intrinsics:def macros (nth 2 tmp))
+
+      (intrinsics:def m (list
+        target-module
+        decls
+        (take (- (length env) initial-env-length) env)
+        (take (- (length macros) initial-macros-length) macros)))
+      (cons m mods))
     ; If there are missing modules, try expanding the first one, then try again with that one
     ; added.
     (progn
@@ -41,10 +52,16 @@
 ; Builds an initial environment from a list of import decls and an assoc of expanded module
 ; environments. Returns a pair (INTERP-ENV INTERP-MACROS).
 (intrinsics:defn build-initial-env (imports mods)
-  (intrinsics:def tmp (map \(process-import $ mods) imports))
-  (if (nil? tmp)
-    (pair nil nil)
-    (panic (list 'todo (list 'build-initial-env imports 'mods)))))
+  (intrinsics:defn helper (l acc)
+    (if (nil? l)
+      (map-pair reverse reverse acc)
+      (progn
+        (intrinsics:def value (car l))
+        (either
+          \(map-fst (intrinsics:fn (ds) (cons $ ds)) mods)
+          \(map-snd (intrinsics:fn (ms) (cons $ ms)) mods)
+          (snd value)))))
+  (helper (flat-map \(process-import $ mods) imports) (pair nil nil)))
 
 ; Returns the name of a module.
 (intrinsics:defn module-name (m)
@@ -59,7 +76,7 @@
   (take-while \(shl? 'import $) (cdr m)))
 
 ; Takes an import form and an assoc of already-expanded modules. Returns a list of pairs, where the
-; fst is the imported value name and the snd is an either.  The left of the either is a value from
+; fst is the imported value name and the snd is an either. The left of the either is a value from
 ; interpreting the module. The right of the either is a function that runs the macro.
 (intrinsics:defn process-import (imp mods)
   (intrinsics:def mod-name (nth 1 imp))
@@ -89,23 +106,24 @@
             process-import-decl
             process-import-either)))
       (expect (f mod-name $ mods)
-        (string-concat
+        (string-concat (list
           "Couldn't import "
           (symbol->string $)
           " from "
-          (symbol->string mod-name))))
+          (symbol->string mod-name)))))
     plain-imports))
 
 (intrinsics:defn process-import-decl (m name mods)
-  (panic '(todo | process-import-decl)))
+  (option-map \(cons name (left $))
+    (lookup name (nth 1 (assoc m mods)))))
 
 (intrinsics:defn process-import-either (m name mods)
-  (intrinsics:def decl (process-import-decl m name mods))
-  (intrinsics:def macro (process-import-macro m name mods))
-  (panic '(todo | process-import-either)))
+  (option-cases some (intrinsics:fn () (process-import-macro m name mods))
+    (process-import-decl m name mods)))
 
 (intrinsics:defn process-import-macro (m name mods)
-  (panic '(todo | process-import-macro)))
+  (option-map \(cons name (right $))
+    (lookup name (nth 2 (assoc m mods)))))
 
 (intrinsics:defn expand-modules (mods-srcs)
   (expand-module 'main mods-srcs nil))

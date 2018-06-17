@@ -27,13 +27,14 @@
 (intrinsics:defn all-some (l)
   (intrinsics:defn helper (l acc)
     (if (nil? l)
-      acc
+      (reverse acc)
       (progn
         (intrinsics:def acc (option-cases
           (intrinsics:fn (x) (cons x acc))
-          (intrinsics:fn () acc)))
+          (intrinsics:fn () acc)
+          (car l)))
         (helper (cdr l) acc))))
-  (reverse (helper l nil)))
+  (helper l nil))
 
 (intrinsics:defn any (f l)
   (if (nil? l)

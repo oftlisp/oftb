@@ -1,9 +1,11 @@
 (module ministd/internal/prelude/either
-  [either left left? right right?]
+  [either left left? left->option right right? right->option]
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
   [car cdr cons cons? eq false panic])
+(import ministd/internal/prelude/option
+  [none some])
 
 (intrinsics:defn either (l r e)
   (if (left? e)
@@ -15,15 +17,21 @@
 (intrinsics:defn left (x)
   (cons 'left x))
 
-(intrinsics:defn left? (opt)
-  (if (cons? opt)
-    (eq (car opt) 'left)
+(intrinsics:defn left? (e)
+  (if (cons? e)
+    (eq (car e) 'left)
     false))
+
+(intrinsics:defn left->option (e)
+  (either some \none e))
 
 (intrinsics:defn right (x)
   (cons 'right x))
 
-(intrinsics:defn right? (opt)
-  (if (cons? opt)
-    (eq (car opt) 'right)
+(intrinsics:defn right? (e)
+  (if (cons? e)
+    (eq (car e) 'right)
     false))
+
+(intrinsics:defn right->option (e)
+  (either \none some e))

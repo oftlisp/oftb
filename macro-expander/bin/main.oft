@@ -15,7 +15,6 @@
 
   (intrinsics:def modules (load-packages std-path package-dir binary-name))
   (intrinsics:def modules (must (traverse-modules modules 'main)))
+  (intrinsics:def modules %(expand-modules modules))
 
-  (panic (expand-modules modules))
-  
-  'todo)
+  (panic 'todo))

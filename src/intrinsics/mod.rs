@@ -21,7 +21,7 @@ fn print_values(store: &Store, values: &[Value], printlike: bool) {
     for val in values {
         if first {
             first = false;
-        } else {
+        } else if printlike {
             print!(" ");
         }
         print!("{}", val.display(store, printlike));

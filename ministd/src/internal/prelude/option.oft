@@ -1,11 +1,13 @@
 (module ministd/internal/prelude/option
-  [expect none none? nullable->option option->nullable option-cases some some?]
+  [expect none none? nullable->option option->nullable option-cases option-map some some?]
   no-prelude)
 
 (import ministd/internal/prelude/function
-  [id])
+  [. const id])
 (import ministd/internal/prelude/intrinsics
-  [car cdr cons cons? eq false nil nil? panic true])
+  [car cdr cons cons? eq equals println false nil nil? panic true])
+(import ministd/internal/prelude/math
+  [1+])
 
 (intrinsics:def none 'none)
 
@@ -23,6 +25,9 @@
     (if (none? opt)
       (n)
       (panic "Not an option"))))
+
+(intrinsics:defn option-map (f opt)
+  (option-cases (. some f) (intrinsics:fn () none) opt))
 
 (intrinsics:defn some (x)
   (cons 'some x))
