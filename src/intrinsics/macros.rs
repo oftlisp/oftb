@@ -70,12 +70,12 @@ macro_rules! __intrinsics_mod {
         use super::*;
 
         $(fn $name<'program>(
-            args: $crate::std::vec::Vec<$crate::interpreter::Value>,
+            _args: $crate::std::vec::Vec<$crate::interpreter::Value>,
             $store: &mut $crate::interpreter::Store<'program>,
             $konts: $crate::std::vec::Vec<$crate::interpreter::Kont<'program>>,
         ) -> $crate::interpreter::State<'program> {
-            __intrinsics_argn!($name, args, $($args)*);
-            __intrinsics_args!(args, $($args)*);
+            __intrinsics_argn!($name, _args, $($args)*);
+            __intrinsics_args!(_args, $($args)*);
             #[allow(unreachable_code)] 
             $crate::interpreter::eval::kontinue($body, $konts)
         })*

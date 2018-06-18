@@ -82,6 +82,10 @@ intrinsics! {
             boolify(a.equals(b, store))
         }
 
+        fn gensym[_s, _k]() {
+            Value::Symbol(::gensym::gensym())
+        }
+
         fn list[store, _k](*args) {
             let mut l = Value::Nil;
             for &x in args.iter().rev() {
@@ -133,6 +137,11 @@ intrinsics! {
     }
 
     mod "io" as io {
+        fn debug_print[store, _k](value) {
+            eprintln!("{}", value.display(store, false));
+            Value::Nil
+        }
+
         fn print[store, _k](*args) {
             print_values(store, args, true);
             Value::Nil

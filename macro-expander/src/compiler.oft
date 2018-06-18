@@ -1,0 +1,10 @@
+(module macro-expander/compiler
+  [modules->flat-anf])
+
+(import macro-expander/compiler/anf
+  [module->anf])
+(import macro-expander/compiler/flat-anf
+  [anf-modules->flat-anf])
+
+(intrinsics:defn modules->flat-anf (modules)
+  (anf-modules->flat-anf (map \(map-snd module->anf $) modules)))

@@ -1,5 +1,5 @@
 (module ministd/internal/prelude/option
-  [expect none none? nullable->option option->nullable option-cases option-map some some?]
+  [expect none none? nullable->option option->nullable option-cases option-map or-else some some?]
   no-prelude)
 
 (import ministd/internal/prelude/function
@@ -10,6 +10,12 @@
   [1+])
 
 (intrinsics:def none 'none)
+
+(intrinsics:defn expect (opt msg)
+  (option-cases id (intrinsics:fn () (panic msg)) opt))
+
+(intrinsics:defn none? (opt)
+  (eq opt 'none))
 
 (intrinsics:defn nullable->option (x)
   (if (nil? x)
@@ -29,6 +35,9 @@
 (intrinsics:defn option-map (f opt)
   (option-cases (. some f) (intrinsics:fn () none) opt))
 
+(intrinsics:defn or-else (f opt)
+  (option-cases some f opt))
+
 (intrinsics:defn some (x)
   (cons 'some x))
 
@@ -36,9 +45,3 @@
   (if (cons? opt)
     (eq (car opt) 'some)
     false))
-
-(intrinsics:defn none? (opt)
-  (eq opt 'none))
-
-(intrinsics:defn expect (opt msg)
-  (option-cases id (intrinsics:fn () (panic msg)) opt))

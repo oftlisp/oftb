@@ -15,7 +15,7 @@
     nil))
 
 (intrinsics:defn debug-trace (x)
-  (writeln x)
+  (intrinsics/io:debug_print x)
   x)
 
 (intrinsics:defn shl? (sym value)

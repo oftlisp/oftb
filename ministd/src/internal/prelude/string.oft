@@ -12,7 +12,7 @@
 (import ministd/internal/prelude/math
   [1+])
 (import ministd/internal/prelude/option
-  [none option-cases some])
+  [none option-cases option-map some])
 (import ministd/internal/prelude/pair
   [fst snd pair])
 
@@ -54,9 +54,9 @@
       false))
   (intrinsics:defn helper (n)
     (if (match? n)
-      n
+      (some n)
       (if (>= n last-n)
-        nil
+        none
         (helper (1+ n)))))
   (helper 0))
 
@@ -70,10 +70,8 @@
   (helper s nil))
 
 (intrinsics:defn string-split-on-1 (needle s)
-  (intrinsics:def n (string-search needle s))
   (intrinsics:def nl (string-length needle))
-  (if n
-    (some (pair
-      (string-slice 0        n                 s)
-      (string-slice (+ n nl) (string-length s) s)))
-    none))
+  (option-map \(pair
+    (string-slice 0        $                 s)
+    (string-slice (+ $ nl) (string-length s) s))
+    (string-search needle s)))

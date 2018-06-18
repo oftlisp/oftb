@@ -36,13 +36,13 @@
       (progn
         (intrinsics:def value (car decls))
         (intrinsics:def decls (cdr decls))
-        (if (shl? 'defmacro value)
+        (if (shl? 'intrinsics:defmacro value)
           (panic '(todo expand-decls defmacro))
           (progn
             (intrinsics:def expanded (expand-value value env macros))
             (if (shl? 'progn expanded)
               (loop (append (cdr expanded) decls) acc-expanded acc-defns env macros)
-              (if (shl? 'defn expanded)
+              (if (shl? 'intrinsics:defn expanded)
                 (loop decls (cons expanded acc-expanded) (cons expanded acc-defns) env macros)
                 (panic (list 'todo 'expand-decls expanded)))))))))
   (loop decls nil nil env macros))

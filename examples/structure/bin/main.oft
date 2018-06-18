@@ -4,7 +4,7 @@
 (import structure
   [hello-world])
 
-(defn main (args)
+(intrinsics:defn main (args)
   (println "Got arguments:" args)
   (hello-world)
   (println "Goodbye, world!"))

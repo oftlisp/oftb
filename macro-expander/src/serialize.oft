@@ -1,0 +1,8 @@
+(module macro-expander/serialize
+  [serialize-modules])
+
+(intrinsics:defn serialize-modules (mods)
+  (panic ['todo serialize-modules]))
+
+(intrinsics:defn serialize-string (s)
+  (panic ['todo serialize-string]))

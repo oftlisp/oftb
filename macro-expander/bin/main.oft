@@ -3,6 +3,8 @@
 
 (import macro-expander
   [expand-modules])
+(import macro-expander/compiler
+  [modules->flat-anf])
 (import macro-expander/packages
   [load-packages traverse-modules])
 
@@ -15,6 +17,8 @@
 
   (intrinsics:def modules (load-packages std-path package-dir binary-name))
   (intrinsics:def modules (must (traverse-modules modules 'main)))
-  (intrinsics:def modules %(expand-modules modules))
+  (intrinsics:def modules (expand-modules modules))
 
-  (panic 'todo))
+  (intrinsics:def flatanf (modules->flat-anf modules))
+
+  (panic ['todo main flatanf]))

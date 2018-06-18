@@ -1,5 +1,5 @@
 (module ministd/internal/prelude/intrinsics
-  [* + - / = byte? bytes? car cdr compare cons cons? eq equals false fixnum? function? list
+  [* + - / = byte? bytes? car cdr compare cons cons? eq equals false fixnum? function? gensym list
    mod nil nil? panic print println string? symbol? true vector? write write-bytes writeln]
   no-prelude)
 
@@ -16,6 +16,7 @@
 (intrinsics:def cons    intrinsics:cons)
 (intrinsics:def eq      intrinsics:eq)
 (intrinsics:def equals  intrinsics:equals)
+(intrinsics:def gensym  intrinsics:gensym)
 (intrinsics:def list    intrinsics:list)
 (intrinsics:def panic   intrinsics:panic)
 

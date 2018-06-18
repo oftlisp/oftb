@@ -11,12 +11,10 @@ from tempfile import NamedTemporaryFile
 
 def command(cmd, redirect=None):
     if redirect is None:
-        code = subprocess.call(cmd)
-        assert code == 0
+        return subprocess.check_output(cmd)
     else:
         with NamedTemporaryFile() as f:
-            code = subprocess.call(cmd, stdout=f)
-            assert code == 0
+            subprocess.check_call(cmd, stdout=f)
             shutil.copy(f.name, redirect)
 
 
@@ -38,7 +36,7 @@ oftb_exec = "target/release/oftb"
 
 
 def oftb(args, redirect=None):
-    command([oftb_exec, "-v"] + args, redirect=redirect)
+    return command([oftb_exec, "-v"] + args, redirect=redirect)
 
 
 def compile(pkg_dir, bin_name):
@@ -48,21 +46,21 @@ def compile(pkg_dir, bin_name):
 
 def interpret(pkg_dir, bin_name, *args, redirect=None):
     print_cyan("interpret", bin_name, *args)
-    args = ["interpret",
-            "{}/build/{}.ofta".format(pkg_dir,
-                                      bin_name)] + list(args)
-    oftb(args, redirect=redirect)
-
-
-def macro_expand(pkg_dir, bin_name):
-    interpret("macro-expander", "oftb-macro-expander", "ministd", pkg_dir,
-              bin_name)
+    bin_path = "{}/build/{}.ofta".format(pkg_dir, bin_name)
+    return oftb(["interpret", bin_path] + list(args), redirect=redirect)
 
 
 def run(pkg_dir, bin_name, *args, redirect=None):
     print_cyan("run", bin_name, *args)
     args = ["run", "--std", "ministd", pkg_dir, bin_name] + list(args)
-    oftb(args, redirect=redirect)
+    return oftb(args, redirect=redirect)
+
+
+def run_with_macros(pkg_dir, bin_name, *args, redirect=None):
+    bin_path = "{}/build/{}.ofta".format(pkg_dir, bin_name)
+    interpret("macro-expander", "oftb-macro-expander", "ministd", pkg_dir,
+              bin_name, redirect=bin_path)
+    return interpret(pkg, bin_name, *args, redirect=redirect)
 
 
 def build_oftb():
@@ -78,8 +76,7 @@ def bootstrap():
     run("macro-expander", "make-env", "ministd",
         redirect="macro-expander/src/interpreter/env.oft")
     compile("macro-expander", "oftb-macro-expander")
-    macro_expand("examples/structure", "structure")
-    interpret("examples/structure", "structure")
+    run_with_macros("examples/structure", "structure")
     raise "TODO"
 
 

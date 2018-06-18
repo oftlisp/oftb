@@ -1,5 +1,5 @@
 (module structure
   [hello-world])
 
-(defn hello-world ()
+(intrinsics:defn hello-world ()
   (println "Hello, world!"))

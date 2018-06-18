@@ -1,0 +1,68 @@
+(module macro-expander/compiler/flat-anf
+  [anf-modules->flat-anf])
+
+(import macro-expander/modules
+  [namespaced-name])
+
+(intrinsics:defn anf-modules->flat-anf (modules)
+  (map flatten-module modules))
+
+(intrinsics:defn flatten-decl (decl scope)
+  (if (shl? 'intrinsics:def decl)
+    (pair (nth 1 decl) (panic 'unimplemented))
+    (if (shl? 'intrinsics:defn decl)
+      (pair
+        (nth 1 decl)
+        (list 'fn
+          (length (nth 2 decl))
+          (flatten-expr (skip 3 decl) (with-vars (nth 2 decl) scope))))
+      (panic (cons 'invalid-decl decl)))))
+
+(intrinsics:defn flatten-expr (expr scope)
+  (if (shl? 'fn expr)
+    (panic ['todo 'fn])
+    (if (shl? 'lit expr)
+      expr
+      (if (shl? 'var expr)
+        (expect
+          (or-else
+            (intrinsics:fn () (option-map \(cons 'local $) (position-of (cdr expr) (fst scope))))
+            (option-map \(cons 'global $) (lookup (cdr expr) (snd scope))))
+          (string-append "variable not found: " (symbol->string (cdr expr))))
+        (if (shl? 'vector expr)
+          (panic ['todo 'vector])
+          (if (shl? 'call expr)
+            (panic ['todo 'call])
+            (if (shl? 'if expr)
+              (panic ['todo 'if])
+              (if (shl? 'letrec expr)
+                (panic ['todo 'letrec])
+                (if (shl? 'let expr)
+                  (panic ['todo 'let])
+                  (if (shl? 'seq expr)
+                    (panic ['todo 'seq])
+                    (panic (cons 'invalid-expr expr))))))))))))
+
+(intrinsics:defn flatten-module (m)
+  (intrinsics:def mod-name (fst m))
+  (intrinsics:def imports (fst (snd m)))
+  (intrinsics:def decls (snd (snd m)))
+  (intrinsics:def scope (pair nil (append
+    (map
+      (intrinsics:fn (decl)
+        (intrinsics:def name (nth 1 decl))
+        (pair name (namespaced-name mod-name name)))
+      decls)
+    imports)))
+  (pair mod-name (map \(flatten-decl $ scope) decls)))
+
+(intrinsics:defn global? (sym)
+  (some? (string-search ":" (symbol->string sym))))
+
+(intrinsics:defn with-var (var scope)
+  (map-fst \(cons var $) scope))
+
+(intrinsics:defn with-vars (vars scope)
+  (if (nil? vars)
+    scope
+    (with-vars (cdr vars) (with-var (car vars) scope))))

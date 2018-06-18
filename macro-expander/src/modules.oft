@@ -1,5 +1,5 @@
 (module macro-expander/modules
-  [expand-modules module-name])
+  [expand-modules find-decls find-imports module-name namespaced-name])
 
 (import macro-expander/expand
   [expand-decls])
@@ -75,6 +75,14 @@
 (intrinsics:defn find-imports (m)
   (take-while \(shl? 'import $) (cdr m)))
 
+(intrinsics:defn namespaced-name (mod-name sym-name)
+  (string->symbol
+    (string-append
+      (symbol->string mod-name)
+      (string-append
+        ":"
+        (symbol->string sym-name)))))
+
 ; Takes an import form and an assoc of already-expanded modules. Returns a list of pairs, where the
 ; fst is the imported value name and the snd is an either. The left of the either is a value from
 ; interpreting the module. The right of the either is a function that runs the macro.
@@ -126,4 +134,5 @@
     (lookup name (nth 2 (assoc m mods)))))
 
 (intrinsics:defn expand-modules (mods-srcs)
-  (expand-module 'main mods-srcs nil))
+  (map \(cons (nth 0 $) (nth 1 $))
+    (expand-module 'main mods-srcs nil)))
