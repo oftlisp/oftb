@@ -101,7 +101,132 @@ intrinsics! {
         }
     }
 
+    mod "byte" as byte {
+        fn and[_s, _k](a, b) {
+            typeck_name!(a as Value::Byte(a), b as Value::Byte(b));
+            Value::Byte(a & b)
+        }
+
+        fn not[_s, _k](n) {
+            typeck_name!(n as Value::Byte(n));
+            Value::Byte(!n)
+        }
+
+        fn or[_s, _k](a, b) {
+            typeck_name!(a as Value::Byte(a), b as Value::Byte(b));
+            Value::Byte(a | b)
+        }
+
+        fn rol[_s, _k](a, b) {
+            typeck_name!(a as Value::Byte(a), b as Value::Byte(b));
+            Value::Byte(a.rotate_left(b as u32))
+        }
+
+        fn ror[_s, _k](a, b) {
+            typeck_name!(a as Value::Byte(a), b as Value::Byte(b));
+            Value::Byte(a.rotate_right(b as u32))
+        }
+
+        fn shl[_s, _k](a, b) {
+            typeck_name!(a as Value::Byte(a), b as Value::Byte(b));
+            Value::Byte(a.checked_shl(b as u32).unwrap_or(0))
+        }
+
+        fn shr[_s, _k](a, b) {
+            typeck_name!(a as Value::Byte(a), b as Value::Byte(b));
+            Value::Byte(a.checked_shr(b as u32).unwrap_or(0))
+        }
+
+        fn xor[_s, _k](a, b) {
+            typeck_name!(a as Value::Byte(a), b as Value::Byte(b));
+            Value::Byte(a ^ b)
+        }
+    }
+
+    mod "bytes" as bytes {
+        fn append[store, _k](l, r) {
+            // TODO: Make this more optimized.
+            match (l, r) {
+                (Value::Bytes(la, ll), Value::Bytes(ra, rl)) => {
+                    let mut vals = store.get_bytes(la, ll).to_owned();
+                    vals.extend(store.get_bytes(ra, rl));
+                    let (a, l) = store.store_bytes(&vals);
+                    Value::Bytes(a, l)
+                }
+                _ => unimplemented!("TODO type error in bytes-append")
+            }
+        }
+
+        fn length[_s, _k](s) {
+            if let Value::Bytes(_, l) = s {
+                Value::Fixnum(l as isize)
+            } else {
+                unimplemented!("TODO Type Error in bytes-length")
+            }
+        }
+
+        fn nth[store, _k](n, s) {
+            if let (Value::Fixnum(n), Value::Bytes(a, l)) = (n, s) {
+                let n = n as usize;
+                if n < l {
+                    let a: usize = a.into();
+                    store.get_vec_val(Addr::from(a + n))
+                } else {
+                    unimplemented!("TODO out of bounds in bytes-nth")
+                }
+            } else {
+                unimplemented!("TODO Type Error in bytes-nth")
+            }
+        }
+
+        fn slice[_s, _k](start, end, s) {
+            let (a, l) = if let (
+                Value::Fixnum(start),
+                Value::Fixnum(end),
+                Value::Bytes(a, l),
+            ) = (start, end, s)
+            {
+                let start = start as usize;
+                let end = end as usize;
+                if start <= l && end <= l && start <= end {
+                    let a: usize = a.into();
+                    (a + start as usize, end - start)
+                } else {
+                    unimplemented!(
+                        "TODO out of bounds in bytes-slice (bounds of [{}, {}) on bytes of length {})",
+                        start,
+                        end,
+                        l,
+                    )
+                }
+            } else {
+                unimplemented!("TODO Type Error in bytes-slice")
+            };
+
+            Value::Bytes(a.into(), l)
+        }
+    }
+
     mod "convert" as convert {
+        fn byte_to_bytes[store, _k](b) {
+            if let Value::Byte(b) = b {
+                let (a, l) = store.store_bytes(&[b]);
+                Value::Bytes(a, l)
+            } else {
+                unimplemented!("TODO Type Error in byte->bytes")
+            }
+        }
+
+        fn byte_to_fixnum[_s, _k](b) {
+            typeck_name!(b as Value::Byte(b));
+            Value::Fixnum(b as isize)
+        }
+
+        fn fixnum_to_byte[_s, _k](n) {
+            typeck_name!(n as Value::Fixnum(n));
+            Value::Byte(n as u8)
+        }
+
         fn list_to_vector[store, _k](s) {
             let mut lst = s;
             let mut vec = Vec::new();
@@ -115,6 +240,13 @@ intrinsics! {
             } else {
                 unimplemented!("TODO Type Error in list->vector")
             }
+        }
+
+        fn string_to_bytes[store, _k](s) {
+            typeck_name!(s as Value::String(a, l));
+            let s = store.get_str(s.0, s.1).to_string();
+            let (a, l) = store.store_bytes(s.as_bytes());
+            Value::Bytes(a, l)
         }
 
         fn string_to_symbol[store, _k](s) {
@@ -133,6 +265,48 @@ intrinsics! {
             } else {
                 unimplemented!("TODO Type Error in symbol->string")
             }
+        }
+    }
+
+    mod "fixnum" as fixnum {
+        fn and[_s, _k](a, b) {
+            typeck_name!(a as Value::Fixnum(a), b as Value::Fixnum(b));
+            Value::Fixnum(a & b)
+        }
+
+        fn not[_s, _k](n) {
+            typeck_name!(n as Value::Fixnum(n));
+            Value::Fixnum(!n)
+        }
+
+        fn or[_s, _k](a, b) {
+            typeck_name!(a as Value::Fixnum(a), b as Value::Fixnum(b));
+            Value::Fixnum(a | b)
+        }
+
+        fn rol[_s, _k](a, b) {
+            typeck_name!(a as Value::Fixnum(a), b as Value::Fixnum(b));
+            Value::Fixnum(a.rotate_left(b as u32))
+        }
+
+        fn ror[_s, _k](a, b) {
+            typeck_name!(a as Value::Fixnum(a), b as Value::Fixnum(b));
+            Value::Fixnum(a.rotate_right(b as u32))
+        }
+
+        fn shl[_s, _k](a, b) {
+            typeck_name!(a as Value::Fixnum(a), b as Value::Fixnum(b));
+            Value::Fixnum(a.checked_shl(b as u32).unwrap_or(0))
+        }
+
+        fn shr[_s, _k](a, b) {
+            typeck_name!(a as Value::Fixnum(a), b as Value::Fixnum(b));
+            Value::Fixnum(a.checked_shr(b as u32).unwrap_or(0))
+        }
+
+        fn xor[_s, _k](a, b) {
+            typeck_name!(a as Value::Fixnum(a), b as Value::Fixnum(b));
+            Value::Fixnum(a ^ b)
         }
     }
 
@@ -383,7 +557,7 @@ intrinsics! {
                     let (a, l) = store.store_vec(&vals);
                     Value::Vector(a, l)
                 }
-                _ => unimplemented!("TODO type error")
+                _ => unimplemented!("TODO type error in vector-append")
             }
         }
 

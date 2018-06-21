@@ -7,6 +7,8 @@
   [modules->flat-anf])
 (import macro-expander/packages
   [load-packages traverse-modules])
+(import macro-expander/serialize
+  [serialize-flatanf])
 
 (intrinsics:defn main (args)
   (if (not (= (length args) 3))
@@ -20,5 +22,4 @@
   (intrinsics:def modules (expand-modules modules))
 
   (intrinsics:def flatanf (modules->flat-anf modules))
-
-  (panic ['todo main flatanf]))
+  (write-bytes (serialize-flatanf flatanf)))

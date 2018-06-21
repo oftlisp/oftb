@@ -1,18 +1,20 @@
 (module macro-expander/compiler/flat-anf
-  [anf-modules->flat-anf])
+  [anf-modules->flat-anf collect-globals])
 
 (import macro-expander/modules
   [namespaced-name])
+(import ministd/data/tree-set
+  [empty-set set->list set-merge singleton-set])
 
 (intrinsics:defn anf-modules->flat-anf (modules)
-  (map flatten-module modules))
+  (flat-map flatten-module modules))
 
-(intrinsics:defn flatten-decl (decl scope)
+(intrinsics:defn flatten-decl (mod-name decl scope)
   (if (shl? 'intrinsics:def decl)
     (pair (nth 1 decl) (panic 'unimplemented))
     (if (shl? 'intrinsics:defn decl)
       (pair
-        (nth 1 decl)
+        (namespaced-name mod-name (nth 1 decl))
         (list 'fn
           (length (nth 2 decl))
           (flatten-expr (skip 3 decl) (with-vars (nth 2 decl) scope))))
@@ -20,27 +22,31 @@
 
 (intrinsics:defn flatten-expr (expr scope)
   (if (shl? 'fn expr)
-    (panic ['todo 'fn])
+    (panic ['todo flatten-expr 'fn])
     (if (shl? 'lit expr)
       expr
       (if (shl? 'var expr)
-        (expect
-          (or-else
-            (intrinsics:fn () (option-map \(cons 'local $) (position-of (cdr expr) (fst scope))))
-            (option-map \(cons 'global $) (lookup (cdr expr) (snd scope))))
-          (string-append "variable not found: " (symbol->string (cdr expr))))
+        (progn
+          (intrinsics:def var (nth 1 expr))
+          (if (global? var)
+            (cons 'global var)
+            (expect
+              (or-else
+                (intrinsics:fn () (option-map \(cons 'local $) (position-of var (fst scope))))
+                (option-map \(cons 'global $) (lookup var (snd scope))))
+              (string-append "variable not found: " (symbol->string (nth 1 expr))))))
         (if (shl? 'vector expr)
-          (panic ['todo 'vector])
+          (panic ['todo flatten-expr 'vector])
           (if (shl? 'call expr)
-            (panic ['todo 'call])
+            (cons 'call (map \(flatten-expr $ scope) (cdr expr)))
             (if (shl? 'if expr)
-              (panic ['todo 'if])
+              (panic ['todo flatten-expr 'if])
               (if (shl? 'letrec expr)
-                (panic ['todo 'letrec])
+                (panic ['todo flatten-expr 'letrec])
                 (if (shl? 'let expr)
-                  (panic ['todo 'let])
+                  (panic ['todo flatten-expr 'let])
                   (if (shl? 'seq expr)
-                    (panic ['todo 'seq])
+                    (panic ['todo flatten-expr 'seq])
                     (panic (cons 'invalid-expr expr))))))))))))
 
 (intrinsics:defn flatten-module (m)
@@ -54,7 +60,14 @@
         (pair name (namespaced-name mod-name name)))
       decls)
     imports)))
-  (pair mod-name (map \(flatten-decl $ scope) decls)))
+  (map \(flatten-decl mod-name $ scope) decls))
+
+(intrinsics:defn collect-globals (decls)
+  (intrinsics:defn collect-from-decl (decl)
+    (panic ['todo collect-from-decl decl]))
+  (intrinsics:defn collect-from-expr (expr)
+    (panic ['todo collect-from-expr expr]))
+  (set->list (foldl set-merge empty-set (map collect-from-decl decls))))
 
 (intrinsics:defn global? (sym)
   (some? (string-search ":" (symbol->string sym))))

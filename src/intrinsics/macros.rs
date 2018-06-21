@@ -74,6 +74,8 @@ macro_rules! __intrinsics_mod {
             $store: &mut $crate::interpreter::Store<'program>,
             $konts: $crate::std::vec::Vec<$crate::interpreter::Kont<'program>>,
         ) -> $crate::interpreter::State<'program> {
+            #[allow(unused_macros)]
+            macro_rules! __intrinsics_name { () => (stringify!($name)) }
             __intrinsics_argn!($name, _args, $($args)*);
             __intrinsics_args!(_args, $($args)*);
             #[allow(unreachable_code)] 
@@ -155,4 +157,14 @@ macro_rules! intrinsics {
             }
         }
     }
+}
+
+macro_rules! typeck_name {
+    ($($id:ident as Value :: $variant:ident $args:tt),*) => {
+        $(let $id = if let Value::$variant $args = $id {
+            $args
+        } else {
+            unimplemented!("TODO typeck_var failed in {}", __intrinsics_name!())
+        };)*
+    };
 }

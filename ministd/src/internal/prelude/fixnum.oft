@@ -1,0 +1,12 @@
+(module ministd/internal/prelude/fixnum
+  [fixnum-and fixnum-or fixnum-not fixnum-rol fixnum-ror fixnum-shl fixnum-shr fixnum-xor]
+  no-prelude)
+
+(intrinsics:def fixnum-and intrinsics/fixnum:and)
+(intrinsics:def fixnum-or intrinsics/fixnum:or)
+(intrinsics:def fixnum-not intrinsics/fixnum:not)
+(intrinsics:def fixnum-rol intrinsics/fixnum:rol)
+(intrinsics:def fixnum-ror intrinsics/fixnum:ror)
+(intrinsics:def fixnum-shl intrinsics/fixnum:shl)
+(intrinsics:def fixnum-shr intrinsics/fixnum:shr)
+(intrinsics:def fixnum-xor intrinsics/fixnum:xor)

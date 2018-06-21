@@ -1,5 +1,6 @@
 (module ministd/internal/prelude/conversions
-  [list->vector string->symbol symbol->string vector->list]
+  [byte->bytes byte->fixnum fixnum->byte list->vector string->bytes string->symbol symbol->string
+   vector->list]
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
@@ -9,7 +10,11 @@
 (import ministd/internal/prelude/vector
   [vector-length vector-nth])
 
+(intrinsics:def byte->bytes    intrinsics/convert:byte_to_bytes)
+(intrinsics:def byte->fixnum   intrinsics/convert:byte_to_fixnum)
+(intrinsics:def fixnum->byte   intrinsics/convert:fixnum_to_byte)
 (intrinsics:def list->vector   intrinsics/convert:list_to_vector)
+(intrinsics:def string->bytes  intrinsics/convert:string_to_bytes)
 (intrinsics:def string->symbol intrinsics/convert:string_to_symbol)
 (intrinsics:def symbol->string intrinsics/convert:symbol_to_string)
 

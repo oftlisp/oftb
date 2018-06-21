@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentParser
-from os import chdir
-from os.path import dirname
+from os import chdir, makedirs
+from os.path import dirname, isdir, realpath
 import shutil
 import subprocess
 import tarfile
@@ -15,6 +15,9 @@ def command(cmd, redirect=None):
     else:
         with NamedTemporaryFile() as f:
             subprocess.check_call(cmd, stdout=f)
+            d = realpath(dirname(redirect))
+            if not isdir(d):
+                makedirs(d)
             shutil.copy(f.name, redirect)
 
 
@@ -60,7 +63,7 @@ def run_with_macros(pkg_dir, bin_name, *args, redirect=None):
     bin_path = "{}/build/{}.ofta".format(pkg_dir, bin_name)
     interpret("macro-expander", "oftb-macro-expander", "ministd", pkg_dir,
               bin_name, redirect=bin_path)
-    return interpret(pkg, bin_name, *args, redirect=redirect)
+    return interpret(pkg_dir, bin_name, *args, redirect=redirect)
 
 
 def build_oftb():
@@ -77,7 +80,7 @@ def bootstrap():
         redirect="macro-expander/src/interpreter/env.oft")
     compile("macro-expander", "oftb-macro-expander")
     run_with_macros("examples/structure", "structure")
-    raise "TODO"
+    raise Exception("TODO")
 
 
 def make_archive():

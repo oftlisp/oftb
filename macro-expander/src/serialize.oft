@@ -1,8 +1,90 @@
 (module macro-expander/serialize
-  [serialize-modules])
+  [serialize-flatanf])
 
-(intrinsics:defn serialize-modules (mods)
-  (panic ['todo serialize-modules]))
+(import macro-expander/flat-anf
+  [collect-globals])
+
+(intrinsics:defn serialize-flatanf (decls)
+  (bytes-append
+    b"ofta"
+    (bytes-append
+      (serialize-list (. serialize-string symbol->string) (collect-globals decls))
+      (serialize-list serialize-decl decls))))
+
+(intrinsics:defn serialize-decl (decl)
+  (bytes-append
+    (serialize-string (symbol->string (fst decl)))
+    (serialize-expr (snd decl))))
+
+(intrinsics:defn serialize-expr (expr)
+  (if (shl? 'let expr)
+    (panic ['todo serialize-expr 'let])
+    (if (shl? 'seq expr)
+      (panic ['todo serialize-expr 'seq])
+      (if (shl? 'call %expr)
+        (bytes-append
+          (bytes-append
+            b"\x02"
+            (serialize-expr (nth 1 expr)))
+          (bytes-append
+            (serialize-u64 (- (length expr) 2))
+            (bytes-concat (map serialize-expr (skip 2 expr)))))
+        (if (shl? 'if expr)
+          (panic ['todo serialize-expr 'if])
+          (if (shl? 'letrec expr)
+            (panic ['todo serialize-expr 'letrec])
+            (if (shl? 'global expr)
+              (bytes-append
+                b"\x05"
+                (serialize-string (symbol->string (cdr expr))))
+              (if (shl? 'fn expr)
+                (bytes-append
+                  (bytes-append
+                    b"\x06"
+                    ; TODO: Named lambdas
+                    (serialize-string ""))
+                  (bytes-append
+                    (serialize-u64 (nth 1 expr))
+                    (serialize-expr (nth 2 expr))))
+                (if (shl? 'lit expr)
+                  (bytes-append
+                    b"\x07"
+                    (serialize-lit (nth 1 expr)))
+                  (if (shl? 'local expr)
+                    (bytes-append
+                      b"\x08"
+                      (serialize-u64 (cdr expr)))
+                    (if (shl? 'vector expr)
+                      (panic ['todo serialize-expr 'vector])
+                      (panic (cons 'invalid-expr expr)))))))))))))
+
+(intrinsics:defn serialize-list (f l)
+  (bytes-append
+    (serialize-u64 (length l))
+    (bytes-concat (map f l))))
+
+(intrinsics:defn serialize-lit (l)
+  (if (byte? l)
+    (panic ['todo serialize-lit 'byte])
+    (if (bytes? l)
+      (panic ['todo serialize-lit 'bytes])
+      (if (cons? l)
+        (panic ['todo serialize-lit 'cons])
+        (if (fixnum? l)
+          (panic ['todo serialize-lit 'fixnum])
+          (if (nil? l)
+            (panic ['todo serialize-lit 'nil])
+            (if (string? l)
+              (bytes-append b"\x05" (serialize-string l))
+              (if (symbol? l)
+                (panic ['todo serialize-lit 'symbol])
+                (if (vector? l)
+                  (panic ['todo serialize-lit 'vector])
+                  (panic (cons 'invalid-lit l)))))))))))
 
 (intrinsics:defn serialize-string (s)
-  (panic ['todo serialize-string]))
+  (intrinsics:def bs (string->bytes s))
+  (bytes-append (serialize-u64 (bytes-length bs)) bs))
+
+(intrinsics:defn serialize-u64 (n)
+  (bytes-concat (map \(byte->bytes (fixnum->byte (fixnum-shr n $))) '(0 8 16 24 32 40 48 56))))

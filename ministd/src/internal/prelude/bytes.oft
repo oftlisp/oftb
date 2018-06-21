@@ -1,0 +1,18 @@
+(module ministd/internal/prelude/bytes
+  [bytes-append bytes-concat bytes-length bytes-nth bytes-slice]
+  no-prelude)
+
+(import ministd/internal/prelude/intrinsics
+  [car cdr nil?])
+
+(intrinsics:def bytes-append intrinsics/bytes:append)
+(intrinsics:def bytes-length intrinsics/bytes:length)
+(intrinsics:def bytes-nth    intrinsics/bytes:nth)
+(intrinsics:def bytes-slice  intrinsics/bytes:slice)
+
+(intrinsics:defn bytes-concat (bs)
+  (intrinsics:defn helper (bs acc)
+    (if (nil? bs)
+      acc
+      (helper (cdr bs) (bytes-append acc (car bs)))))
+  (helper bs b""))

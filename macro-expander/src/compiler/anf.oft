@@ -68,14 +68,14 @@
 
 (intrinsics:defn progn->anf (exprs)
   (intrinsics:defn helper (exprs anf-expr defns)
+    (list exprs anf-expr defns)
     (if (nil? exprs)
       (save-letrec anf-expr defns)
       (progn
         (intrinsics:def expr (car exprs))
-        (intrinsics:def exprs (cdr exprs))
         (if (shl? 'intrinsics:defn expr)
-          (helper exprs anf-expr (cons expr defns))
-          (helper exprs (save-letrec expr defns) nil)))))
+          (helper (cdr exprs) anf-expr (cons expr defns))
+          (helper (cdr exprs) (save-letrec (expr->anf expr) defns) nil)))))
   (intrinsics:defn save-letrec (anf-expr defns)
     (if (nil? defns)
       anf-expr
@@ -84,7 +84,7 @@
   (intrinsics:def exprs (reverse exprs))
   (if (nil? exprs)
     (panic 'empty-progn)
-    (helper (expr->anf (car exprs)) (cdr exprs) nil)))
+    (helper (cdr exprs) (expr->anf (car exprs)) nil)))
 
 (intrinsics:defn flatten-import (i)
-  (panic i))
+  (panic ['todo flatten-import i]))

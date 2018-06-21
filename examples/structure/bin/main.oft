@@ -5,6 +5,7 @@
   [hello-world])
 
 (intrinsics:defn main (args)
-  (println "Got arguments:" args)
+  (intrinsics/internal/prelude:println "Got arguments:" args)
   (hello-world)
-  (println "Goodbye, world!"))
+  (intrinsics/internal/prelude:println "Goodbye, world!")
+  args)

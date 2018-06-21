@@ -108,7 +108,10 @@ pub fn atomic<'program>(
     store: &mut Store<'program>,
 ) -> Value {
     match *expr {
-        AExpr::Global(name) => globals[&name],
+        AExpr::Global(name) => globals
+            .get(&name)
+            .cloned()
+            .unwrap_or_else(|| panic!("Unknown global: {}", name)),
         AExpr::Lambda(name, argn, ref body) => {
             Value::Closure(store.store_closure(argn, body, name, env.clone()))
         }
