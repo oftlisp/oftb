@@ -2,4 +2,4 @@
   [hello-world])
 
 (intrinsics:defn hello-world ()
-  (intrinsics/internal/prelude:println "Hello, world!"))
+  (intrinsics/io:println "Hello, world!"))

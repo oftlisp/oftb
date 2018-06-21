@@ -1,5 +1,5 @@
 (module ministd/data/tree-set
-  [empty-set list->set set->list set-has? set-insert singleton-set])
+  [empty-set list->set set->list set-difference set-has? set-insert set-merge singleton-set])
 
 (intrinsics:def black 'black)
 (intrinsics:def red 'red)
@@ -176,6 +176,10 @@
         (set->list (get-right tree))))
     nil))
 
+; TODO: This could probably be more efficient.
+(intrinsics:defn set-difference (l r)
+  (list->set (filter \(not (set-has? $ r)) (set->list l))))
+
 (intrinsics:defn set-has? (x tree)
   (if (E? tree)
     false
@@ -206,3 +210,7 @@
   (intrinsics:def r (get-right tree))
   (intrinsics:def y (get-value tree))
   (T black l r y))
+
+; TODO: This could probably be more efficient.
+(intrinsics:defn set-merge (l r)
+  (foldl (flip set-insert) l (set->list r)))

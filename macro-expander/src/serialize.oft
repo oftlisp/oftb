@@ -1,14 +1,20 @@
 (module macro-expander/serialize
   [serialize-flatanf])
 
-(import macro-expander/flat-anf
+(import macro-expander/compiler/flat-anf
   [collect-globals])
+(import ministd/data/tree-set
+  [list->set set->list set-difference])
 
 (intrinsics:defn serialize-flatanf (decls)
+  (intrinsics:def globals
+    (set-difference
+      (collect-globals decls)
+      (list->set (map fst decls))))
   (bytes-append
     b"ofta"
     (bytes-append
-      (serialize-list (. serialize-string symbol->string) (collect-globals decls))
+      (serialize-list (. serialize-string symbol->string) %(set->list globals))
       (serialize-list serialize-decl decls))))
 
 (intrinsics:defn serialize-decl (decl)
@@ -21,7 +27,7 @@
     (panic ['todo serialize-expr 'let])
     (if (shl? 'seq expr)
       (panic ['todo serialize-expr 'seq])
-      (if (shl? 'call %expr)
+      (if (shl? 'call expr)
         (bytes-append
           (bytes-append
             b"\x02"
