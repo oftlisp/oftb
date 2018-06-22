@@ -78,7 +78,7 @@ macro_rules! __intrinsics_mod {
             macro_rules! __intrinsics_name { () => (stringify!($name)) }
             __intrinsics_argn!($name, _args, $($args)*);
             __intrinsics_args!(_args, $($args)*);
-            #[allow(unreachable_code)] 
+            #[allow(unreachable_code)]
             $crate::interpreter::eval::kontinue($body, $konts)
         })*
 

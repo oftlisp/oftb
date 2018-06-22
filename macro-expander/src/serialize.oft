@@ -14,7 +14,7 @@
   (bytes-append
     b"ofta"
     (bytes-append
-      (serialize-list (. serialize-string symbol->string) %(set->list globals))
+      (serialize-list (. serialize-string symbol->string) (set->list globals))
       (serialize-list serialize-decl decls))))
 
 (intrinsics:defn serialize-decl (decl)
@@ -26,7 +26,11 @@
   (if (shl? 'let expr)
     (panic ['todo serialize-expr 'let])
     (if (shl? 'seq expr)
-      (panic ['todo serialize-expr 'seq])
+      (bytes-append
+        (bytes-append
+          b"\x01"
+          (serialize-expr (nth 1 expr)))
+        (serialize-expr (nth 2 expr)))
       (if (shl? 'call expr)
         (bytes-append
           (bytes-append

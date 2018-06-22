@@ -37,12 +37,7 @@ pub fn step<'program>(
                 CExpr::LetRec(ref lambdas, ref body) => {
                     let mut addrs = Vec::new();
                     for &(name, argn, ref body) in lambdas {
-                        let a = store.store_closure(
-                            argn,
-                            body,
-                            Some(name),
-                            Env::new(),
-                        );
+                        let a = store.store_closure(argn, body, Some(name), Env::new());
                         addrs.push(a);
                         env = env.push(Value::Closure(a));
                     }
@@ -76,18 +71,9 @@ pub fn apply<'program>(
             let (argn, body, name, mut env) = store.get_closure(clo_addr);
             if argn != args.len() {
                 if let Some(name) = name {
-                    unimplemented!(
-                        "Bad argn in call to `{}', {} vs {}",
-                        name,
-                        argn,
-                        args.len()
-                    );
+                    unimplemented!("Bad argn in call to `{}', {} vs {}", name, argn, args.len());
                 } else {
-                    unimplemented!(
-                        "Bad argn in call to a closure, {} vs {}",
-                        argn,
-                        args.len()
-                    );
+                    unimplemented!("Bad argn in call to a closure, {} vs {}", argn, args.len());
                 }
             }
             for arg in args {
@@ -133,18 +119,13 @@ pub fn atomic<'program>(
 
 /// Applies a value onto the top continuation of the continuation stack,
 /// returning the new state.
-pub fn kontinue<'program>(
-    val: Value,
-    mut konts: Vec<Kont<'program>>,
-) -> State<'program> {
+pub fn kontinue<'program>(val: Value, mut konts: Vec<Kont<'program>>) -> State<'program> {
     match konts.pop() {
         Some(Kont::Let(expr, env)) => {
             let env = env.push(val.clone());
             State::Running(Control::Normal(expr), env, konts)
         }
-        Some(Kont::Seq(expr, env)) => {
-            State::Running(Control::Normal(expr), env, konts)
-        }
+        Some(Kont::Seq(expr, env)) => State::Running(Control::Normal(expr), env, konts),
         None => State::Halted(val),
     }
 }

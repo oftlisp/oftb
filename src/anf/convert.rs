@@ -51,19 +51,13 @@ impl From<AstExpr> for Expr {
                 ),
 
                 // A defn in the tail position can have no effect.
-                AstDecl::Defn(_, _, _, _) => {
-                    Expr::AExpr(AExpr::Literal(Literal::Nil))
-                }
+                AstDecl::Defn(_, _, _, _) => Expr::AExpr(AExpr::Literal(Literal::Nil)),
             },
             AstExpr::If(c, t, e) => {
                 let mut context = Vec::new();
                 let c = into_aexpr(*c, &mut context);
                 apply_context(
-                    Expr::CExpr(CExpr::If(
-                        c,
-                        Box::new((*t).into()),
-                        Box::new((*e).into()),
-                    )),
+                    Expr::CExpr(CExpr::If(c, Box::new((*t).into()), Box::new((*e).into()))),
                     context,
                 )
             }

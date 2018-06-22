@@ -5,12 +5,7 @@ use literal::Literal;
 /// Tries to convert a literal to a `module` or `import` statement.
 pub fn convert_modulish(
     lit: &Literal,
-) -> Option<(
-    Symbol,
-    Symbol,
-    Vec<Symbol>,
-    Vec<(Symbol, Option<Literal>)>,
-)> {
+) -> Option<(Symbol, Symbol, Vec<Symbol>, Vec<(Symbol, Option<Literal>)>)> {
     let (hd, mut tl) = lit.as_shl()?;
     tl.reverse();
 
@@ -49,11 +44,7 @@ pub fn convert_modulish(
 /// Tries to convert a literal to a `module` statement.
 pub fn convert_module(
     lit: &Literal,
-) -> Option<(
-    Symbol,
-    Vec<Symbol>,
-    Vec<(Symbol, Option<Literal>)>,
-)> {
+) -> Option<(Symbol, Vec<Symbol>, Vec<(Symbol, Option<Literal>)>)> {
     convert_modulish(lit).and_then(|(hd, name, exports, attrs)| {
         if hd.as_str() == "module" {
             Some((name, exports, attrs))

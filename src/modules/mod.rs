@@ -15,9 +15,10 @@ use anf::Module;
 use ast::Attr;
 use error::{Error, ErrorKind};
 use flatanf::Program;
-pub use modules::metadata::{BinaryComponentMetadata, ComponentsMetadata,
-                            DependencyMetadata, LibraryComponentMetadata,
-                            PackageMetadata};
+pub use modules::metadata::{
+    BinaryComponentMetadata, ComponentsMetadata, DependencyMetadata, LibraryComponentMetadata,
+    PackageMetadata,
+};
 use parser::parse_file;
 use BuiltinPackage;
 
@@ -48,8 +49,7 @@ impl Packages {
 
     /// Adds a builtin package.
     pub fn add_builtins<P: BuiltinPackage>(&mut self) {
-        self.pkgs
-            .insert(P::name(), Package::Builtins(P::decls()));
+        self.pkgs.insert(P::name(), Package::Builtins(P::decls()));
     }
 
     /// Loads the modules in the package in the given directory, returning the
@@ -86,17 +86,13 @@ impl Packages {
     ) -> Result<(), Error> {
         let meta = self.load_metadata_from(&path)?;
         if package_name != meta.name {
-            return Err(
-                ErrorKind::MisnamedPackage(package_name, meta.name).into(),
-            );
+            return Err(ErrorKind::MisnamedPackage(package_name, meta.name).into());
         } else if meta.components.library.is_none() {
             if require_library {
                 return Err(ErrorKind::DependencyMustExportLib(package_name).into());
             } else {
-                self.pkgs.insert(
-                    package_name,
-                    Package::Filesystem(path, meta, Vec::new()),
-                );
+                self.pkgs
+                    .insert(package_name, Package::Filesystem(path, meta, Vec::new()));
                 return Ok(());
             };
         }
@@ -115,22 +111,13 @@ impl Packages {
         ) -> Result<(), Error> {
             // TODO: This could use a good catch block...
             for entry in base.read_dir().with_context(|_| {
-                ErrorKind::CouldntReadPackageDir(
-                    base.display().to_string(),
-                    package_name,
-                )
+                ErrorKind::CouldntReadPackageDir(base.display().to_string(), package_name)
             })? {
                 let entry = entry.with_context(|_| {
-                    ErrorKind::CouldntReadPackageDir(
-                        base.display().to_string(),
-                        package_name,
-                    )
+                    ErrorKind::CouldntReadPackageDir(base.display().to_string(), package_name)
                 })?;
                 let file_type = entry.file_type().with_context(|_| {
-                    ErrorKind::CouldntReadPackageDir(
-                        base.display().to_string(),
-                        package_name,
-                    )
+                    ErrorKind::CouldntReadPackageDir(base.display().to_string(), package_name)
                 })?;
                 if file_type.is_dir() {
                     let name = entry
@@ -170,18 +157,13 @@ impl Packages {
                     if path == lib_oft_path {
                         assert_eq!(name.pop(), Some('/'));
                     } else {
-                        name += file_name
-                            .to_str()
-                            .expect("Non-Unicode source file name...");
+                        name += file_name.to_str().expect("Non-Unicode source file name...");
                     }
                     let name = name.into();
 
                     let module = Packages::load_module(&path)?;
                     if name != module.name {
-                        return Err(ErrorKind::MisnamedModule(
-                            name,
-                            module.name,
-                        ).into());
+                        return Err(ErrorKind::MisnamedModule(name, module.name).into());
                     }
 
                     modules.push(module);
@@ -230,11 +212,7 @@ impl Packages {
     }
 
     /// Compiles a binary from a given module into a `flatanf::Program`.
-    pub fn compile(
-        self,
-        root_package_name: Symbol,
-        binary: &str,
-    ) -> Result<Program, Error> {
+    pub fn compile(self, root_package_name: Symbol, binary: &str) -> Result<Program, Error> {
         let mut builtins = HashMap::new();
         let mut root_meta_path = None;
         let mut mods = Vec::new();
@@ -246,13 +224,10 @@ impl Packages {
             .map(|n| (prelude, n))
             .collect::<Vec<_>>();
         let augment_module_imports = |m: &mut Module| {
-            if !m.attrs
-                .iter()
-                .any(|attr| *attr == Attr::NoPrelude)
+            if !m.attrs.iter().any(|attr| *attr == Attr::NoPrelude)
                 && !m.imports.iter().any(|&(m, _)| m == prelude)
             {
-                m.imports
-                    .extend(prelude_exports.iter().cloned());
+                m.imports.extend(prelude_exports.iter().cloned());
             }
         };
 
@@ -283,10 +258,7 @@ impl Packages {
         let (root_meta, root_path) = match root_meta_path {
             Some((meta, path)) => (meta, path),
             None => {
-                return Err(ErrorKind::NoSuchBinary(
-                    root_package_name,
-                    binary.to_string(),
-                ).into());
+                return Err(ErrorKind::NoSuchBinary(root_package_name, binary.to_string()).into());
             }
         };
         let binary_rel_path = root_meta
@@ -295,9 +267,7 @@ impl Packages {
             .iter()
             .find(|bin| bin.name == binary)
             .map(|bin| &bin.path)
-            .ok_or_else(|| {
-                ErrorKind::NoSuchBinary(root_package_name, binary.to_string())
-            })?;
+            .ok_or_else(|| ErrorKind::NoSuchBinary(root_package_name, binary.to_string()))?;
         let binary_path = root_path.join(binary_rel_path);
         let mut binary = Packages::load_module(binary_path)?;
         if binary.name != "main".into() {
@@ -313,11 +283,7 @@ impl Packages {
     }
 
     /// Returns the exports of the given module.
-    pub fn exports_of(
-        &self,
-        package: Symbol,
-        module: Symbol,
-    ) -> Result<BTreeSet<Symbol>, Error> {
+    pub fn exports_of(&self, package: Symbol, module: Symbol) -> Result<BTreeSet<Symbol>, Error> {
         match self.pkgs.get(&package) {
             Some(&Package::Builtins(ref package)) => {
                 unimplemented!("{:?} {:?}", package, module);
@@ -337,10 +303,7 @@ impl Packages {
     }
 
     /// Loads metadata from the module in the given directory.
-    pub fn load_metadata_from(
-        &self,
-        path: &Path,
-    ) -> Result<PackageMetadata, Error> {
+    pub fn load_metadata_from(&self, path: &Path) -> Result<PackageMetadata, Error> {
         let lits = parse_file(path.join("package.oftd"))?;
         PackageMetadata::from_literals(lits)
     }

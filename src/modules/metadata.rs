@@ -60,10 +60,7 @@ impl PackageMetadata {
                     let v = l.into_iter()
                         .map(|lit| match lit {
                             Literal::String(s) => Ok(s),
-                            _ => Err(Error::from(ErrorKind::Unexpected(
-                                "an author",
-                                lit,
-                            ))),
+                            _ => Err(Error::from(ErrorKind::Unexpected("an author", lit))),
                         })
                         .collect::<Result<_, _>>()?;
                     authors = Some(v);
@@ -84,15 +81,9 @@ impl PackageMetadata {
                     let deps = l.into_iter()
                         .map(|lit| {
                             if let Some((name, lits)) = lit.as_shl() {
-                                Ok((
-                                    name,
-                                    DependencyMetadata::from_literals(lits)?,
-                                ))
+                                Ok((name, DependencyMetadata::from_literals(lits)?))
                             } else {
-                                Err(Error::from(ErrorKind::Unexpected(
-                                    "a dependency",
-                                    lit,
-                                )))
+                                Err(Error::from(ErrorKind::Unexpected("a dependency", lit)))
                             }
                         })
                         .collect::<Result<_, _>>()?;
@@ -104,10 +95,7 @@ impl PackageMetadata {
                     }
 
                     if l.len() != 1 {
-                        return Err(ErrorKind::Unexpected(
-                            "a license",
-                            Literal::list(l),
-                        ).into());
+                        return Err(ErrorKind::Unexpected("a license", Literal::list(l)).into());
                     }
                     let l = l.into_iter().next().unwrap();
                     if let Literal::String(l) = l {
@@ -122,19 +110,15 @@ impl PackageMetadata {
                     }
 
                     if l.len() != 1 {
-                        return Err(ErrorKind::Unexpected(
-                            "the package name",
-                            Literal::list(l),
-                        ).into());
+                        return Err(
+                            ErrorKind::Unexpected("the package name", Literal::list(l)).into()
+                        );
                     }
                     let n = l.into_iter().next().unwrap();
                     if let Literal::Symbol(n) = n {
                         name = Some(n);
                     } else {
-                        return Err(ErrorKind::Unexpected(
-                            "the package name",
-                            n,
-                        ).into());
+                        return Err(ErrorKind::Unexpected("the package name", n).into());
                     }
                 }
                 "version" => {
@@ -143,33 +127,25 @@ impl PackageMetadata {
                     }
 
                     if l.len() != 1 {
-                        return Err(ErrorKind::Unexpected(
-                            "the package version",
-                            Literal::list(l),
-                        ).into());
+                        return Err(
+                            ErrorKind::Unexpected("the package version", Literal::list(l)).into(),
+                        );
                     }
                     let v = l.into_iter().next().unwrap();
                     if let Literal::String(v) = v {
-                        let v = v.parse()
-                            .map_err(ErrorKind::IllegalPackageVersion)?;
+                        let v = v.parse().map_err(ErrorKind::IllegalPackageVersion)?;
                         version = Some(v);
                     } else {
-                        return Err(ErrorKind::Unexpected(
-                            "the package version",
-                            v,
-                        ).into());
+                        return Err(ErrorKind::Unexpected("the package version", v).into());
                     }
                 }
-                _ => {
-                    return Err(ErrorKind::Unexpected("a metadata item", lit).into())
-                }
+                _ => return Err(ErrorKind::Unexpected("a metadata item", lit).into()),
             }
         }
 
         Ok(PackageMetadata {
             authors: authors.unwrap_or_default(),
-            components: components
-                .ok_or(ErrorKind::MissingField("components".into()))?,
+            components: components.ok_or(ErrorKind::MissingField("components".into()))?,
             dependencies: dependencies.unwrap_or_default(),
             license,
             name: name.ok_or(ErrorKind::MissingField("name".into()))?,
@@ -206,9 +182,7 @@ impl PackageMetadata {
         ));
 
         if self.dependencies.len() != 0 {
-            let mut deps = self.dependencies
-                .into_iter()
-                .collect::<Vec<_>>();
+            let mut deps = self.dependencies.into_iter().collect::<Vec<_>>();
             deps.sort_by_key(|&(n, _)| n.as_str());
             let mut dep_lit = vec![Literal::Symbol("dependencies".into())];
             dep_lit.extend(deps.into_iter().map(|(name, dep)| {
@@ -236,9 +210,7 @@ pub struct ComponentsMetadata {
 
 impl ComponentsMetadata {
     /// Converts from `Literal`s.
-    pub fn from_literals(
-        lits: Vec<Literal>,
-    ) -> Result<ComponentsMetadata, Error> {
+    pub fn from_literals(lits: Vec<Literal>) -> Result<ComponentsMetadata, Error> {
         let mut library = None;
         let mut binaries = Vec::new();
 
@@ -261,16 +233,11 @@ impl ComponentsMetadata {
                     let bin = BinaryComponentMetadata::from_literals(l)?;
                     binaries.push(bin);
                 }
-                _ => {
-                    return Err(ErrorKind::Unexpected("a component", lit).into())
-                }
+                _ => return Err(ErrorKind::Unexpected("a component", lit).into()),
             }
         }
 
-        Ok(ComponentsMetadata {
-            library,
-            binaries,
-        })
+        Ok(ComponentsMetadata { library, binaries })
     }
 
     /// Converts to a `Literal`.
@@ -302,9 +269,7 @@ pub struct LibraryComponentMetadata;
 
 impl LibraryComponentMetadata {
     /// Converts from a `Literal`.
-    pub fn from_literals(
-        mut lits: Vec<Literal>,
-    ) -> Result<LibraryComponentMetadata, Error> {
+    pub fn from_literals(mut lits: Vec<Literal>) -> Result<LibraryComponentMetadata, Error> {
         if let Some(lit) = lits.pop() {
             Err(ErrorKind::Unexpected("a library component", lit).into())
         } else {
@@ -331,9 +296,7 @@ pub struct BinaryComponentMetadata {
 
 impl BinaryComponentMetadata {
     /// Converts from a `Literal`.
-    pub fn from_literals(
-        lits: Vec<Literal>,
-    ) -> Result<BinaryComponentMetadata, Error> {
+    pub fn from_literals(lits: Vec<Literal>) -> Result<BinaryComponentMetadata, Error> {
         let mut name = None;
         let mut path = None;
 
@@ -341,10 +304,7 @@ impl BinaryComponentMetadata {
             let (s, lit) = if let Some(val) = lit.as_shp() {
                 val
             } else {
-                return Err(ErrorKind::Unexpected(
-                    "a binary component metadata item",
-                    lit,
-                ).into());
+                return Err(ErrorKind::Unexpected("a binary component metadata item", lit).into());
             };
             match s.as_str() {
                 "name" => {
@@ -366,10 +326,9 @@ impl BinaryComponentMetadata {
                     }
                 }
                 _ => {
-                    return Err(ErrorKind::Unexpected(
-                        "a binary component metadata item",
-                        lit,
-                    ).into())
+                    return Err(
+                        ErrorKind::Unexpected("a binary component metadata item", lit).into(),
+                    )
                 }
             }
         }
@@ -407,9 +366,7 @@ pub struct DependencyMetadata {
 
 impl DependencyMetadata {
     /// Converts from `Literal`s.
-    pub fn from_literals(
-        lits: Vec<Literal>,
-    ) -> Result<DependencyMetadata, Error> {
+    pub fn from_literals(lits: Vec<Literal>) -> Result<DependencyMetadata, Error> {
         let mut git = None;
         let mut version = None;
 
@@ -417,10 +374,7 @@ impl DependencyMetadata {
             let (s, lit) = if let Some(val) = lit.as_shp() {
                 val
             } else {
-                return Err(ErrorKind::Unexpected(
-                    "a binary component metadata item",
-                    lit,
-                ).into());
+                return Err(ErrorKind::Unexpected("a binary component metadata item", lit).into());
             };
             match s.as_str() {
                 "git" => {
@@ -429,32 +383,20 @@ impl DependencyMetadata {
                     } else if let Literal::String(url) = lit {
                         git = Some(url);
                     } else {
-                        return Err(ErrorKind::Unexpected(
-                            "a Git clone URL",
-                            lit,
-                        ).into());
+                        return Err(ErrorKind::Unexpected("a Git clone URL", lit).into());
                     }
                 }
                 "version" => {
                     if version.is_some() {
                         return Err(ErrorKind::DuplicateField(s).into());
                     } else if let Literal::String(v) = lit {
-                        let v = v.parse()
-                            .map_err(ErrorKind::IllegalDependencyVersion)?;
+                        let v = v.parse().map_err(ErrorKind::IllegalDependencyVersion)?;
                         version = Some(v);
                     } else {
-                        return Err(ErrorKind::Unexpected(
-                            "a dependency version",
-                            lit,
-                        ).into());
+                        return Err(ErrorKind::Unexpected("a dependency version", lit).into());
                     }
                 }
-                _ => {
-                    return Err(ErrorKind::Unexpected(
-                        "a dependency metadata item",
-                        lit,
-                    ).into())
-                }
+                _ => return Err(ErrorKind::Unexpected("a dependency metadata item", lit).into()),
             }
         }
 

@@ -1,9 +1,9 @@
 use failure::Error;
-use oftb::Literal;
 use oftb::flatanf::{AExpr, CExpr, Expr};
 use oftb::interpreter::{Interpreter, Value};
 use oftb::intrinsics::Intrinsics;
 use oftb::modules::Packages;
+use oftb::Literal;
 
 use options::RunOptions;
 
@@ -24,16 +24,9 @@ pub fn run(options: RunOptions) -> Result<(), Error> {
     let program = pkgs.compile(name, &options.binary_name)?;
 
     // Create the expression for the call to main.
-    let args = options
-        .args
-        .into_iter()
-        .map(Literal::String)
-        .collect();
+    let args = options.args.into_iter().map(Literal::String).collect();
     let args = AExpr::Literal(Literal::list(args));
-    let main = Expr::CExpr(CExpr::Call(
-        AExpr::Global("main:main".into()),
-        vec![args],
-    ));
+    let main = Expr::CExpr(CExpr::Call(AExpr::Global("main:main".into()), vec![args]));
 
     // Create the interpreter.
     let mut interpreter = Interpreter::new();

@@ -1,6 +1,9 @@
 (module macro-expander/compiler/anf
   [module->anf])
 
+(import macro-expander/modules
+  [namespaced-name])
+
 (intrinsics:defn aexpr? (expr)
   (or (shl? 'fn expr)
   (or (shl? 'lit expr)
@@ -73,18 +76,21 @@
       (save-letrec anf-expr defns)
       (progn
         (intrinsics:def expr (car exprs))
-        (if (shl? 'intrinsics:defn expr)
-          (helper (cdr exprs) anf-expr (cons expr defns))
-          (helper (cdr exprs) (save-letrec (expr->anf expr) defns) nil)))))
+        (if (shl? 'intrinsics:def expr)
+          (helper (cdr exprs) (save-letrec (expr->anf expr) defns) nil)
+          (if (shl? 'intrinsics:defn expr)
+            (helper (cdr exprs) anf-expr (cons expr defns))
+            (helper (cdr exprs) (list 'seq anf-expr (save-letrec (expr->anf expr) defns)) nil))))))
   (intrinsics:defn save-letrec (anf-expr defns)
     (if (nil? defns)
       anf-expr
       (panic save-letrec)))
 
-  (intrinsics:def exprs (reverse exprs))
   (if (nil? exprs)
     (panic 'empty-progn)
     (helper (cdr exprs) (expr->anf (car exprs)) nil)))
 
 (intrinsics:defn flatten-import (i)
-  (panic ['todo flatten-import i]))
+  (map
+    \(pair $ (namespaced-name (nth 1 i) $))
+    (vector->list (nth 2 i))))

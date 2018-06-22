@@ -8,12 +8,10 @@ fn improper_list() {
     let r = parse_program("(a | b)");
     assert_eq!(
         r,
-        Ok(vec![
-            Literal::Cons(
-                Box::new(Literal::Symbol("a".into())),
-                Box::new(Literal::Symbol("b".into())),
-            ),
-        ])
+        Ok(vec![Literal::Cons(
+            Box::new(Literal::Symbol("a".into())),
+            Box::new(Literal::Symbol("b".into())),
+        )])
     );
 }
 

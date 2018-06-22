@@ -46,7 +46,7 @@
                 (if (shl? 'let expr)
                   (panic ['todo flatten-expr 'let])
                   (if (shl? 'seq expr)
-                    (panic ['todo flatten-expr 'seq])
+                    (list 'seq (flatten-expr (nth 1 expr) scope) (flatten-expr (nth 2 expr) scope))
                     (panic (cons 'invalid-expr expr))))))))))))
 
 (intrinsics:defn flatten-module (m)

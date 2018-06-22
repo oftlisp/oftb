@@ -9,9 +9,7 @@ use util::{escape_bytes, escape_str};
 /// The type of an intrinsic function.
 #[derive(Copy, Clone)]
 pub struct Intrinsic(
-    pub 
-        for<'program> fn(Vec<Value>, &mut Store<'program>, Vec<Kont<'program>>)
-            -> State<'program>,
+    pub for<'program> fn(Vec<Value>, &mut Store<'program>, Vec<Kont<'program>>) -> State<'program>,
 );
 
 impl Debug for Intrinsic {
@@ -85,9 +83,9 @@ impl Value {
             (Value::Byte(_), _) => Ordering::Less,
 
             (Value::Bytes(_, _), Value::Byte(_)) => Ordering::Greater,
-            (Value::Bytes(la, ln), Value::Bytes(ra, rn)) => store
-                .get_bytes(la, ln)
-                .cmp(store.get_bytes(ra, rn)),
+            (Value::Bytes(la, ln), Value::Bytes(ra, rn)) => {
+                store.get_bytes(la, ln).cmp(store.get_bytes(ra, rn))
+            }
             (Value::Bytes(_, _), _) => Ordering::Less,
 
             (Value::Closure(_), Value::Byte(_)) => Ordering::Greater,
@@ -145,9 +143,9 @@ impl Value {
             (Value::String(_, _), Value::Fixnum(_)) => Ordering::Greater,
             (Value::String(_, _), Value::Intrinsic(_)) => Ordering::Greater,
             (Value::String(_, _), Value::Nil) => Ordering::Greater,
-            (Value::String(la, ln), Value::String(ra, rn)) => store
-                .get_str(la, ln)
-                .cmp(&store.get_str(ra, rn)),
+            (Value::String(la, ln), Value::String(ra, rn)) => {
+                store.get_str(la, ln).cmp(&store.get_str(ra, rn))
+            }
             (Value::String(_, _), _) => Ordering::Less,
 
             (Value::Symbol(_), Value::Byte(_)) => Ordering::Greater,
@@ -250,17 +248,12 @@ impl<'store, 'program: 'store> Display for DisplayValue<'store, 'program> {
                 }
             }
             Value::Cons(h, t) => {
-                write!(
-                    fmt,
-                    "({}",
-                    self.store.get(h).display(self.store, false)
-                )?;
+                write!(fmt, "({}", self.store.get(h).display(self.store, false))?;
                 let mut l = self.store.get(t);
                 loop {
                     match l {
                         Value::Cons(h, t) => {
-                            let h =
-                                self.store.get(h).display(self.store, false);
+                            let h = self.store.get(h).display(self.store, false);
                             write!(fmt, " {}", h)?;
                             l = self.store.get(t);
                         }

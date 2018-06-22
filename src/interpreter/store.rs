@@ -52,10 +52,7 @@ impl<'program> Store<'program> {
     }
 
     /// Gets a closure out of the closure heap.
-    pub fn get_closure(
-        &self,
-        addr: Addr<Closure>,
-    ) -> (usize, &'program Expr, Option<Symbol>, Env) {
+    pub fn get_closure(&self, addr: Addr<Closure>) -> (usize, &'program Expr, Option<Symbol>, Env) {
         let &(addr, ref body, name, ref env) = &self.clos[addr.0];
         (addr, body, name, env.clone())
     }
@@ -167,10 +164,7 @@ impl<'program> Store<'program> {
     }
 
     /// Stores a value into the vector heap.
-    pub fn store_vec(
-        &mut self,
-        addrs: &[Addr<Value>],
-    ) -> (Addr<Vector>, usize) {
+    pub fn store_vec(&mut self, addrs: &[Addr<Value>]) -> (Addr<Vector>, usize) {
         let n = self.vecs.len();
         self.vecs.extend(addrs);
         debug_assert_eq!(self.vecs.len(), n + addrs.len());

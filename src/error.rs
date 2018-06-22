@@ -76,10 +76,7 @@ pub enum ErrorKind {
     DependencyLoopInPackage(Symbol),
 
     /// It's impossible to depend on a package that doesn't export a library.
-    #[fail(
-        display = "The `{}' package must export a library to be depended on.",
-        _0
-    )]
+    #[fail(display = "The `{}' package must export a library to be depended on.", _0)]
     DependencyMustExportLib(Symbol),
 
     /// Two different decls have the same name.
@@ -87,9 +84,7 @@ pub enum ErrorKind {
     DuplicateDeclName(Symbol),
 
     /// Two different variables in a letrec have the same name.
-    #[fail(
-        display = "There are two variables in the same letrec named `{}'", _0
-    )]
+    #[fail(display = "There are two variables in the same letrec named `{}'", _0)]
     DuplicateLetrecName(Symbol),
 
     /// A field was duplicated in a metadata file.
@@ -133,11 +128,7 @@ pub enum ErrorKind {
     MisnamedPackage(Symbol, Symbol),
 
     /// A variable that was exported wasn't defined.
-    #[fail(
-        display = "`{}' should have exported `{}', but it wasn't defined",
-        _0,
-        _1
-    )]
+    #[fail(display = "`{}' should have exported `{}', but it wasn't defined", _0, _1)]
     MissingExport(Symbol, Symbol),
 
     /// A required field was missing from a metadata file.
@@ -162,9 +153,7 @@ pub enum ErrorKind {
 
     /// An import was made to a symbol that doesn't exist or wasn't exported.
     #[fail(
-        display = "`{}' tried to import `{}', but that doesn't exist (or wasn't exported)",
-        _0,
-        _1
+        display = "`{}' tried to import `{}', but that doesn't exist (or wasn't exported)", _0, _1
     )]
     NonexistentImport(Symbol, Symbol),
 

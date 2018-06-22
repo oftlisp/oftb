@@ -51,10 +51,7 @@ impl Program {
             decls.push((name.into(), expr));
         }
 
-        Ok(Program {
-            decls,
-            intrinsics,
-        })
+        Ok(Program { decls, intrinsics })
     }
 }
 
@@ -72,22 +69,15 @@ impl Expr {
                 let b = Expr::deserialize_from(r)?;
                 Ok(Expr::Seq(Box::new(a), Box::new(b)))
             }
-            0x02...0x04 => {
-                CExpr::deserialize_from_discrim(r, discrim).map(Expr::CExpr)
-            }
-            0x05...0x09 => {
-                AExpr::deserialize_from_discrim(r, discrim).map(Expr::AExpr)
-            }
+            0x02...0x04 => CExpr::deserialize_from_discrim(r, discrim).map(Expr::CExpr),
+            0x05...0x09 => AExpr::deserialize_from_discrim(r, discrim).map(Expr::AExpr),
             _ => bail!("Unknown discriminant for Expr: {}", discrim),
         }
     }
 }
 
 impl CExpr {
-    fn deserialize_from_discrim<R: Read>(
-        r: &mut R,
-        discrim: u8,
-    ) -> Result<CExpr> {
+    fn deserialize_from_discrim<R: Read>(r: &mut R, discrim: u8) -> Result<CExpr> {
         match discrim {
             0x02 => {
                 let func = AExpr::deserialize_from(r)?;
@@ -126,10 +116,7 @@ impl AExpr {
         let discrim = r.read_u8()?;
         AExpr::deserialize_from_discrim(r, discrim)
     }
-    fn deserialize_from_discrim<R: Read>(
-        r: &mut R,
-        discrim: u8,
-    ) -> Result<AExpr> {
+    fn deserialize_from_discrim<R: Read>(r: &mut R, discrim: u8) -> Result<AExpr> {
         match discrim {
             0x05 => {
                 let name = deserialize_string(r)?;
@@ -137,11 +124,7 @@ impl AExpr {
             }
             0x06 => {
                 let name = deserialize_string(r)?;
-                let name = if name == "" {
-                    None
-                } else {
-                    Some(name.into())
-                };
+                let name = if name == "" { None } else { Some(name.into()) };
                 let argn = deserialize_u64_as_usize(r)?;
                 let body = Expr::deserialize_from(r)?;
                 Ok(AExpr::Lambda(name, argn, Box::new(body)))

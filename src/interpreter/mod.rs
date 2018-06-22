@@ -12,7 +12,6 @@ use std::collections::HashMap;
 
 use symbol::Symbol;
 
-use BuiltinPackage;
 use flatanf::Expr;
 pub use interpreter::control::Control;
 use interpreter::env::Env;
@@ -20,6 +19,7 @@ pub use interpreter::kont::Kont;
 pub use interpreter::state::State;
 pub use interpreter::store::{Addr, Bytes, Closure, Store, Vector};
 pub use interpreter::value::{Intrinsic, Value};
+use BuiltinPackage;
 
 /// The interpreter.
 #[derive(Debug)]
@@ -76,9 +76,7 @@ impl<'program> Interpreter<'program> {
     pub fn eval_step(&mut self) -> Option<Value> {
         let state = self.state.take().unwrap();
         let next = match state {
-            State::Running(c, e, k) => {
-                eval::step(c, e, &self.globals, &mut self.store, k)
-            }
+            State::Running(c, e, k) => eval::step(c, e, &self.globals, &mut self.store, k),
             State::Halted(val) => State::Halted(val),
         };
         self.state = Some(next);

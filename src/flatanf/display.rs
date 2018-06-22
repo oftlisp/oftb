@@ -44,9 +44,7 @@ impl Display for CExpr {
                 }
                 write!(fmt, ")")
             }
-            CExpr::If(ref c, ref t, ref e) => {
-                write!(fmt, "if {} then {} else {} endif", c, t, e)
-            }
+            CExpr::If(ref c, ref t, ref e) => write!(fmt, "if {} then {} else {} endif", c, t, e),
             CExpr::LetRec(ref bound, ref body) => {
                 writeln!(fmt, "letrec")?;
                 for (name, argn, ref body) in bound {
@@ -62,9 +60,7 @@ impl Display for AExpr {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         match *self {
             AExpr::Global(name) => write!(fmt, "{}", name),
-            AExpr::Lambda(None, argn, ref body) => {
-                write!(fmt, "lam({}). {}", argn, body)
-            }
+            AExpr::Lambda(None, argn, ref body) => write!(fmt, "lam({}). {}", argn, body),
             AExpr::Lambda(Some(name), argn, ref body) => {
                 write!(fmt, "lam[{}]({}). {}", name, argn, body)
             }

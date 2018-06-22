@@ -6,9 +6,7 @@ use parser::symbolish::parse_symbolish;
 use parser::Rule;
 use util::convert_hex_digit;
 
-pub fn convert_program(
-    mut pairs: Pairs<Rule>,
-) -> Result<Vec<Literal>, Error<Rule>> {
+pub fn convert_program(mut pairs: Pairs<Rule>) -> Result<Vec<Literal>, Error<Rule>> {
     let pair = pairs.next().unwrap();
     assert_eq!(pair.as_rule(), Rule::program);
     pair.into_inner()
@@ -32,11 +30,9 @@ fn convert_value(mut pairs: Pairs<Rule>) -> Result<Literal, Error<Rule>> {
             convert_rmacro(rmacro, value)
         }
         Rule::string => convert_string(pair.into_inner()),
-        Rule::symbolish => parse_symbolish(pair.as_str()).map_err(|err| {
-            Error::CustomErrorSpan {
-                message: err,
-                span: pair.into_span(),
-            }
+        Rule::symbolish => parse_symbolish(pair.as_str()).map_err(|err| Error::CustomErrorSpan {
+            message: err,
+            span: pair.into_span(),
         }),
         Rule::vector => pair.into_inner()
             .map(|pair| {
@@ -93,17 +89,11 @@ fn convert_bytes(pairs: Pairs<Rule>) -> Result<Literal, Error<Rule>> {
     Ok(Literal::Bytes(bs))
 }
 
-fn convert_rmacro(
-    pair: Pair<Rule>,
-    value: Literal,
-) -> Result<Literal, Error<Rule>> {
+fn convert_rmacro(pair: Pair<Rule>, value: Literal) -> Result<Literal, Error<Rule>> {
     fn simple_macro(name: &'static str, value: Literal) -> Literal {
         Literal::Cons(
             Box::new(Literal::Symbol(name.into())),
-            Box::new(Literal::Cons(
-                Box::new(value),
-                Box::new(Literal::Nil),
-            )),
+            Box::new(Literal::Cons(Box::new(value), Box::new(Literal::Nil))),
         )
     }
 
@@ -119,10 +109,7 @@ fn convert_rmacro(
                     Box::new(Literal::Symbol("$".into())),
                     Box::new(Literal::Nil),
                 )),
-                Box::new(Literal::Cons(
-                    Box::new(value),
-                    Box::new(Literal::Nil),
-                )),
+                Box::new(Literal::Cons(Box::new(value), Box::new(Literal::Nil))),
             )),
         ),
         "%" => simple_macro("debug-trace", value),
@@ -151,14 +138,9 @@ fn convert_string_escape(old_pair: Pair<Rule>) -> Result<char, Error<Rule>> {
     match pair.as_rule() {
         Rule::string_4_esc | Rule::string_8_esc => {
             let n = convert_hex_escape(pair.into_inner());
-            ::std::char::from_u32(n).ok_or_else(move || {
-                Error::CustomErrorSpan {
-                    message: format!(
-                        "Invalid Unicode Escape: {}",
-                        old_pair.as_str()
-                    ),
-                    span: old_pair.into_span(),
-                }
+            ::std::char::from_u32(n).ok_or_else(move || Error::CustomErrorSpan {
+                message: format!("Invalid Unicode Escape: {}", old_pair.as_str()),
+                span: old_pair.into_span(),
             })
         }
         _ => Ok(convert_byte_escape(pair) as char),

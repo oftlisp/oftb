@@ -1,5 +1,7 @@
-use modules::{BinaryComponentMetadata, ComponentsMetadata, DependencyMetadata,
-              LibraryComponentMetadata, PackageMetadata};
+use modules::{
+    BinaryComponentMetadata, ComponentsMetadata, DependencyMetadata, LibraryComponentMetadata,
+    PackageMetadata,
+};
 use parser::parse_program;
 
 #[test]
@@ -43,10 +45,7 @@ fn parses_blogpost_package_oftd() {
             (
                 "grid".into(),
                 DependencyMetadata {
-                    git: Some(
-                        "https://github.com/remexre/oftlisp-grid.git"
-                            .to_string(),
-                    ),
+                    git: Some("https://github.com/remexre/oftlisp-grid.git".to_string()),
                     version: "0.1.0".parse().unwrap(),
                 },
             ),

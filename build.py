@@ -11,7 +11,7 @@ from tempfile import NamedTemporaryFile
 
 def command(cmd, redirect=None):
     if redirect is None:
-        return subprocess.check_output(cmd)
+        subprocess.check_call(cmd)
     else:
         with NamedTemporaryFile() as f:
             subprocess.check_call(cmd, stdout=f)
@@ -39,7 +39,7 @@ oftb_exec = "target/release/oftb"
 
 
 def oftb(args, redirect=None):
-    return command([oftb_exec, "-v"] + args, redirect=redirect)
+    command([oftb_exec, "-v"] + args, redirect=redirect)
 
 
 def compile(pkg_dir, bin_name):
@@ -50,20 +50,20 @@ def compile(pkg_dir, bin_name):
 def interpret(pkg_dir, bin_name, *args, redirect=None):
     print_cyan("interpret", bin_name, *args)
     bin_path = "{}/build/{}.ofta".format(pkg_dir, bin_name)
-    return oftb(["interpret", bin_path] + list(args), redirect=redirect)
+    oftb(["interpret", bin_path] + list(args), redirect=redirect)
 
 
 def run(pkg_dir, bin_name, *args, redirect=None):
     print_cyan("run", bin_name, *args)
     args = ["run", "--std", "ministd", pkg_dir, bin_name] + list(args)
-    return oftb(args, redirect=redirect)
+    oftb(args, redirect=redirect)
 
 
 def run_with_macros(pkg_dir, bin_name, *args, redirect=None):
     bin_path = "{}/build/{}.ofta".format(pkg_dir, bin_name)
     interpret("macro-expander", "oftb-macro-expander", "ministd", pkg_dir,
               bin_name, redirect=bin_path)
-    return interpret(pkg_dir, bin_name, *args, redirect=redirect)
+    interpret(pkg_dir, bin_name, *args, redirect=redirect)
 
 
 def build_oftb():
@@ -80,7 +80,6 @@ def bootstrap():
         redirect="macro-expander/src/interpreter/env.oft")
     compile("macro-expander", "oftb-macro-expander")
     run_with_macros("examples/structure", "structure")
-    raise Exception("TODO")
 
 
 def make_archive():

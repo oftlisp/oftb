@@ -21,20 +21,13 @@ pub struct Module {
 
 impl Module {
     /// Creates a module from literals.
-    pub fn from_values(
-        path: &Path,
-        mut l: Vec<Literal>,
-    ) -> Result<Module, Error> {
+    pub fn from_values(path: &Path, mut l: Vec<Literal>) -> Result<Module, Error> {
         if l.len() == 0 {
-            return Err(
-                ErrorKind::NoModuleForm(path.display().to_string()).into(),
-            );
+            return Err(ErrorKind::NoModuleForm(path.display().to_string()).into());
         }
 
         let (name, exports, attrs) = helpers::convert_module(&l.remove(0))
-            .ok_or_else(|| {
-                ErrorKind::NoModuleForm(path.display().to_string())
-            })?;
+            .ok_or_else(|| ErrorKind::NoModuleForm(path.display().to_string()))?;
         let attrs = attrs
             .into_iter()
             .map(|(n, v)| {
@@ -150,12 +143,7 @@ pub enum Expr {
     Call(Box<Expr>, Vec<Expr>),
     Decl(Box<Decl>),
     If(Box<Expr>, Box<Expr>, Box<Expr>),
-    Lambda(
-        Option<Symbol>,
-        Vec<Symbol>,
-        Vec<Expr>,
-        Box<Expr>,
-    ),
+    Lambda(Option<Symbol>, Vec<Symbol>, Vec<Expr>, Box<Expr>),
     Literal(Literal),
     Progn(Vec<Expr>, Box<Expr>),
     Var(Symbol),
@@ -174,16 +162,11 @@ impl Expr {
             Literal::Cons(h, t_lit) => {
                 let mut t = match t_lit.as_list() {
                     Some(t) => t,
-                    None => {
-                        return Err(ErrorKind::InvalidExpr(Literal::Cons(
-                            h, t_lit,
-                        )).into())
-                    }
+                    None => return Err(ErrorKind::InvalidExpr(Literal::Cons(h, t_lit)).into()),
                 };
                 match *h {
                     Literal::Symbol(s)
-                        if s.as_str() == "intrinsics:def"
-                            || s.as_str() == "intrinsics:defn" =>
+                        if s.as_str() == "intrinsics:def" || s.as_str() == "intrinsics:defn" =>
                     {
                         let lit = Literal::Cons(h, t_lit);
                         let decl = Decl::from_value(lit)?;
@@ -191,9 +174,7 @@ impl Expr {
                     }
                     Literal::Symbol(s) if s.as_str() == "intrinsics:fn" => {
                         if t.len() < 2 {
-                            return Err(ErrorKind::InvalidExpr(Literal::Cons(
-                                h, t_lit,
-                            )).into());
+                            return Err(ErrorKind::InvalidExpr(Literal::Cons(h, t_lit)).into());
                         }
 
                         let tail = Expr::from_value(t.pop().unwrap())?;
@@ -201,25 +182,17 @@ impl Expr {
                             .map(Expr::from_value)
                             .collect::<Result<_, _>>()?;
 
-                        let args = if let Some(args) =
-                            t.pop().unwrap().as_symbol_list()
-                        {
+                        let args = if let Some(args) = t.pop().unwrap().as_symbol_list() {
                             args
                         } else {
-                            return Err(ErrorKind::InvalidExpr(Literal::Cons(
-                                h, t_lit,
-                            )).into());
+                            return Err(ErrorKind::InvalidExpr(Literal::Cons(h, t_lit)).into());
                         };
 
                         Ok(Expr::Lambda(None, args, body, Box::new(tail)))
                     }
-                    Literal::Symbol(s)
-                        if s.as_str() == "intrinsics:named-fn" =>
-                    {
+                    Literal::Symbol(s) if s.as_str() == "intrinsics:named-fn" => {
                         if t.len() < 3 {
-                            return Err(ErrorKind::InvalidExpr(Literal::Cons(
-                                h, t_lit,
-                            )).into());
+                            return Err(ErrorKind::InvalidExpr(Literal::Cons(h, t_lit)).into());
                         }
 
                         let tail = Expr::from_value(t.pop().unwrap())?;
@@ -227,36 +200,22 @@ impl Expr {
                             .map(Expr::from_value)
                             .collect::<Result<_, _>>()?;
 
-                        let args = if let Some(args) =
-                            t.pop().unwrap().as_symbol_list()
-                        {
+                        let args = if let Some(args) = t.pop().unwrap().as_symbol_list() {
                             args
                         } else {
-                            return Err(ErrorKind::InvalidExpr(Literal::Cons(
-                                h, t_lit,
-                            )).into());
+                            return Err(ErrorKind::InvalidExpr(Literal::Cons(h, t_lit)).into());
                         };
-                        let name =
-                            if let Literal::Symbol(name) = t.pop().unwrap() {
-                                name
-                            } else {
-                                return Err(ErrorKind::InvalidExpr(
-                                    Literal::Cons(h, t_lit),
-                                ).into());
-                            };
+                        let name = if let Literal::Symbol(name) = t.pop().unwrap() {
+                            name
+                        } else {
+                            return Err(ErrorKind::InvalidExpr(Literal::Cons(h, t_lit)).into());
+                        };
 
-                        Ok(Expr::Lambda(
-                            Some(name),
-                            args,
-                            body,
-                            Box::new(tail),
-                        ))
+                        Ok(Expr::Lambda(Some(name), args, body, Box::new(tail)))
                     }
                     Literal::Symbol(s) if s.as_str() == "if" => {
                         if t.len() < 2 || t.len() > 3 {
-                            return Err(ErrorKind::InvalidExpr(Literal::Cons(
-                                h, t_lit,
-                            )).into());
+                            return Err(ErrorKind::InvalidExpr(Literal::Cons(h, t_lit)).into());
                         }
 
                         let else_expr = if t.len() == 3 {
@@ -275,9 +234,7 @@ impl Expr {
                     }
                     Literal::Symbol(s) if s.as_str() == "quote" => {
                         if t.len() != 1 {
-                            return Err(ErrorKind::InvalidExpr(Literal::Cons(
-                                h, t_lit,
-                            )).into());
+                            return Err(ErrorKind::InvalidExpr(Literal::Cons(h, t_lit)).into());
                         }
 
                         Ok(Expr::Literal(t.pop().unwrap()))

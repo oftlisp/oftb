@@ -31,9 +31,7 @@ pub fn parse_file<P: AsRef<Path>>(path: P) -> Result<Vec<Literal>, Error> {
             let mut src = String::new();
             file.read_to_string(&mut src).map(|_| src)
         })
-        .with_context(|_| {
-            ErrorKind::CouldntOpenSource(path.display().to_string())
-        })?;
+        .with_context(|_| ErrorKind::CouldntOpenSource(path.display().to_string()))?;
     debug!("Parsing `{}'...", path.display());
     parse_program(&src)
         .map_err(|e| err_msg(e.to_string()))
@@ -42,9 +40,7 @@ pub fn parse_file<P: AsRef<Path>>(path: P) -> Result<Vec<Literal>, Error> {
 }
 
 /// Parses OftLisp source code.
-pub fn parse_program<'src>(
-    src: &'src str,
-) -> Result<Vec<Literal>, ::pest::Error<'src, Rule>> {
+pub fn parse_program<'src>(src: &'src str) -> Result<Vec<Literal>, ::pest::Error<'src, Rule>> {
     let pairs = OftLispParser::parse(Rule::program, src)?;
     debug!("Finished parsing, converting to Literals...");
     convert::convert_program(pairs)

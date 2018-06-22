@@ -1,5 +1,6 @@
 [package]
 authors = ["Nathan Ringo <remexre@gmail.com>"]
+autobins = false
 description = "The OftLisp bootstrapper."
 license = "Apache-2.0/MIT"
 name = "oftb"

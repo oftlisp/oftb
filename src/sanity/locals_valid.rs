@@ -20,12 +20,8 @@ fn check_expr<'a>(depth: usize, expr: &'a Expr) -> FailRecord<'a> {
     match *expr {
         Expr::AExpr(ref e) => check_aexpr(depth, e),
         Expr::CExpr(ref e) => check_cexpr(depth, e),
-        Expr::Let(ref x, ref y) => {
-            check_expr(depth, x).or_else(|| check_expr(depth + 1, y))
-        }
-        Expr::Seq(ref x, ref y) => {
-            check_expr(depth, x).or_else(|| check_expr(depth, y))
-        }
+        Expr::Let(ref x, ref y) => check_expr(depth, x).or_else(|| check_expr(depth + 1, y)),
+        Expr::Seq(ref x, ref y) => check_expr(depth, x).or_else(|| check_expr(depth, y)),
     }.chain(expr)
 }
 
@@ -34,20 +30,18 @@ fn check_aexpr<'a>(depth: usize, expr: &'a AExpr) -> FailRecord<'a> {
         AExpr::Lambda(_, argn, ref body) => check_expr(depth + argn, body),
         AExpr::Local(n) if n >= depth => FailRecord::err(n, depth),
         AExpr::Local(_) => FailRecord::ok(),
-        AExpr::Vector(ref es) => {
-            FailRecord::all(es.iter().map(|e| check_aexpr(depth, e)))
-        }
+        AExpr::Vector(ref es) => FailRecord::all(es.iter().map(|e| check_aexpr(depth, e))),
         _ => FailRecord::ok(),
     }.chain_a(expr)
 }
 
 fn check_cexpr<'a>(depth: usize, expr: &'a CExpr) -> FailRecord<'a> {
     match *expr {
-        CExpr::Call(ref func, ref args) => check_aexpr(depth, func).or_else(
-            || FailRecord::all(args.iter().map(|a| check_aexpr(depth, a))),
-        ),
-        CExpr::If(ref c, ref t, ref e) => check_aexpr(depth, c)
-            .or_else(|| check_expr(depth, t).or_else(|| check_expr(depth, e))),
+        CExpr::Call(ref func, ref args) => check_aexpr(depth, func)
+            .or_else(|| FailRecord::all(args.iter().map(|a| check_aexpr(depth, a)))),
+        CExpr::If(ref c, ref t, ref e) => {
+            check_aexpr(depth, c).or_else(|| check_expr(depth, t).or_else(|| check_expr(depth, e)))
+        }
         CExpr::LetRec(ref bound, ref body) => {
             let depth = depth + bound.len();
             FailRecord::all(
@@ -135,21 +129,13 @@ impl<'a> FailRecord<'a> {
 impl<'a> Display for FailRecord<'a> {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         match *self {
-            FailRecord::CauseA(expr, ref tl) => {
-                write!(fmt, "In expr {}:\n\n{}", expr, tl)
-            }
-            FailRecord::CauseC(expr, ref tl) => {
-                write!(fmt, "In expr {}:\n\n{}", expr, tl)
-            }
-            FailRecord::CauseE(expr, ref tl) => {
-                write!(fmt, "In expr {}:\n\n{}", expr, tl)
-            }
+            FailRecord::CauseA(expr, ref tl) => write!(fmt, "In expr {}:\n\n{}", expr, tl),
+            FailRecord::CauseC(expr, ref tl) => write!(fmt, "In expr {}:\n\n{}", expr, tl),
+            FailRecord::CauseE(expr, ref tl) => write!(fmt, "In expr {}:\n\n{}", expr, tl),
             FailRecord::NoError => write!(fmt, "No error"),
-            FailRecord::RootCause(var, depth) => write!(
-                fmt,
-                "Tried to access local {} at depth {}",
-                var, depth
-            ),
+            FailRecord::RootCause(var, depth) => {
+                write!(fmt, "Tried to access local {} at depth {}", var, depth)
+            }
         }
     }
 }

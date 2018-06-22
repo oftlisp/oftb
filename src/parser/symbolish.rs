@@ -1,6 +1,6 @@
 use num::{BigInt, /*BigRational,*/ BigUint, ToPrimitive, Zero};
-use pest::Parser;
 use pest::iterators::{Pair, Pairs};
+use pest::Parser;
 
 use literal::Literal;
 use util::convert_hex_digit;
