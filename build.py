@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentParser
-from os import chdir, makedirs
+import filecmp
+from os import chdir, makedirs, remove
 from os.path import dirname, isdir, realpath
 import shutil
 import subprocess
@@ -73,12 +74,40 @@ def build_oftb():
     cargo("build", mode="release")
 
 
+def triple_compile_macro_expander():
+    # Compile 1: oftb -> oftb-macro-expander
+    compile("macro-expander", "oftb-macro-expander")
+
+    # Compile 2: oftb-macro-expander -> oftb-macro-expander-2
+    interpret("macro-expander", "oftb-macro-expander", "ministd", "macro-expander",
+              "oftb-macro-expander", redirect="macro-expander/build/oftb-macro-expander-2.ofta")
+    # oftb-macro-expander and oftb-macro-expander-2 should be equivalent in
+    # functionality, but are possibly not identical files, as oftb and
+    # oftb-macro-expander may apply different optimizations, order things
+    # differently, etc.
+
+    # Compile 3: oftb-macro-expander-2 -> oftb-macro-expander-3
+    interpret("macro-expander", "oftb-macro-expander-2", "ministd", "macro-expander",
+              "oftb-macro-expander", redirect="macro-expander/build/oftb-macro-expander-3.ofta")
+    # oftb-macro-expander-2 and oftb-macro-expander-3 should be identical,
+    # given that the macro expander is deterministic (which it should be).
+
+    if not filecmp.cmp("macro-expander/build/oftb-macro-expander-2.ofta",
+                       "macro-expander/build/oftb-macro-expander-3.ofta"):
+        raise Exception("oftb-macro-expander is not idempotent")
+
+    shutil.copy("macro-expander/build/oftb-macro-expander-3.ofta",
+                "macro-expander/build/oftb-macro-expander.ofta")
+    remove("macro-expander/build/oftb-macro-expander-2.ofta")
+    remove("macro-expander/build/oftb-macro-expander-3.ofta")
+
+
 def bootstrap():
     run("macro-expander", "make-prelude", "ministd",
         redirect="ministd/src/prelude.oft")
     run("macro-expander", "make-env", "ministd",
         redirect="macro-expander/src/interpreter/env.oft")
-    compile("macro-expander", "oftb-macro-expander")
+    triple_compile_macro_expander()
     run_with_macros("examples/structure", "structure")
 
 

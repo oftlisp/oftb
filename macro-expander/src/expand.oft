@@ -23,7 +23,7 @@
         (if (cons? value)
           (map \(expand-value $ env macros) value)
           (if (vector? value)
-            (panic '(todo expand-value vector))
+            (list->vector (map \(expand-value $ env macros) (vector->list value)))
             value))))))
 
 ; Expands the decls at the top level of a module, expanding progns and evaluating defmacros and
@@ -42,7 +42,7 @@
             (intrinsics:def expanded (expand-value value env macros))
             (if (shl? 'progn expanded)
               (loop (append (cdr expanded) decls) acc-expanded acc-defns env macros)
-              (if (shl? 'intrinsics:defn expanded)
+              (if (or (shl? 'intrinsics:defn expanded) (shl? 'intrinsics:def expanded))
                 (loop decls (cons expanded acc-expanded) (cons expanded acc-defns) env macros)
                 (panic (list 'todo 'expand-decls expanded)))))))))
   (loop decls nil nil env macros))
