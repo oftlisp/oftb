@@ -5,6 +5,8 @@
   [expand-modules])
 (import macro-expander/compiler
   [modules->flat-anf])
+(import macro-expander/modules
+  [module-name prelude-name])
 (import macro-expander/packages
   [load-packages traverse-modules])
 (import macro-expander/serialize
@@ -17,9 +19,15 @@
   (intrinsics:def package-dir (nth 1 args))
   (intrinsics:def binary-name (nth 2 args))
 
-  (intrinsics:def modules (load-packages std-path package-dir binary-name))
-  (intrinsics:def modules (must (traverse-modules modules 'main)))
-  (intrinsics:def modules (expand-modules modules))
+  (intrinsics:def tmp (load-packages std-path package-dir binary-name))
+  (intrinsics:def std-name (fst tmp))
+  (intrinsics:def modules (snd tmp))
+  (intrinsics:def prelude-modules (must (traverse-modules modules (prelude-name std-name))))
+  (intrinsics:def main-modules (must (traverse-modules modules 'main)))
+  (intrinsics:def modules (append
+    prelude-modules
+    (filter \(not (contains? (module-name $) (map module-name prelude-modules))) main-modules)))
+  (intrinsics:def modules (expand-modules std-name modules))
 
   (intrinsics:def flatanf (modules->flat-anf modules))
-  (write-bytes (serialize-flatanf flatanf)))
+  (write-bytes %(serialize-flatanf flatanf)))

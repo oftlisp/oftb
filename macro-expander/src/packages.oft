@@ -12,23 +12,23 @@
 
 (intrinsics:defn load-packages (std-path root-package-path binary-name)
   (intrinsics:def std (load-package-from std-path))
-  ; TODO: Dependencies. I guess this is getting tossed out once it bootstraps
-  ; oftc, so it doesn't _really_ matter, but /shrug.
+  ; TODO: Dependencies. I guess this is getting tossed out once it bootstraps oftc, so it doesn't
+  ; _really_ matter, but /shrug.
   (intrinsics:def root (load-package-from root-package-path))
 
-  (append
-    (binary-component root binary-name)
+  (pair
+    (fst std)
     (append
-      (library-component root)
-      (library-component std))))
+      (binary-component root binary-name)
+      (append
+        (library-component root)
+        (library-component std)))))
 
-; Performs a post-order traversal over the modules, returning a result with
-; the modules in order if the modules are acyclic, or the module involved in
-; the cycle if they are not.
+; Performs a post-order traversal over the modules, returning a result with the modules in order if
+; the modules are acyclic, or the module involved in the cycle if they are not.
 (intrinsics:defn traverse-modules (mods starting-module)
-  ; Traverses to the given module. Returns an ok value of the pair
-  ; (seen-set, resolved-list) on success, and a symbol (the module involved in
-  ; the cycle) on error.
+  ; Traverses to the given module. Returns an ok value of the pair (seen-set, resolved-list) on
+  ; success, and a symbol (the module involved in the cycle) on error.
   (intrinsics:defn helper (goal seen-set resolved-list)
     (intrinsics:defn goal? (m)
       (eq (module-name m) goal))

@@ -1,23 +1,27 @@
 (module macro-expander/modules
-  [expand-modules find-decls find-imports module-name namespaced-name])
+  [expand-modules find-decls module-name namespaced-name prelude-name])
 
 (import macro-expander/expand
   [expand-decls])
 (import ministd/data/tree-set
   [list->set set-has?])
 
-(intrinsics:defn expand-modules (mods-srcs)
+(intrinsics:defn expand-modules (std-name mods-srcs)
+  (intrinsics:def mods (expand-module (prelude-name std-name) mods-srcs std-name nil))
   (map \(pair (nth 0 $) (nth 1 $))
-    (expand-module 'main mods-srcs nil)))
+    (expand-module 'main mods-srcs std-name mods)))
 
 ; Expands all the declarations in a module, returning a list of expanded modules.
-(intrinsics:defn expand-module (target-module mod-srcs mods)
+(intrinsics:defn expand-module (target-module mod-srcs std-name mods)
   ; The source of the target module.
   (intrinsics:def mod-src (expect
     (find \(equals (module-name $) target-module) mod-srcs)
     (string-append "Module not found: " (symbol->string target-module))))
   ; All import decls.
-  (intrinsics:def imports (find-imports mod-src))
+  (intrinsics:def mod-attrs (skip 3 (car mod-src)))
+  (intrinsics:def imports (if (contains? 'no-prelude mod-attrs)
+    (find-imports-no-prelude mod-src)
+    (find-imports mod-src std-name mod-srcs)))
   ; A list of modules not yet in the mods assoc.
   (intrinsics:def missing-modules (filter
     \(none? (lookup $ mods))
@@ -50,8 +54,8 @@
     ; If there are missing modules, try expanding the first one, then try again with that one
     ; added.
     (progn
-      (intrinsics:def new-mods (expand-module (car missing-modules) mod-srcs mods))
-      (expand-module target-module mod-srcs new-mods))))
+      (intrinsics:def new-mods (expand-module (car missing-modules) mod-srcs std-name mods))
+      (expand-module target-module mod-srcs std-name new-mods))))
 
 ; Builds an initial environment from a list of import decls and an assoc of expanded module
 ; environments. Returns a pair (INTERP-ENV INTERP-MACROS).
@@ -74,13 +78,28 @@
 (intrinsics:defn module-name (m)
   (index-into '(0 1) m))
 
+; Returns the exports of a module as a vector.
+(intrinsics:defn module-exports (m)
+  (index-into '(0 2) m))
+
 ; Returns all the declarations from a module. (Really, just skips the module form and imports.)
 (intrinsics:defn find-decls (m)
   (skip-while \(shl? 'import $) (cdr m)))
 
-; Returns all the import forms from a module.
-(intrinsics:defn find-imports (m)
+; Returns all the import forms from a module without injecting the prelude import.
+(intrinsics:defn find-imports-no-prelude (m)
   (take-while \(shl? 'import $) (cdr m)))
+
+; Returns all the import forms from a module, injecting the prelude import.
+(intrinsics:defn find-imports (m std-name mod-srcs)
+  (intrinsics:def prelude (prelude-name std-name))
+  (intrinsics:def prelude-exports (module-exports
+    (expect
+      (find \(eq (module-name $) prelude) mod-srcs)
+      "Missing prelude? (Did the prelude try to import itself?)")))
+  (cons
+    (list 'import prelude prelude-exports)
+    (take-while \(shl? 'import $) (cdr m))))
 
 (intrinsics:defn namespaced-name (mod-name sym-name)
   (string->symbol
@@ -139,3 +158,6 @@
 (intrinsics:defn process-import-macro (m name mods)
   (option-map \(cons name (right $))
     (lookup name (nth 2 (assoc m mods)))))
+
+(intrinsics:defn prelude-name (std-name)
+  (string->symbol (string-append (symbol->string std-name) "/prelude")))

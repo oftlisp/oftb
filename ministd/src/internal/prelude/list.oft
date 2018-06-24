@@ -1,7 +1,7 @@
 (module ministd/internal/prelude/list
-  [1st 2nd 3rd 4th 5th 6th 7th 8th 9th all all-some any append assoc each filter find first-nonnil
-   first-some flat-map foldl foldr index-into init last length lookup map nth partition position
-   position-of reverse skip skip-while split-at take take-while]
+  [1st 2nd 3rd 4th 5th 6th 7th 8th 9th all all-some any append assoc contains? each filter find
+   first-nonnil first-some flat-map foldl foldr index-into init last length lookup map nth
+   partition position position-of reverse skip skip-while split-at take take-while]
   no-prelude)
 
 (import ministd/internal/prelude/either
@@ -57,12 +57,8 @@
       (cdr (car l))
       (assoc x (cdr l)))))
 
-(intrinsics:defn lookup (x l)
-  (if (nil? l)
-    none
-    (if (equals (car (car l)) x)
-      (some (cdr (car l)))
-      (lookup x (cdr l)))))
+(intrinsics:defn contains? (x l)
+  (any \(equals x $) l))
 
 (intrinsics:defn each (f l)
   (if (nil? l)
@@ -141,6 +137,13 @@
 
 (intrinsics:defn length (l)
   (foldl (intrinsics:fn (l _) (1+ l)) 0 l))
+
+(intrinsics:defn lookup (x l)
+  (if (nil? l)
+    none
+    (if (equals (car (car l)) x)
+      (some (cdr (car l)))
+      (lookup x (cdr l)))))
 
 (intrinsics:defn map (f l)
   (reverse (foldl (intrinsics:fn (a x) (cons (f x) a)) '() l)))

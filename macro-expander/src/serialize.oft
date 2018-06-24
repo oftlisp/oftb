@@ -18,13 +18,19 @@
       (serialize-list serialize-decl decls))))
 
 (intrinsics:defn serialize-decl (decl)
+  %[serialize-decl decl]
   (bytes-append
     (serialize-string (symbol->string (fst decl)))
     (serialize-expr (snd decl))))
 
 (intrinsics:defn serialize-expr (expr)
+  %[serialize-expr expr]
   (if (shl? 'let expr)
-    (panic ['todo serialize-expr 'let])
+    (bytes-append
+      (bytes-append
+        b"\x00"
+        (serialize-expr (nth 1 expr)))
+      (serialize-expr (nth 2 expr)))
     (if (shl? 'seq expr)
       (bytes-append
         (bytes-append
@@ -40,9 +46,25 @@
             (serialize-u64 (- (length expr) 2))
             (bytes-concat (map serialize-expr (skip 2 expr)))))
         (if (shl? 'if expr)
-          (panic ['todo serialize-expr 'if])
+          (bytes-append
+            (bytes-append
+              b"\x03"
+              (serialize-expr (nth 1 expr)))
+            (bytes-append
+              (serialize-expr (nth 2 expr))
+              (serialize-expr (nth 3 expr))))
           (if (shl? 'letrec expr)
-            (panic ['todo serialize-expr 'letrec])
+            (bytes-append
+              (bytes-append
+                b"\x04"
+                (serialize-list
+                  \(bytes-append
+                    (serialize-string (symbol->string (nth 0 $)))
+                    (bytes-append
+                      (serialize-u64 (nth 1 $))
+                      (serialize-expr (nth 2 $))))
+                  (nth 1 expr)))
+                (serialize-expr (nth 2 expr)))
             (if (shl? 'global expr)
               (bytes-append
                 b"\x05"
@@ -51,11 +73,13 @@
                 (bytes-append
                   (bytes-append
                     b"\x06"
-                    ; TODO: Named lambdas
-                    (serialize-string ""))
+                    (serialize-string (option-cases
+                      symbol->string
+                      (intrinsics:fn () "")
+                      (nth 1 expr))))
                   (bytes-append
-                    (serialize-u64 (nth 1 expr))
-                    (serialize-expr (nth 2 expr))))
+                    (serialize-u64 (nth 2 expr))
+                    (serialize-expr (nth 3 expr))))
                 (if (shl? 'lit expr)
                   (bytes-append
                     b"\x07"
@@ -65,7 +89,7 @@
                       b"\x08"
                       (serialize-u64 (cdr expr)))
                     (if (shl? 'vector expr)
-                      (panic ['todo serialize-expr 'vector])
+                      (panic (list 'todo serialize-expr 'vector))
                       (panic (cons 'invalid-expr expr)))))))))))))
 
 (intrinsics:defn serialize-list (f l)
@@ -74,22 +98,35 @@
     (bytes-concat (map f l))))
 
 (intrinsics:defn serialize-lit (l)
+  %[serialize-lit l]
   (if (byte? l)
-    (panic ['todo serialize-lit 'byte])
+    (bytes-append b"\x00" (byte->bytes l))
     (if (bytes? l)
-      (panic ['todo serialize-lit 'bytes])
+      (bytes-append
+        b"\x01"
+        (bytes-append
+          (serialize-u64 (bytes-length l))
+          l))
       (if (cons? l)
-        (panic ['todo serialize-lit 'cons])
+        (bytes-append
+          b"\x02"
+          (bytes-append
+            (serialize-lit (car l))
+            (serialize-lit (cdr l))))
         (if (fixnum? l)
-          (panic ['todo serialize-lit 'fixnum])
+          (bytes-append b"\x03" (serialize-u64 l))
           (if (nil? l)
-            (panic ['todo serialize-lit 'nil])
+            b"\x04"
             (if (string? l)
               (bytes-append b"\x05" (serialize-string l))
               (if (symbol? l)
-                (panic ['todo serialize-lit 'symbol])
+                (bytes-append b"\x06" (serialize-string (symbol->string l)))
                 (if (vector? l)
-                  (panic ['todo serialize-lit 'vector])
+                  (bytes-append
+                    (bytes-append
+                      b"\x07"
+                      (serialize-u64 (vector-length l)))
+                    (bytes-concat (map \(serialize-lit $) (vector->list l))))
                   (panic (cons 'invalid-lit l)))))))))))
 
 (intrinsics:defn serialize-string (s)
