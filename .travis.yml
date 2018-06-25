@@ -4,18 +4,17 @@ rust:
 - stable
 - beta
 - nightly
-os:
-- linux
-- osx
+os: linux
 matrix:
   allow_failures:
+  - rust: beta
   - rust: nightly
   fast_finish: true
 cache: cargo
 
 script:
 - cargo test --release
-- python3 build.py
+- python build.py
 
 deploy:
   provider: releases
