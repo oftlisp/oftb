@@ -9,12 +9,56 @@
 (intrinsics:defn anf-modules->flat-anf (modules)
   (flat-map flatten-module modules))
 
+(intrinsics:defn flatten-module (m)
+  (intrinsics:def mod-name (fst m))
+
+  (intrinsics:defn helper (decls scope collected-defns acc)
+    (if (nil? decls)
+      (if (nil? collected-defns)
+        (reverse acc)
+        (helper
+          nil
+          scope
+          (cdr collected-defns)
+          (cons (flatten-decl mod-name (car collected-defns) scope) acc)))
+      (progn
+        (intrinsics:def decl (car decls))
+        (intrinsics:def name (nth 1 decl))
+        (if (shl? 'intrinsics:def decl)
+          (if (nil? collected-defns)
+            (helper
+              (cdr decls)
+              (map-snd \(cons (pair name (namespaced-name mod-name name)) $) scope)
+              collected-defns
+              (cons (flatten-decl mod-name decl scope) acc))
+            (helper
+              decls
+              scope
+              (cdr collected-defns)
+              (cons (flatten-decl mod-name (car collected-defns) scope) acc)))
+          (if (shl? 'intrinsics:defn decl)
+            (helper
+              (cdr decls)
+              (map-snd \(cons (pair name (namespaced-name mod-name name)) $) scope)
+              (cons decl collected-defns)
+              acc)
+            (panic (cons 'invalid-decl decl)))))))
+
+  (intrinsics:def imports (fst (snd m)))
+  (intrinsics:def decls (snd (snd m)))
+  (intrinsics:def flattened (helper decls (pair nil imports) nil nil))
+  (each
+    \(if (not (global? (fst $)))
+      (panic (string-append "Symbol not global: " (symbol->string (fst $)))))
+    flattened)
+  flattened)
+
 (intrinsics:defn flatten-decl (mod-name decl scope)
+  (intrinsics:def name (namespaced-name mod-name (nth 1 decl)))
   (if (shl? 'intrinsics:def decl)
-    (pair (nth 1 decl) (flatten-expr (nth 2 decl) scope))
+    (pair name (flatten-expr (nth 2 decl) scope))
     (if (shl? 'intrinsics:defn decl)
       (progn
-        (intrinsics:def name (namespaced-name mod-name (nth 1 decl)))
         (pair
           name
           (list 'fn
@@ -65,19 +109,6 @@
                   (if (shl? 'seq expr)
                     (list 'seq (flatten-expr (nth 1 expr) scope) (flatten-expr (nth 2 expr) scope))
                     (panic (cons 'invalid-anf-expr expr))))))))))))
-
-(intrinsics:defn flatten-module (m)
-  (intrinsics:def mod-name (fst m))
-  (intrinsics:def imports (fst (snd m)))
-  (intrinsics:def decls (snd (snd m)))
-  (intrinsics:def scope (pair nil (append
-    (map
-      (intrinsics:fn (decl)
-        (intrinsics:def name (nth 1 decl))
-        (pair name (namespaced-name mod-name name)))
-      decls)
-    imports)))
-  (map \(flatten-decl mod-name $ scope) decls))
 
 (intrinsics:defn collect-globals (decls)
   (intrinsics:defn helper (expr)

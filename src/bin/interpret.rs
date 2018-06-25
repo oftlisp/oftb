@@ -14,7 +14,7 @@ pub fn run(options: InterpretOptions) -> Result<(), Error> {
         let mut f = File::open(options.file)?;
         Program::deserialize_from(&mut f)?
     };
-    trace!("{:?}", program);
+    trace!("{:#?}", program);
     if !program
         .decls
         .iter()

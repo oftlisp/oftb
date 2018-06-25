@@ -7,4 +7,4 @@
   [anf-modules->flat-anf])
 
 (intrinsics:defn modules->flat-anf (modules)
-  (anf-modules->flat-anf (map \(map-snd module->anf $) modules)))
+  (anf-modules->flat-anf (map \(map-snd module->anf $) (reverse modules))))

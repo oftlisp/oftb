@@ -46,7 +46,13 @@
     (if (shl? 'intrinsics:defn expr)
       (list 'lit nil)
       (if (shl? 'if expr)
-        (cons 'if (map expr->anf (cdr expr)))
+        (anf->aexpr (expr->anf (nth 1 expr))
+          \(list 'if
+            $
+            (expr->anf (nth 2 expr))
+            (if (= (length expr) 3)
+              '(lit ())
+              (expr->anf (nth 3 expr)))))
         (if (shl? 'intrinsics:fn expr)
           (list 'fn none (nth 1 expr) (progn->anf (skip 2 expr)))
           (if (shl? 'quote expr)

@@ -11,7 +11,9 @@ from tempfile import NamedTemporaryFile
 
 
 def command(cmd, redirect=None):
-    if redirect is None:
+    if redirect is True:
+        return subprocess.check_output(cmd, universal_newlines=True)
+    elif redirect is None:
         subprocess.check_call(cmd)
     else:
         with NamedTemporaryFile() as f:
@@ -22,8 +24,9 @@ def command(cmd, redirect=None):
             shutil.copy(f.name, redirect)
 
 
-def print_cyan(*args):
+def print_cyan(*args, indent=0):
     from sys import stdout
+    stdout.write(" " * indent)
     stdout.write("\x1b[1;36m")
     print(*args, end="")
     stdout.write("\x1b[0m\n")
@@ -40,31 +43,24 @@ oftb_exec = "target/release/oftb"
 
 
 def oftb(args, redirect=None):
-    command([oftb_exec, "-v"] + args, redirect=redirect)
+    return command([oftb_exec, "-v"] + args, redirect=redirect)
 
 
 def compile(pkg_dir, bin_name):
     print_cyan("compile", bin_name)
-    oftb(["compile", "--std", "ministd", pkg_dir, bin_name])
+    return oftb(["compile", "--std", "ministd", pkg_dir, bin_name])
 
 
 def interpret(pkg_dir, bin_name, *args, redirect=None):
     print_cyan("interpret", bin_name, *args)
     bin_path = "{}/build/{}.ofta".format(pkg_dir, bin_name)
-    oftb(["interpret", bin_path] + list(args), redirect=redirect)
+    return oftb(["interpret", bin_path] + list(args), redirect=redirect)
 
 
 def run(pkg_dir, bin_name, *args, redirect=None):
     print_cyan("run", bin_name, *args)
     args = ["run", "--std", "ministd", pkg_dir, bin_name] + list(args)
-    oftb(args, redirect=redirect)
-
-
-def run_with_macros(pkg_dir, bin_name, *args, redirect=None):
-    bin_path = "{}/build/{}.ofta".format(pkg_dir, bin_name)
-    interpret("macro-expander", "oftb-macro-expander", "ministd", pkg_dir,
-              bin_name, redirect=bin_path)
-    interpret(pkg_dir, bin_name, *args, redirect=redirect)
+    return oftb(args, redirect=redirect)
 
 
 def build_oftb():
@@ -72,6 +68,26 @@ def build_oftb():
     cargo("check")
     cargo("doc")
     cargo("build", mode="release")
+
+
+def test_macro_expander(use_prebuilt):
+    def run_with_macros(pkg_dir, bin_name, *args, expected=None):
+        if use_prebuilt:
+            f = interpret
+        else:
+            f = run
+        f("macro-expander", "oftb-macro-expander", "ministd", pkg_dir,
+          bin_name, redirect="{}/build/{}.ofta".format(pkg_dir, bin_name))
+        output = interpret(pkg_dir, bin_name, *args, redirect=True)
+        if expected is not None:
+            if output != expected:
+                raise Exception(
+                    "Assertion failed: {!r} == {!r}".format(
+                        output, expected))
+    run_with_macros("examples/structure", "structure",
+                    expected="Got arguments: ()\nHello, world!\nhullo\nGoodbye, world!\n")
+    run_with_macros("examples/structure", "structure", "foo", "bar",
+                    expected="Got arguments: (\"foo\" \"bar\")\nHello, world!\nhullo\nGoodbye, world!\n(\"foo\" \"bar\")\n")
 
 
 def triple_compile_macro_expander():
@@ -89,9 +105,9 @@ def triple_compile_macro_expander():
     # Compile 3: oftb-macro-expander-2 -> oftb-macro-expander-3
     interpret("macro-expander", "oftb-macro-expander-2", "ministd", "macro-expander",
               "oftb-macro-expander", redirect="macro-expander/build/oftb-macro-expander-3.ofta")
+
     # oftb-macro-expander-2 and oftb-macro-expander-3 should be identical,
     # given that the macro expander is deterministic (which it should be).
-
     if not filecmp.cmp("macro-expander/build/oftb-macro-expander-2.ofta",
                        "macro-expander/build/oftb-macro-expander-3.ofta"):
         raise Exception("oftb-macro-expander is not idempotent")
@@ -107,12 +123,13 @@ def bootstrap():
         redirect="ministd/src/prelude.oft")
     run("macro-expander", "make-env", "ministd",
         redirect="macro-expander/src/interpreter/env.oft")
+    test_macro_expander(False)
     triple_compile_macro_expander()
-    run_with_macros("examples/structure", "structure")
+    test_macro_expander(True)
 
 
 def make_archive():
-    with tarfile.open("oftb.tar.gz", "x:gz") as tar:
+    with tarfile.open("oftb.tar.gz", "w:gz") as tar:
         tar.add(oftb_exec, arcname="oftb")
         tar.add("macro-expander")
         tar.add("ministd")

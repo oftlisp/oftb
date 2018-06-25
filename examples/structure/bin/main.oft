@@ -7,5 +7,9 @@
 (intrinsics:defn main (args)
   (intrinsics/io:println "Got arguments:" args)
   (hello-world)
+  (helper 'hullo)
   (intrinsics/io:println "Goodbye, world!")
   args)
+
+(intrinsics:defn helper (msg)
+  (intrinsics/io:println msg))

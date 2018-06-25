@@ -5,12 +5,12 @@
   [expand-modules])
 (import macro-expander/compiler
   [modules->flat-anf])
+(import macro-expander/compiler/serialize
+  [serialize-flatanf])
 (import macro-expander/modules
   [module-name prelude-name])
 (import macro-expander/packages
   [load-packages traverse-modules])
-(import macro-expander/serialize
-  [serialize-flatanf])
 
 (intrinsics:defn main (args)
   (if (not (= (length args) 3))
@@ -30,4 +30,4 @@
   (intrinsics:def modules (expand-modules std-name modules))
 
   (intrinsics:def flatanf (modules->flat-anf modules))
-  (write-bytes %(serialize-flatanf flatanf)))
+  (write-bytes (serialize-flatanf flatanf)))

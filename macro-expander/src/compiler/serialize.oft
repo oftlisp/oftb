@@ -1,4 +1,4 @@
-(module macro-expander/serialize
+(module macro-expander/compiler/serialize
   [serialize-flatanf])
 
 (import macro-expander/compiler/flat-anf
@@ -18,13 +18,11 @@
       (serialize-list serialize-decl decls))))
 
 (intrinsics:defn serialize-decl (decl)
-  %[serialize-decl decl]
   (bytes-append
     (serialize-string (symbol->string (fst decl)))
     (serialize-expr (snd decl))))
 
 (intrinsics:defn serialize-expr (expr)
-  %[serialize-expr expr]
   (if (shl? 'let expr)
     (bytes-append
       (bytes-append
@@ -89,7 +87,9 @@
                       b"\x08"
                       (serialize-u64 (cdr expr)))
                     (if (shl? 'vector expr)
-                      (panic (list 'todo serialize-expr 'vector))
+                      (bytes-append
+                        b"\x09"
+                        (serialize-list serialize-expr (cdr expr)))
                       (panic (cons 'invalid-expr expr)))))))))))))
 
 (intrinsics:defn serialize-list (f l)
@@ -98,7 +98,6 @@
     (bytes-concat (map f l))))
 
 (intrinsics:defn serialize-lit (l)
-  %[serialize-lit l]
   (if (byte? l)
     (bytes-append b"\x00" (byte->bytes l))
     (if (bytes? l)
