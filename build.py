@@ -3,7 +3,7 @@
 from argparse import ArgumentParser
 import filecmp
 from os import chdir, makedirs, remove
-from os.path import isdir, join, realpath
+from os.path import abspath, isdir, join, realpath
 import shutil
 import subprocess
 import tarfile
@@ -18,7 +18,7 @@ def command(cmd, redirect=None):
     else:
         with NamedTemporaryFile() as f:
             subprocess.check_call(cmd, stdout=f)
-            d = realpath(join(redirect, ".."))
+            d = realpath(abspath(join(redirect, "..")))
             if not isdir(d):
                 makedirs(d)
             shutil.copy(f.name, redirect)
@@ -136,7 +136,7 @@ def make_archive():
 
 
 if __name__ == "__main__":
-    chdir(join(__file__, ".."))
+    chdir(abspath(join(__file__, "..")))
     parser = ArgumentParser()
     parser.add_argument("--no-oftb-build", action="store_true")
     parser.add_argument("--use-system-oftb", action="store_true")
