@@ -164,8 +164,8 @@ pub enum ErrorKind {
     /// A parse error.
     ///
     /// TODO: Display this better.
-    #[fail(display = "Syntax error in {}", _0)]
-    Parse(String),
+    #[fail(display = "Syntax error in {}: {}", _0, _1)]
+    Parse(String, String),
 
     /// A value with an unexpected type was found in a metadata file.
     #[fail(display = "Expected `{}', found `{}'", _0, _1)]

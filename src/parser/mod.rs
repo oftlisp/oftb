@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
-use failure::{err_msg, ResultExt};
+use failure::ResultExt;
 use pest::Parser;
 
 use error::{Error, ErrorKind};
@@ -34,9 +34,7 @@ pub fn parse_file<P: AsRef<Path>>(path: P) -> Result<Vec<Literal>, Error> {
         .with_context(|_| ErrorKind::CouldntOpenSource(path.display().to_string()))?;
     debug!("Parsing `{}'...", path.display());
     parse_program(&src)
-        .map_err(|e| err_msg(e.to_string()))
-        .with_context(|_| ErrorKind::Parse(path.display().to_string()))
-        .map_err(|e| e.into())
+        .map_err(|e| ErrorKind::Parse(path.display().to_string(), e.to_string()).into())
 }
 
 /// Parses OftLisp source code.

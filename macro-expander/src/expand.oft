@@ -14,7 +14,7 @@
 ; Macro-expands an arbitrary value, returning the expanded value. Will panic if a defmacro is
 ; encountered.
 (intrinsics:defn expand-value (value env macros)
-  (if (shl? 'defmacro value)
+  (if (shl? 'intrinsics:defmacro value)
     (panic "defmacros must appear at the top level of a module")
     (if (shl? 'quote value)
       value
@@ -37,12 +37,12 @@
         (intrinsics:def value (car decls))
         (intrinsics:def decls (cdr decls))
         (if (shl? 'intrinsics:defmacro value)
-          (panic '(todo expand-decls defmacro))
+          (panic ['todo 'defmacro value])
           (progn
             (intrinsics:def expanded (expand-value value env macros))
             (if (shl? 'progn expanded)
               (loop (append (cdr expanded) decls) acc-expanded acc-defns env macros)
               (if (or (shl? 'intrinsics:defn expanded) (shl? 'intrinsics:def expanded))
                 (loop decls (cons expanded acc-expanded) (cons expanded acc-defns) env macros)
-                (panic (list 'todo 'expand-decls expanded)))))))))
+                (panic (list 'todo expand-decls expanded)))))))))
   (loop decls nil nil env macros))
