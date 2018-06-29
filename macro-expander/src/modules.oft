@@ -148,6 +148,8 @@
     plain-imports))
 
 (intrinsics:defn process-import-decl (m name mods)
+  %[process-import-decl m name 'mods]
+  %(nth 2 (assoc m mods))
   (option-map \(cons name (left $))
     (lookup name (nth 1 (assoc m mods)))))
 

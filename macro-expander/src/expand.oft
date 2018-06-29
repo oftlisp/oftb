@@ -2,7 +2,7 @@
   [expand-decls])
 
 (import macro-expander/interpreter
-  [make-letrec-env])
+  [eval make-letrec-env])
 
 ; Returns whether the value is directly macro-expandable with any of the given macros.
 (intrinsics:defn expandable? (value macros)
@@ -42,7 +42,14 @@
             (intrinsics:def expanded (expand-value value env macros))
             (if (shl? 'progn expanded)
               (loop (append (cdr expanded) decls) acc-expanded acc-defns env macros)
-              (if (or (shl? 'intrinsics:defn expanded) (shl? 'intrinsics:def expanded))
+              (if (shl? 'intrinsics:defn expanded)
                 (loop decls (cons expanded acc-expanded) (cons expanded acc-defns) env macros)
-                (panic (list 'todo expand-decls expanded)))))))))
+                (if (shl? 'intrinsics:def expanded)
+                  (loop decls (cons expanded acc-expanded) nil
+                    (progn
+                      (intrinsics:def env (make-letrec-env acc-expanded env))
+                      (intrinsics:def value (eval (nth 2 expanded) env))
+                      (cons (pair (nth 1 expanded) value) env))
+                    macros)
+                  (panic (list 'todo expand-decls expanded))))))))))
   (loop decls nil nil env macros))

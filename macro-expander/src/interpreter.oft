@@ -1,14 +1,31 @@
 (module macro-expander/interpreter
-  [eval evaluate make-letrec-env])
+  [eval evaluate eval-decl make-letrec-env])
 
 (import macro-expander/interpreter/env
   [intrinsics])
 
 (intrinsics:defn eval (expr env)
+  %[eval expr env]
   (if (cons? expr)
-    (progn
-      (intrinsics:def evald (map \(eval $ env) expr))
-      ((car evald) (cdr evald)))
+    (if (shl? 'intrinsics:def expr)
+      (progn
+        (eval (nth 2 expr) env)
+        nil)
+      (if (shl? 'intrinsics:defn expr)
+        nil
+        (if (shl? 'if expr)
+          (if (eval (nth 1 expr))
+            (eval (nth 2 expr))
+            (eval (nth 3 expr)))
+          (if (shl? 'intrinsics:fn expr)
+            (panic ['todo 'intrinsics:fn])
+            (if (shl? 'quote expr)
+              (nth 1 expr)
+              (if (shl? 'progn expr)
+                (eval-progn (cdr expr) env)
+                (progn
+                  (intrinsics:def evald (map \(eval $ env) expr))
+                  ((car evald) (cdr evald)))))))))
     (if (vector? expr)
       (panic "TODO Vectors")
       (if (symbol? expr)
@@ -21,15 +38,39 @@
 (intrinsics:defn evaluate (expr)
   (eval expr intrinsics))
 
+(intrinsics:defn eval-decl (decl env)
+  (if (shl? 'intrinsics:def expr)
+    (panic ['todo 'intrinsics:def])
+    (if (shl? 'intrinsics:defn expr)
+      (panic ['todo 'intrinsics:defn])
+      (panic (cons 'not-a-decl decl)))))
+
+(intrinsics:defn eval-progn (exprs env)
+  (if (nil? exprs)
+    (panic 'empty-progn)
+    (if (nil? (cdr exprs))
+      (eval (car exprs) env)
+      (progn
+        (intrinsics:def expr (car exprs))
+        (intrinsics:def env
+          (if (decl? expr)
+            (eval-decl expr env)
+            (progn (eval expr env) env)))
+        (eval-progns (cdr exprs) env)))))
+
 (intrinsics:defn make-lambda (params body get-env)
   (intrinsics:fn (args)
     (eval body (append (match-arguments params args) (get-env)))))
 
 (intrinsics:defn make-letrec-env (defns env)
   (intrinsics:defn helper (f)
-    (cons (nth 1 f) (make-lambda (nth 2 f) (skip 3 f) get-env)))
+    (if (shl? 'intrinsics:defn (nth 0 f))
+      (cons (nth 1 f) (make-lambda (nth 2 f) (skip 3 f) get-env))
+      (panic (cons 'not-a-defn f))))
   (intrinsics:defn get-env ()
     (append (map helper defns) env))
+  %[make-letrec-env defns env]
+  %['-> (get-env)]
   (get-env))
 
 (intrinsics:defn match-arguments (params args)
