@@ -6,7 +6,7 @@
 (import macro-expander/packages/load
   [load-package-from])
 (import ministd/data/tree-set
-  [empty-set set->list set-insert])
+  [empty-set list->set set->list set-difference set-insert])
 (import ministd/internal/oftb
   [read-file])
 
@@ -17,51 +17,37 @@
 
   (println '(module macro-expander/interpreter/env [intrinsics]))
   (println)
-  (println (list 'intrinsics:def 'intrinsics (make-env intrinsics))))
+  (println (list 'intrinsics:def 'intrinsics (cons 'list (make-env intrinsics)))))
 
-; If the symbol is a global name from the `intrinsics` package, returns a some
-; value containing a pair (MODULE-NAME | NAME). Otherwise, returns none.
-(intrinsics:defn as-intrinsic (sym)
-  (option-cases
-    (intrinsics:fn (tmp)
-      ; Technically, this should use a regex...
-      (intrinsics:def is-intrinsic (if (> (string-length (fst tmp)) 10)
-        (equals (string-slice 0 10 (fst tmp)) "intrinsics")
-        false))
-      (if is-intrinsic
-        (some (map-pair string->symbol string->symbol tmp))
-        none))
-    (intrinsics:fn () none)
-    (string-split-on-1 ":" (symbol->string sym))))
+(intrinsics:defn make-env (intrinsics)
+  (map
+    \(list 'cons (list 'quote $) (list 'cons $ -1))
+    (sort (set->list (set-difference
+      intrinsics
+      (list->set '(intrinsics:def intrinsics:defn intrinsics:fn)))))))
 
 (intrinsics:defn extract-intrinsics (value set)
   (if (symbol? value)
-    (option-cases
-      \(set-insert (pair value $) set)
-      (intrinsics:fn () set)
-      (as-intrinsic value))
+    (if (intrinsic? value)
+      (set-insert value set)
+      set)
     (if (cons? value)
-      (extract-intrinsics
-        (car value)
-        (extract-intrinsics
-          (cdr value)
-          set))
+      (extract-intrinsics (car value) (extract-intrinsics (cdr value) set))
       (if (vector? value)
         (if (= (vector-length value) 0)
           set
           (extract-intrinsics
             (vector-nth 0 value)
-            (extract-intrinsics
-              (vector-slice 1 (vector-length value) value)
-              set)))
+            (extract-intrinsics (vector-slice 1 (vector-length value) value) set)))
         set))))
 
-(intrinsics:defn make-env (intrinsics)
-  (cons 'list (map
-    \(list 'cons
-      (list 'quote (map-snd (. string->symbol name-for-intrinsic) (snd $)))
-      (fst $))
-    (sort (set->list intrinsics)))))
+; Returns whether the symbol is a global name from the `intrinsics` package.
+(intrinsics:defn intrinsic? (sym)
+  (intrinsics:def s (symbol->string sym))
+  (if (string-search ":" s)
+    (if (> (string-length s) 10)
+      (equals (string-slice 0 10 s) "intrinsics")
+      false)))
 
 ; Converts a name like `string_to_symbol` to `string->symbol`.
 (intrinsics:defn name-for-intrinsic (sym)

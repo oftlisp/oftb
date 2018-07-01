@@ -5,7 +5,6 @@
   [intrinsics])
 
 (intrinsics:defn eval (expr env)
-  %[eval expr env]
   (if (cons? expr)
     (if (shl? 'intrinsics:def expr)
       (progn
@@ -38,10 +37,13 @@
 (intrinsics:defn evaluate (expr)
   (eval expr intrinsics))
 
+(intrinsics:defn decl? (decl)
+  (or (shl? 'intrinsics:def decl) (shl? 'intrinsics:defn decl)))
+
 (intrinsics:defn eval-decl (decl env)
-  (if (shl? 'intrinsics:def expr)
+  (if (shl? 'intrinsics:def decl)
     (panic ['todo 'intrinsics:def])
-    (if (shl? 'intrinsics:defn expr)
+    (if (shl? 'intrinsics:defn decl)
       (panic ['todo 'intrinsics:defn])
       (panic (cons 'not-a-decl decl)))))
 
@@ -56,7 +58,7 @@
           (if (decl? expr)
             (eval-decl expr env)
             (progn (eval expr env) env)))
-        (eval-progns (cdr exprs) env)))))
+        (eval-progn (cdr exprs) env)))))
 
 (intrinsics:defn make-lambda (params body get-env)
   (intrinsics:fn (args)
@@ -64,14 +66,19 @@
 
 (intrinsics:defn make-letrec-env (defns env)
   (intrinsics:defn helper (f)
-    (if (shl? 'intrinsics:defn (nth 0 f))
-      (cons (nth 1 f) (make-lambda (nth 2 f) (skip 3 f) get-env))
+    (if (shl? 'intrinsics:defn f)
+      (cons (nth 1 f) (make-lambda (nth 2 f) (cons 'progn (skip 3 f)) get-env))
       (panic (cons 'not-a-defn f))))
   (intrinsics:defn get-env ()
     (append (map helper defns) env))
-  %[make-letrec-env defns env]
-  %['-> (get-env)]
   (get-env))
 
 (intrinsics:defn match-arguments (params args)
-  (panic '(todo | match-arguments)))
+  (intrinsics:defn helper (params args env)
+    (if (nil? params)
+      env
+      (helper (cdr params) (cdr args)
+        (cons (pair (car params) (car args)) env))))
+  (if (= (length params) (length args))
+    (helper params args nil)
+    (panic "bad argn")))

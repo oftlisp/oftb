@@ -32,6 +32,20 @@ intrinsics! {
     pkg "intrinsics" as Intrinsics;
 
     mod "" as root {
+        fn apply[store, konts](func, args) {
+            let mut lst = args;
+            let mut args = Vec::new();
+            while let Value::Cons(hd, tl) = lst {
+                args.push(store.get(hd));
+                lst = store.get(tl);
+            }
+            if lst == Value::Nil {
+                return ::interpreter::eval::apply(func, args, store, konts)
+            } else {
+                panic!("type error in apply (not a list)")
+            }
+        }
+
         fn car[store, _k](l) {
             match l {
                 Value::Cons(h, _) => store.get(h),

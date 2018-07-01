@@ -47,7 +47,7 @@
                 (if (shl? 'intrinsics:def expanded)
                   (loop decls (cons expanded acc-expanded) nil
                     (progn
-                      (intrinsics:def env (make-letrec-env acc-expanded env))
+                      (intrinsics:def env (make-letrec-env acc-defns env))
                       (intrinsics:def value (eval (nth 2 expanded) env))
                       (cons (pair (nth 1 expanded) value) env))
                     macros)

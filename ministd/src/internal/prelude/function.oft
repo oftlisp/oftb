@@ -1,9 +1,11 @@
 (module ministd/internal/prelude/function
-  [. const fix flip id]
+  [. apply const fix flip id]
   no-prelude)
 
 (intrinsics:defn . (f g)
   \(f (g $)))
+
+(intrinsics:def apply intrinsics:apply)
 
 (intrinsics:defn const (x)
   \x)

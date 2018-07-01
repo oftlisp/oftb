@@ -124,8 +124,6 @@ def triple_compile_macro_expander():
 def bootstrap():
     run("macro-expander", "make-prelude", "ministd",
         redirect="ministd/src/prelude.oft")
-    run("macro-expander", "make-env", "ministd",
-        redirect="macro-expander/src/interpreter/env.oft")
     test_macro_expander(False)
     triple_compile_macro_expander()
     test_macro_expander(True)

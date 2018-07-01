@@ -3,6 +3,8 @@
 
 (import macro-expander/expand
   [expand-decls])
+(import macro-expander/interpreter/env
+  [intrinsics])
 (import ministd/data/tree-set
   [list->set set-has?])
 
@@ -72,7 +74,7 @@
           \(map-snd (intrinsics:fn (ms) (cons (pair name $) ms)) acc)
           (snd value)))
         (helper (cdr l) acc))))
-  (helper (flat-map \(process-import $ mods) imports) (pair nil nil)))
+  (helper (flat-map \(process-import $ mods) imports) (pair (wrap-intrinsics intrinsics) nil)))
 
 ; Returns the name of a module.
 (intrinsics:defn module-name (m)
@@ -148,8 +150,6 @@
     plain-imports))
 
 (intrinsics:defn process-import-decl (m name mods)
-  %[process-import-decl m name 'mods]
-  %(nth 2 (assoc m mods))
   (option-map \(cons name (left $))
     (lookup name (nth 1 (assoc m mods)))))
 
@@ -163,3 +163,10 @@
 
 (intrinsics:defn prelude-name (std-name)
   (string->symbol (string-append (symbol->string std-name) "/prelude")))
+
+(intrinsics:defn wrap-intrinsics (intrinsics)
+  (intrinsics:defn helper (tmp)
+    (intrinsics:def f (fst tmp))
+    (intrinsics:def arity (snd tmp))
+    \(apply f $))
+  (map \(map-snd helper $) intrinsics))
