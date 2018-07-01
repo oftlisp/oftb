@@ -67,8 +67,6 @@ def build_oftb():
     print_cyan("build oftb")
     print_cyan("check oftb", indent=2)
     cargo("check")
-    print_cyan("document oftb", indent=2)
-    cargo("doc")
     print_cyan("compile oftb", indent=2)
     cargo("build", mode="release")
 
