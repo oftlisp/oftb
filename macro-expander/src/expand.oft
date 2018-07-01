@@ -19,7 +19,7 @@
     (if (shl? 'quote value)
       value
       (if (expandable? value macros)
-        (panic '(todo | expand-value))
+        ((assoc (car value) macros) (cdr value))
         (if (cons? value)
           (map \(expand-value $ env macros) value)
           (if (vector? value)
@@ -37,7 +37,9 @@
         (intrinsics:def value (car decls))
         (intrinsics:def decls (cdr decls))
         (if (shl? 'intrinsics:defmacro value)
-          (panic ['todo 'defmacro value])
+          (progn
+            (intrinsics:def env (make-letrec-env acc-defns env))
+            (loop decls acc-expanded nil env (cons (make-macro value env) macros)))
           (progn
             (intrinsics:def expanded (expand-value value env macros))
             (if (shl? 'progn expanded)
@@ -53,3 +55,11 @@
                     macros)
                   (panic (list 'todo expand-decls expanded))))))))))
   (loop decls nil nil env macros))
+
+; Creates a macro as a single-argument function, which takes the form it expands and returns the
+; expansion. Returns a pair, (MACRO-NAME MACRO-FUNCTION).
+(intrinsics:defn make-macro (macro-form env)
+  (intrinsics:def body (cons 'progn (skip 3 macro-form)))
+  (intrinsics:defn macro (form)
+    (eval body (cons (pair (nth 2 macro-form) form) env)))
+  (pair (nth 1 macro-form) macro))

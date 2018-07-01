@@ -51,7 +51,9 @@
         target-module
         (append imports decls)
         (take (- (length env) initial-env-length) env)
-        (take (- (length macros) initial-macros-length) macros)))
+        ; TODO: This decision is questionable at best...
+        ; (take (- (length macros) initial-macros-length) macros)))
+        macros))
       (cons m mods))
     ; If there are missing modules, try expanding the first one, then try again with that one
     ; added.

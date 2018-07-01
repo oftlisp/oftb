@@ -1,7 +1,7 @@
 (module ministd/internal/prelude/list
-  [1st 2nd 3rd 4th 5th 6th 7th 8th 9th all all-some any append assoc contains? each filter find
-   first-nonnil first-some flat-map foldl foldr index-into init last length lookup map nth
-   partition position position-of reverse skip skip-while split-at take take-while]
+  [all all-some any append assoc contains? each filter find first-nonnil first-some flat-map foldl
+   foldr index-into init last length lookup map nth partition position position-of reverse skip
+   skip-while split-at take take-while]
   no-prelude)
 
 (import ministd/internal/prelude/either
@@ -206,13 +206,3 @@
         (helper (cdr l) (cons (car l) acc))
         acc)))
   (reverse (helper l nil)))
-
-(intrinsics:defn 1st (l) (car l))
-(intrinsics:defn 2nd (l) (car (cdr l)))
-(intrinsics:defn 3rd (l) (car (cdr (cdr l))))
-(intrinsics:defn 4th (l) (car (cdr (cdr (cdr l)))))
-(intrinsics:defn 5th (l) (car (cdr (cdr (cdr (cdr l))))))
-(intrinsics:defn 6th (l) (car (cdr (cdr (cdr (cdr (cdr l)))))))
-(intrinsics:defn 7th (l) (car (cdr (cdr (cdr (cdr (cdr (cdr l))))))))
-(intrinsics:defn 8th (l) (car (cdr (cdr (cdr (cdr (cdr (cdr (cdr l)))))))))
-(intrinsics:defn 9th (l) (car (cdr (cdr (cdr (cdr (cdr (cdr (cdr (cdr l))))))))))

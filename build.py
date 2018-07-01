@@ -140,11 +140,15 @@ if __name__ == "__main__":
     chdir(abspath(join(__file__, "..")))
     parser = ArgumentParser()
     parser.add_argument("--no-oftb-build", action="store_true")
+    parser.add_argument("--rebuild-macro-expander", action="store_true")
     parser.add_argument("--use-system-oftb", action="store_true")
     args = parser.parse_args()
     if args.use_system_oftb:
         oftb_exec = "oftb"
     elif not args.no_oftb_build:
         build_oftb()
-    bootstrap()
-    make_archive()
+    if args.rebuild_macro_expander:
+        triple_compile_macro_expander()
+    else:
+        bootstrap()
+        make_archive()

@@ -49,14 +49,14 @@ intrinsics! {
         fn car[store, _k](l) {
             match l {
                 Value::Cons(h, _) => store.get(h),
-                _ => unimplemented!("Can't take car of {:?}", l)
+                _ => unimplemented!("Can't take car of {}", l.display(store, false))
             }
         }
 
         fn cdr[store, _k](l) {
             match l {
                 Value::Cons(_, t) => store.get(t),
-                _ => unimplemented!("Can't take cdr of {:?}", l)
+                _ => unimplemented!("Can't take cdr of {}", l.display(store, false))
             }
         }
 
