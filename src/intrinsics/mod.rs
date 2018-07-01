@@ -467,12 +467,16 @@ intrinsics! {
         }
 
         fn write_file[store, _k](path, data) {
-            use std::fs::File;
+            use std::fs::{create_dir_all, File};
             use std::io::Write;
+            use std::path::Path;
 
             typeck_name!(path as Value::String(pa, pl), data as Value::Bytes(da, dl));
-            let path = store.get_str(path.0, path.1);
+            let path: &Path = store.get_str(path.0, path.1).as_ref();
             let data = store.get_bytes(data.0, data.1);
+            if let Some(dir) = path.parent() {
+                create_dir_all(dir).ok();
+            }
             let mut file = File::create(path).expect("Couldn't open file for writing");
             file.write_all(data).expect("Couldn't write to file");
             Value::Nil
