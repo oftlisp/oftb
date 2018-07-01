@@ -353,7 +353,7 @@ intrinsics! {
         }
 
         fn write_bytes[store, _k](bytes) {
-            use std::io::{stdout,Write};
+            use std::io::{stdout, Write};
 
             let bytes = if let Value::Bytes(addr, len) = bytes {
                 store.get_bytes(addr, len)
@@ -464,6 +464,18 @@ intrinsics! {
                 }
             };
             store.store_literal(&data)
+        }
+
+        fn write_file[store, _k](path, data) {
+            use std::fs::File;
+            use std::io::Write;
+
+            typeck_name!(path as Value::String(pa, pl), data as Value::Bytes(da, dl));
+            let path = store.get_str(path.0, path.1);
+            let data = store.get_bytes(data.0, data.1);
+            let mut file = File::create(path).expect("Couldn't open file for writing");
+            file.write_all(data).expect("Couldn't write to file");
+            Value::Nil
         }
     }
 

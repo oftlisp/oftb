@@ -1,6 +1,7 @@
 (module ministd/internal/oftb
-  [read-dir read-file]
+  [read-dir read-file write-file]
   no-prelude)
 
-(intrinsics:def read-dir  intrinsics/oftb:read_dir)
-(intrinsics:def read-file intrinsics/oftb:read_file)
+(intrinsics:def read-dir   intrinsics/oftb:read_dir)
+(intrinsics:def read-file  intrinsics/oftb:read_file)
+(intrinsics:def write-file intrinsics/oftb:write_file)
