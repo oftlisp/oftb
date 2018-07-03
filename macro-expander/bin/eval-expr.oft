@@ -2,7 +2,7 @@
   [main])
 
 (import macro-expander/interpreter
-  [eval])
+  [evaluate])
 (import ministd/internal/oftb
   [read-file])
 
@@ -18,7 +18,7 @@
   (intrinsics:def exprs (read-file path))
   (each
     (intrinsics:fn (expr)
-      (intrinsics:def v (eval expr))
+      (intrinsics:def v (evaluate expr))
       (if (not (nil? v))
         (println v)))
     exprs))

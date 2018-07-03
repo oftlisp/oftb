@@ -1,0 +1,14 @@
+(module macro-expander/util
+  [global? global-name])
+
+(intrinsics:defn global? (sym)
+  (some? (string-search ":" (symbol->string sym))))
+
+(intrinsics:defn global-name (mod-name sym-name)
+  (string->symbol
+    (string-append
+      (symbol->string mod-name)
+      (string-append
+        ":"
+        (symbol->string sym-name)))))
+

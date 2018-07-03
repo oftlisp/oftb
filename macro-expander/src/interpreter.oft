@@ -3,6 +3,8 @@
 
 (import macro-expander/interpreter/env
   [intrinsics])
+(import macro-expander/util
+  [global-name])
 
 (intrinsics:defn eval (expr env)
   (if (cons? expr)
@@ -13,9 +15,9 @@
       (if (shl? 'intrinsics:defn expr)
         nil
         (if (shl? 'if expr)
-          (if (eval (nth 1 expr))
-            (eval (nth 2 expr))
-            (eval (nth 3 expr)))
+          (if (eval (nth 1 expr) env)
+            (eval (nth 2 expr) env)
+            (eval (nth 3 expr) env))
           (if (shl? 'intrinsics:fn expr)
             (panic ['todo 'intrinsics:fn])
             (if (shl? 'quote expr)
@@ -40,7 +42,7 @@
 (intrinsics:defn decl? (decl)
   (or (shl? 'intrinsics:def decl) (shl? 'intrinsics:defn decl)))
 
-(intrinsics:defn eval-decl (decl env)
+(intrinsics:defn eval-decl (decl module-name env)
   (if (shl? 'intrinsics:def decl)
     (panic ['todo 'intrinsics:def])
     (if (shl? 'intrinsics:defn decl)
@@ -56,7 +58,7 @@
         (intrinsics:def expr (car exprs))
         (intrinsics:def env
           (if (decl? expr)
-            (eval-decl expr env)
+            (eval-decl expr nil env)
             (progn (eval expr env) env)))
         (eval-progn (cdr exprs) env)))))
 
@@ -64,13 +66,21 @@
   (intrinsics:fn (args)
     (eval body (append (match-arguments params args) (get-env)))))
 
-(intrinsics:defn make-letrec-env (defns env)
-  (intrinsics:defn helper (f)
+(intrinsics:defn make-letrec-env (defns module-name env)
+  (intrinsics:defn get-env ()
+    (intrinsics:def these-defns
+      (if module-name
+        (append
+          (map (. rename make-defn) defns)
+          (map make-defn defns))
+        (map make-defn defns)))
+    (append these-defns env))
+  (intrinsics:defn make-defn (f)
     (if (shl? 'intrinsics:defn f)
       (cons (nth 1 f) (make-lambda (nth 2 f) (cons 'progn (skip 3 f)) get-env))
       (panic (cons 'not-a-defn f))))
-  (intrinsics:defn get-env ()
-    (append (map helper defns) env))
+  (intrinsics:defn rename (item)
+    (map-fst \(global-name module-name $) item))
   (get-env))
 
 (intrinsics:defn match-arguments (params args)

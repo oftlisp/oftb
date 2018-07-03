@@ -1,8 +1,8 @@
 (module macro-expander/compiler/flat-anf
   [anf-modules->flat-anf collect-globals])
 
-(import macro-expander/modules
-  [namespaced-name])
+(import macro-expander/util
+  [global? global-name])
 (import ministd/data/tree-set
   [empty-set set->list set-merge singleton-set])
 
@@ -28,7 +28,7 @@
           (if (nil? collected-defns)
             (helper
               (cdr decls)
-              (map-snd \(cons (pair name (namespaced-name mod-name name)) $) scope)
+              (map-snd \(cons (pair name (global-name mod-name name)) $) scope)
               collected-defns
               (cons (flatten-decl mod-name decl scope) acc))
             (helper
@@ -39,7 +39,7 @@
           (if (shl? 'intrinsics:defn decl)
             (helper
               (cdr decls)
-              (map-snd \(cons (pair name (namespaced-name mod-name name)) $) scope)
+              (map-snd \(cons (pair name (global-name mod-name name)) $) scope)
               (cons decl collected-defns)
               acc)
             (panic (cons 'invalid-decl decl)))))))
@@ -54,7 +54,7 @@
   flattened)
 
 (intrinsics:defn flatten-decl (mod-name decl scope)
-  (intrinsics:def name (namespaced-name mod-name (nth 1 decl)))
+  (intrinsics:def name (global-name mod-name (nth 1 decl)))
   (if (shl? 'intrinsics:def decl)
     (pair name (flatten-expr (nth 2 decl) scope))
     (if (shl? 'intrinsics:defn decl)
@@ -134,9 +134,6 @@
                         (foldl set-merge empty-set (map helper (cdr expr)))
                         (panic (cons 'invalid-anf-expr expr)))))))))))))
   (foldl set-merge empty-set (map (. helper cdr) decls)))
-
-(intrinsics:defn global? (sym)
-  (some? (string-search ":" (symbol->string sym))))
 
 (intrinsics:defn with-var (var scope)
   (map-fst \(cons var $) scope))

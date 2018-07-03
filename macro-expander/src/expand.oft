@@ -2,7 +2,9 @@
   [expand-decls])
 
 (import macro-expander/interpreter
-  [eval make-letrec-env])
+  [eval eval-decl make-letrec-env])
+(import macro-expander/util
+  [global-name])
 
 ; Returns whether the value is directly macro-expandable with any of the given macros.
 (intrinsics:defn expandable? (value macros)
@@ -13,35 +15,35 @@
 
 ; Macro-expands an arbitrary value, returning the expanded value. Will panic if a defmacro is
 ; encountered.
-(intrinsics:defn expand-value (value env macros)
-  (if (shl? 'intrinsics:defmacro value)
+(intrinsics:defn expand-value (value env macros allow-defmacro)
+  (if (and (not allow-defmacro) (shl? 'intrinsics:defmacro value))
     (panic "defmacros must appear at the top level of a module")
     (if (shl? 'quote value)
       value
       (if (expandable? value macros)
-        ((assoc (car value) macros) (cdr value))
+        (expand-value ((assoc (car value) macros) (cdr value)) env macros false)
         (if (cons? value)
-          (map \(expand-value $ env macros) value)
+          (map \(expand-value $ env macros false) value)
           (if (vector? value)
-            (list->vector (map \(expand-value $ env macros) (vector->list value)))
+            (list->vector (map \(expand-value $ env macros false) (vector->list value)))
             value))))))
 
 ; Expands the decls at the top level of a module, expanding progns and evaluating defmacros and
 ; decls. Returns a list (EXPANDED-DECLS ENV MACROS).
-(intrinsics:defn expand-decls (decls env macros)
+(intrinsics:defn expand-decls (module-name decls env macros)
   ; This loop lets us accumulate defns.
   (intrinsics:defn loop (decls acc-expanded acc-defns env macros)
     (if (nil? decls)
-      (list (reverse acc-expanded) (make-letrec-env acc-defns env) macros)
+      (list (reverse acc-expanded) (make-letrec-env acc-defns module-name env) macros)
       (progn
         (intrinsics:def value (car decls))
         (intrinsics:def decls (cdr decls))
-        (if (shl? 'intrinsics:defmacro value)
-          (progn
-            (intrinsics:def env (make-letrec-env acc-defns env))
-            (loop decls acc-expanded nil env (cons (make-macro value env) macros)))
-          (progn
-            (intrinsics:def expanded (expand-value value env macros))
+        (progn
+          (intrinsics:def expanded (expand-value value env macros true))
+          (if (shl? 'intrinsics:defmacro expanded)
+            (progn
+              (intrinsics:def env (make-letrec-env acc-defns module-name env))
+              (loop decls acc-expanded nil env (cons (make-macro expanded env) macros)))
             (if (shl? 'progn expanded)
               (loop (append (cdr expanded) decls) acc-expanded acc-defns env macros)
               (if (shl? 'intrinsics:defn expanded)
@@ -49,9 +51,11 @@
                 (if (shl? 'intrinsics:def expanded)
                   (loop decls (cons expanded acc-expanded) nil
                     (progn
-                      (intrinsics:def env (make-letrec-env acc-defns env))
+                      (intrinsics:def env (make-letrec-env acc-defns module-name env))
                       (intrinsics:def value (eval (nth 2 expanded) env))
-                      (cons (pair (nth 1 expanded) value) env))
+                      (intrinsics:def name (nth 1 expanded))
+                      (cons (pair (global-name module-name name) value)
+                        (cons (pair name value) env)))
                     macros)
                   (panic (list 'todo expand-decls expanded))))))))))
   (loop decls nil nil env macros))

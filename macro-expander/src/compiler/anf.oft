@@ -1,8 +1,8 @@
 (module macro-expander/compiler/anf
   [module->anf])
 
-(import macro-expander/modules
-  [namespaced-name])
+(import macro-expander/util
+  [global-name])
 
 (intrinsics:defn aexpr? (expr)
   (or (shl? 'fn expr)
@@ -100,5 +100,5 @@
 
 (intrinsics:defn flatten-import (i)
   (map
-    \(pair $ (namespaced-name (nth 1 i) $))
+    \(pair $ (global-name (nth 1 i) $))
     (vector->list (nth 2 i))))
