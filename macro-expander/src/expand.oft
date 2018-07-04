@@ -39,7 +39,7 @@
         (intrinsics:def value (car decls))
         (intrinsics:def decls (cdr decls))
         (progn
-          (intrinsics:def expanded %(expand-value value env macros true))
+          (intrinsics:def expanded (expand-value value env macros true))
           (if (shl? 'intrinsics:defmacro expanded)
             (progn
               (intrinsics:def env (make-letrec-env acc-defns module-name env))

@@ -42,7 +42,7 @@
       (intrinsics:def initial-env-length (length env))
       (intrinsics:def initial-macros-length (length macros))
 
-      (intrinsics:def tmp (expand-decls %target-module decls env macros))
+      (intrinsics:def tmp (expand-decls target-module decls env macros))
       (intrinsics:def decls (nth 0 tmp))
       (intrinsics:def env (nth 1 tmp))
       (intrinsics:def macros (nth 2 tmp))
