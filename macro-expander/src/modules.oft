@@ -29,9 +29,7 @@
   ; A list of modules not yet in the mods assoc.
   (intrinsics:def missing-modules (filter
     \(none? (lookup $ mods))
-    (map
-      \(nth 1 $)
-      imports)))
+    (map \(nth 1 $) imports)))
   (if (nil? missing-modules)
     ; If no modules are missing, build the environment and expand the declarations inside the
     ; module. Then, return the module list with this module added.
@@ -44,7 +42,7 @@
       (intrinsics:def initial-env-length (length env))
       (intrinsics:def initial-macros-length (length macros))
 
-      (intrinsics:def tmp (expand-decls target-module decls env macros))
+      (intrinsics:def tmp (expand-decls %target-module decls env macros))
       (intrinsics:def decls (nth 0 tmp))
       (intrinsics:def env (nth 1 tmp))
       (intrinsics:def macros (nth 2 tmp))
@@ -69,22 +67,13 @@
 (intrinsics:defn build-initial-env (imports mods)
   (intrinsics:defn find-global-funcs (mods)
     (intrinsics:defn helper (tmp)
-      (intrinsics:def mod-name (fst tmp))
-      (intrinsics:def mod-body (snd tmp))
-      (panic ['todo find-global-funcs mod-body]))
-    (flat-map helper mods))
-  (intrinsics:defn find-global-macros (mods)
-    (intrinsics:defn helper (tmp)
-      (intrinsics:def mod-name (fst tmp))
-      (intrinsics:def mod-body (snd tmp))
-      (panic ['todo find-global-macros mod-body]))
+      (intrinsics:def mod-name (nth 0 tmp))
+      (intrinsics:def mod-env (nth 2 tmp))
+      (filter \(global? (fst $)) mod-env))
     (flat-map helper mods))
   (intrinsics:defn helper (l acc)
     (if (nil? l)
-      (map-pair
-        \(append (reverse $) (find-global-funcs mods))
-        \(append (reverse $) (find-global-macros mods))
-        acc)
+      (map-pair \(append (reverse $) (find-global-funcs mods)) reverse acc)
       (progn
         (intrinsics:def value (car l))
         (intrinsics:def name (fst value))

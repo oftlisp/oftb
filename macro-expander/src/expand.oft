@@ -2,7 +2,7 @@
   [expand-decls])
 
 (import macro-expander/interpreter
-  [eval eval-decl make-letrec-env])
+  [eval make-letrec-env])
 (import macro-expander/util
   [global-name])
 
@@ -15,13 +15,13 @@
 
 ; Macro-expands an arbitrary value, returning the expanded value. Will panic if a defmacro is
 ; encountered.
-(intrinsics:defn expand-value (value env macros allow-defmacro)
-  (if (and (not allow-defmacro) (shl? 'intrinsics:defmacro value))
+(intrinsics:defn expand-value (value env macros top-level)
+  (if (and (not top-level) (shl? 'intrinsics:defmacro value))
     (panic "defmacros must appear at the top level of a module")
-    (if (shl? 'quote value)
+    (if (or (shl? 'quote value) (and top-level (shl? 'progn value)))
       value
       (if (expandable? value macros)
-        (expand-value ((assoc (car value) macros) (cdr value)) env macros false)
+        (expand-value ((assoc (car value) macros) (cdr value)) env macros top-level)
         (if (cons? value)
           (map \(expand-value $ env macros false) value)
           (if (vector? value)
@@ -39,7 +39,7 @@
         (intrinsics:def value (car decls))
         (intrinsics:def decls (cdr decls))
         (progn
-          (intrinsics:def expanded (expand-value value env macros true))
+          (intrinsics:def expanded %(expand-value value env macros true))
           (if (shl? 'intrinsics:defmacro expanded)
             (progn
               (intrinsics:def env (make-letrec-env acc-defns module-name env))

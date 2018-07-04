@@ -1,5 +1,5 @@
 (module macro-expander/interpreter
-  [eval evaluate eval-decl make-letrec-env])
+  [eval evaluate make-letrec-env])
 
 (import macro-expander/interpreter/env
   [intrinsics])
@@ -42,25 +42,25 @@
 (intrinsics:defn decl? (decl)
   (or (shl? 'intrinsics:def decl) (shl? 'intrinsics:defn decl)))
 
-(intrinsics:defn eval-decl (decl module-name env)
-  (if (shl? 'intrinsics:def decl)
-    (panic ['todo 'intrinsics:def])
-    (if (shl? 'intrinsics:defn decl)
-      (panic ['todo 'intrinsics:defn])
-      (panic (cons 'not-a-decl decl)))))
-
 (intrinsics:defn eval-progn (exprs env)
   (if (nil? exprs)
     (panic 'empty-progn)
-    (if (nil? (cdr exprs))
-      (eval (car exprs) env)
-      (progn
-        (intrinsics:def expr (car exprs))
-        (intrinsics:def env
-          (if (decl? expr)
-            (eval-decl expr nil env)
-            (progn (eval expr env) env)))
-        (eval-progn (cdr exprs) env)))))
+    (progn
+      (intrinsics:def defns (take-while \(shl? 'intrinsics:defn $) exprs))
+      (intrinsics:def exprs (skip-while \(shl? 'intrinsics:defn $) exprs))
+      (if (nil? exprs)
+        nil
+        (progn
+          (intrinsics:def expr (car exprs))
+          (intrinsics:def env (make-letrec-env defns nil env))
+          (if (nil? (cdr exprs))
+            (eval expr env)
+            (progn
+              (intrinsics:def env
+                (if (shl? 'intrinsics:def expr)
+                  (append (pair (nth 1 expr) (eval (nth 2 expr) env)) env)
+                  (progn (eval expr env) env)))
+              (eval-progn (cdr exprs) env))))))))
 
 (intrinsics:defn make-lambda (params body get-env)
   (intrinsics:fn (args)
