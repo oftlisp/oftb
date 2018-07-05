@@ -1,6 +1,7 @@
 (module ministd/internal/prelude/intrinsics
-  [* + - / = byte? bytes? car cdr compare cons cons? eq equals false fixnum? function? gensym list
-   mod nil nil? panic print println string? symbol? true vector? write write-bytes writeln]
+  [* + - / = byte? bytes? car cdr compare cons cons? eq equals false fixnum? function? gensym
+   get-type list make-object mod nil nil? panic print println string? symbol? true vector? write
+   write-bytes writeln]
   no-prelude)
 
 ; Constants
@@ -33,6 +34,10 @@
 (intrinsics:def -   intrinsics/math:subtract)
 (intrinsics:def /   intrinsics/math:divide)
 (intrinsics:def mod intrinsics/math:modulo)
+
+; Objectful Functions
+(intrinsics:def get-type    intrinsics/obj:get_type)
+(intrinsics:def make-object intrinsics/obj:make_object)
 
 ; Type-Test Functions
 (intrinsics:def byte?     intrinsics/types:is_byte)

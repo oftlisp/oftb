@@ -9,7 +9,7 @@
 (import ministd/internal/prelude/function
   [id])
 (import ministd/internal/prelude/intrinsics
-  [/ car cdr compare cons eq list nil nil? vector?])
+  [/ car cdr compare cons eq nil nil? vector?])
 (import ministd/internal/prelude/list
   [length map split-at])
 (import ministd/internal/prelude/option

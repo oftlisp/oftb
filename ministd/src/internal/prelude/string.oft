@@ -6,7 +6,7 @@
 (import ministd/internal/prelude/compare
   [<= >=])
 (import ministd/internal/prelude/intrinsics
-  [+ - car cdr cons equals false list nil nil? panic])
+  [+ - car cdr cons equals false nil nil? panic])
 (import ministd/internal/prelude/list
   [reverse])
 (import ministd/internal/prelude/math

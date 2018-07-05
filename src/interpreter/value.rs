@@ -12,16 +12,29 @@ pub struct Intrinsic(
     pub for<'program> fn(Vec<Value>, &mut Store<'program>, Vec<Kont<'program>>) -> State<'program>,
 );
 
+#[cfg(not(feature = "elf"))]
 impl Debug for Intrinsic {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         write!(fmt, "{:p}", self.0 as *const ())
     }
 }
 
+#[cfg(feature = "elf")]
+impl Debug for Intrinsic {
+    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+        use util::symname;
+
+        if let Some(name) = symname(self.0 as usize) {
+            write!(fmt, "{}", name)
+        } else {
+            write!(fmt, "{:p}", self.0 as *const ())
+        }
+    }
+}
+
 impl Display for Intrinsic {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
-        // TODO: Try to get the name out of the symbol table or something.
-        write!(fmt, "{:?}", self)
+        Debug::fmt(self, fmt)
     }
 }
 
@@ -55,6 +68,7 @@ pub enum Value {
     Fixnum(isize),
     Intrinsic(Intrinsic),
     Nil,
+    Object(Symbol, Addr<Value>),
     String(Addr<String>, usize),
     Symbol(Symbol),
     Vector(Addr<Vector>, usize),
@@ -136,6 +150,19 @@ impl Value {
             (Value::Nil, Value::Nil) => Ordering::Equal,
             (Value::Nil, _) => Ordering::Less,
 
+            (Value::Object(_, _), Value::Byte(_)) => Ordering::Greater,
+            (Value::Object(_, _), Value::Bytes(_, _)) => Ordering::Greater,
+            (Value::Object(_, _), Value::Closure(_)) => Ordering::Greater,
+            (Value::Object(_, _), Value::Cons(_, _)) => Ordering::Greater,
+            (Value::Object(_, _), Value::Fixnum(_)) => Ordering::Greater,
+            (Value::Object(_, _), Value::Intrinsic(_)) => Ordering::Greater,
+            (Value::Object(_, _), Value::Nil) => Ordering::Greater,
+            (Value::Object(lt, lv), Value::Object(rt, rv)) => match lt.cmp(&rt) {
+                Ordering::Equal => store.get(lv).compare(store.get(rv), store),
+                o => o,
+            },
+            (Value::Object(_, _), _) => Ordering::Less,
+
             (Value::String(_, _), Value::Byte(_)) => Ordering::Greater,
             (Value::String(_, _), Value::Bytes(_, _)) => Ordering::Greater,
             (Value::String(_, _), Value::Closure(_)) => Ordering::Greater,
@@ -143,6 +170,7 @@ impl Value {
             (Value::String(_, _), Value::Fixnum(_)) => Ordering::Greater,
             (Value::String(_, _), Value::Intrinsic(_)) => Ordering::Greater,
             (Value::String(_, _), Value::Nil) => Ordering::Greater,
+            (Value::String(_, _), Value::Object(_, _)) => Ordering::Greater,
             (Value::String(la, ln), Value::String(ra, rn)) => {
                 store.get_str(la, ln).cmp(&store.get_str(ra, rn))
             }
@@ -155,6 +183,7 @@ impl Value {
             (Value::Symbol(_), Value::Fixnum(_)) => Ordering::Greater,
             (Value::Symbol(_), Value::Intrinsic(_)) => Ordering::Greater,
             (Value::Symbol(_), Value::Nil) => Ordering::Greater,
+            (Value::Symbol(_), Value::Object(_, _)) => Ordering::Greater,
             (Value::Symbol(_), Value::String(_, _)) => Ordering::Greater,
             (Value::Symbol(l), Value::Symbol(r)) => l.as_str().cmp(&r.as_str()),
             (Value::Symbol(_), _) => Ordering::Less,
@@ -166,6 +195,7 @@ impl Value {
             (Value::Vector(_, _), Value::Fixnum(_)) => Ordering::Greater,
             (Value::Vector(_, _), Value::Intrinsic(_)) => Ordering::Greater,
             (Value::Vector(_, _), Value::Nil) => Ordering::Greater,
+            (Value::Vector(_, _), Value::Object(_, _)) => Ordering::Greater,
             (Value::Vector(_, _), Value::String(_, _)) => Ordering::Greater,
             (Value::Vector(_, _), Value::Symbol(_)) => Ordering::Greater,
             (Value::Vector(la, ln), Value::Vector(ra, rn)) => {
@@ -205,6 +235,9 @@ impl Value {
             (Value::Fixnum(l), Value::Fixnum(r)) => l == r,
             (Value::Intrinsic(l), Value::Intrinsic(r)) => l == r,
             (Value::Nil, Value::Nil) => true,
+            (Value::Object(lt, lv), Value::Object(rt, rv)) => {
+                lt == rt && store.get(lv).equals(store.get(rv), store)
+            }
             (Value::String(la, ln), Value::String(ra, rn)) => if ln == rn {
                 store.get_str(la, ln) == store.get_str(ra, rn)
             } else {
@@ -269,6 +302,12 @@ impl<'store, 'program: 'store> Display for DisplayValue<'store, 'program> {
             Value::Fixnum(n) => write!(fmt, "{}", n),
             Value::Intrinsic(i) => write!(fmt, "<<function {}>>", i),
             Value::Nil => write!(fmt, "()"),
+            Value::Object(t, v) => write!(
+                fmt,
+                "<<{} {}>>",
+                t,
+                self.store.get(v).display(self.store, false)
+            ),
             Value::String(a, l) => {
                 if self.printlike {
                     write!(fmt, "{}", self.store.get_str(a, l))

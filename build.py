@@ -150,3 +150,4 @@ if __name__ == "__main__":
     else:
         bootstrap()
         make_archive()
+    print_cyan("done")

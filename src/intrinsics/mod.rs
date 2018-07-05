@@ -268,7 +268,7 @@ intrinsics! {
                 // TODO Check the string for validity.
                 Value::Symbol(store.get_str(a, l).into())
             } else {
-                unimplemented!("TODO Type Error in string->symbol")
+                unimplemented!("TODO Type Error in string->symbol: {}", s.display(store, false))
             }
         }
 
@@ -277,7 +277,7 @@ intrinsics! {
                 let (a, l) = store.store_str(s.as_str());
                 Value::String(a, l)
             } else {
-                unimplemented!("TODO Type Error in symbol->string")
+                unimplemented!("TODO Type Error in symbol->string: {}", s.display(store, false))
             }
         }
     }
@@ -404,6 +404,32 @@ intrinsics! {
                 (Value::Fixnum(l), Value::Fixnum(r)) => Value::Fixnum(l - r),
                 _ => panic!("TODO Math Type Error {:?} {:?}", l, r),
             }
+        }
+    }
+
+    mod "obj" as obj {
+        fn get_type[_s, _k](val) {
+            let s = match val {
+                Value::Byte(_) => "byte",
+                Value::Bytes(_,_) => "bytes",
+                Value::Closure(_) | Value::Intrinsic(_) => "function",
+                Value::Cons(_,_) => "cons",
+                Value::Fixnum(_) => "fixnum",
+                Value::Nil => "nil",
+                Value::Object(ty, _) => ty.as_str(),
+                Value::String(_, _) => "string",
+                Value::Symbol(_) => "symbol",
+                Value::Vector(_, _) => "vector",
+            };
+            Value::Symbol(s.into())
+        }
+
+        fn make_object[store, _k](ty, val) {
+            typeck_name!(ty as Value::Symbol(ty));
+            if !ty.contains(':') {
+                panic!("Can't create object of reserved type {}", ty);
+            }
+            Value::Object(ty, store.store(val))
         }
     }
 

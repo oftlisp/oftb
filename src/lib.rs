@@ -20,6 +20,8 @@
 extern crate failure;
 #[macro_use]
 extern crate lazy_static;
+#[cfg(feature = "elf")]
+extern crate libc;
 #[macro_use]
 extern crate log;
 extern crate num;
@@ -27,8 +29,12 @@ extern crate pest;
 #[macro_use]
 extern crate pest_derive;
 extern crate podio;
+#[cfg(feature = "elf")]
+extern crate rustc_demangle;
 extern crate semver;
 extern crate symbol;
+#[cfg(feature = "elf")]
+extern crate xmas_elf;
 
 pub mod anf;
 pub mod ast;

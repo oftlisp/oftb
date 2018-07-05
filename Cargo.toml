@@ -10,18 +10,26 @@ version = "0.1.0"
 failure = "0.1.1"
 human-panic = "0.4.0"
 lazy_static = "1.0.0"
+libc = { version = "0.2.42", optional = true }
 log = "0.4.1"
 num = "0.1.42"
 pest = "1.0.6"
 pest_derive = "1.0.6"
 podio = "0.1.6"
+rustc-demangle = { version = "0.1.8", optional = true }
 semver = "0.9.0"
 stderrlog = "0.4.0"
 structopt = "0.2.5"
 symbol = "0.1.1"
+xmas-elf = { version = "0.6.2", optional = true }
 
 [dev-dependencies]
 proptest = "0.7.0"
+
+[features]
+# TODO: Make this only default on Linux
+default = ["elf"]
+elf = ["libc", "rustc-demangle", "xmas-elf"]
 
 [[bin]]
 name = "oftb"
