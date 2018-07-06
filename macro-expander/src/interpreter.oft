@@ -58,7 +58,7 @@
             (progn
               (intrinsics:def env
                 (if (shl? 'intrinsics:def expr)
-                  (append (pair (nth 1 expr) (eval (nth 2 expr) env)) env)
+                  (cons (pair (nth 1 expr) (eval (nth 2 expr) env)) env)
                   (progn (eval expr env) env)))
               (eval-progn (cdr exprs) env))))))))
 
