@@ -85,6 +85,7 @@ impl Attr {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Decl {
     Def(Symbol, Expr),
+    Defmethod(Symbol, Symbol, Vec<Symbol>, Vec<Expr>, Expr),
     Defn(Symbol, Vec<Symbol>, Vec<Expr>, Expr),
 }
 
@@ -103,6 +104,31 @@ impl Decl {
                 return Err(ErrorKind::InvalidDecl(lit).into());
             };
             Ok(Decl::Def(name, expr))
+        } else if lit.is_shl("intrinsics:defmethod".into()) {
+            let mut l = lit.as_list().unwrap();
+            if l.len() < 5 {
+                return Err(ErrorKind::InvalidDecl(lit).into());
+            }
+            let tail = Expr::from_value(l.pop().unwrap())?;
+            let body = l.drain(4..)
+                .map(Expr::from_value)
+                .collect::<Result<_, _>>()?;
+            let args = if let Some(args) = l.pop().unwrap().as_symbol_list() {
+                args
+            } else {
+                return Err(ErrorKind::InvalidDecl(lit).into());
+            };
+            let name = if let Literal::Symbol(name) = l.pop().unwrap() {
+                name
+            } else {
+                return Err(ErrorKind::InvalidDecl(lit).into());
+            };
+            let type_ = if let Literal::Symbol(type_) = l.pop().unwrap() {
+                type_
+            } else {
+                return Err(ErrorKind::InvalidDecl(lit).into());
+            };
+            Ok(Decl::Defmethod(type_, name, args, body, tail))
         } else if lit.is_shl("intrinsics:defn".into()) {
             let mut l = lit.as_list().unwrap();
             if l.len() < 4 {
@@ -132,6 +158,7 @@ impl Decl {
     pub fn name(&self) -> Symbol {
         match *self {
             Decl::Def(name, _) => name,
+            Decl::Defmethod(type_, name, _, _, _) => format!("{}#{}", type_, name).into(),
             Decl::Defn(name, _, _, _) => name,
         }
     }
@@ -141,7 +168,9 @@ impl Decl {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Expr {
     Call(Box<Expr>, Vec<Expr>),
-    Decl(Box<Decl>),
+    Def(Symbol, Box<Expr>),
+    Defn(Symbol, Vec<Symbol>, Vec<Expr>, Box<Expr>),
+    GetMethod(Box<Expr>, Symbol),
     If(Box<Expr>, Box<Expr>, Box<Expr>),
     Lambda(Option<Symbol>, Vec<Symbol>, Vec<Expr>, Box<Expr>),
     Literal(Literal),
@@ -168,9 +197,16 @@ impl Expr {
                     Literal::Symbol(s)
                         if s.as_str() == "intrinsics:def" || s.as_str() == "intrinsics:defn" =>
                     {
-                        let lit = Literal::Cons(h, t_lit);
-                        let decl = Decl::from_value(lit)?;
-                        Ok(Expr::Decl(Box::new(decl)))
+                        match Decl::from_value(Literal::Cons(h, t_lit))? {
+                            Decl::Def(name, expr) => Ok(Expr::Def(name, Box::new(expr))),
+                            Decl::Defn(name, args, body, tail) => {
+                                Ok(Expr::Defn(name, args, body, Box::new(tail)))
+                            }
+                            _ => panic!(),
+                        }
+                    }
+                    Literal::Symbol(s) if s.as_str() == "intrinsics:defmethod" => {
+                        Err(ErrorKind::InvalidExpr(Literal::Cons(h, t_lit)).into())
                     }
                     Literal::Symbol(s) if s.as_str() == "intrinsics:fn" => {
                         if t.len() < 2 {
@@ -189,6 +225,19 @@ impl Expr {
                         };
 
                         Ok(Expr::Lambda(None, args, body, Box::new(tail)))
+                    }
+                    Literal::Symbol(s) if s.as_str() == "intrinsics:get-method" => {
+                        if t.len() != 2 {
+                            return Err(ErrorKind::InvalidExpr(Literal::Cons(h, t_lit)).into());
+                        }
+
+                        let name = if let Literal::Symbol(name) = t.pop().unwrap() {
+                            name
+                        } else {
+                            return Err(ErrorKind::InvalidExpr(Literal::Cons(h, t_lit)).into());
+                        };
+                        let type_ = Expr::from_value(t.pop().unwrap())?;
+                        Ok(Expr::GetMethod(Box::new(type_), name))
                     }
                     Literal::Symbol(s) if s.as_str() == "intrinsics:named-fn" => {
                         if t.len() < 3 {

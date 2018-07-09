@@ -59,6 +59,7 @@ impl Display for CExpr {
 impl Display for AExpr {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         match *self {
+            AExpr::GetMethod(ref type_, name) => write!(fmt, "{}#{}", type_, name),
             AExpr::Global(name) => write!(fmt, "{}", name),
             AExpr::Lambda(None, argn, ref body) => write!(fmt, "lam({}). {}", argn, body),
             AExpr::Lambda(Some(name), argn, ref body) => {

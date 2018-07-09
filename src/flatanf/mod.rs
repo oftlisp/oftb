@@ -53,7 +53,7 @@ pub enum CExpr {
     /// A conditional.
     If(AExpr, Box<Expr>, Box<Expr>),
 
-    /// A letrec, which only handles (mutually) recursive functions.
+    /// A letrec, which only handles (mutually) recursive functions, rather than arbitrary values.
     LetRec(Vec<(Symbol, usize, Expr)>, Box<Expr>),
 }
 
@@ -61,6 +61,11 @@ pub enum CExpr {
 /// side effects, popping from the continuation stack.
 #[derive(Clone, Debug, PartialEq)]
 pub enum AExpr {
+    /// A reference to a method, which is a global whose name is of the form `type#name`. `type` is
+    /// computed as the symbol yielded by evaluating the expression, while `name` is the constant
+    /// symbol.
+    GetMethod(Box<AExpr>, Symbol),
+
     /// A reference to a global value.
     Global(Symbol),
 

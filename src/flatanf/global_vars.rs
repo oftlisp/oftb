@@ -45,6 +45,7 @@ impl AExpr {
     /// subexpressions.
     pub fn global_vars(&self) -> BTreeSet<Symbol> {
         match *self {
+            AExpr::GetMethod(ref type_, _) => type_.global_vars(),
             AExpr::Global(name) => {
                 let mut s = BTreeSet::new();
                 s.insert(name);

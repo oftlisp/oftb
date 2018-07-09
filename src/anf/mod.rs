@@ -23,6 +23,7 @@ pub struct Module {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Decl {
     Def(Symbol, Expr),
+    Defmethod(Symbol, Symbol, Vec<Symbol>, Expr),
     Defn(Symbol, Vec<Symbol>, Expr),
 }
 
@@ -31,6 +32,7 @@ impl Decl {
     pub fn name(&self) -> Symbol {
         match *self {
             Decl::Def(name, _) => name,
+            Decl::Defmethod(type_, name, _, _) => format!("{}#{}", type_, name).into(),
             Decl::Defn(name, _, _) => name,
         }
     }
@@ -59,6 +61,7 @@ pub enum CExpr {
 /// side effects, popping from the continuation stack.
 #[derive(Clone, Debug, PartialEq)]
 pub enum AExpr {
+    GetMethod(Box<AExpr>, Symbol),
     Lambda(Option<Symbol>, Vec<Symbol>, Box<Expr>),
     Literal(Literal),
     Var(Symbol),

@@ -94,6 +94,13 @@ pub fn atomic<'program>(
     store: &mut Store<'program>,
 ) -> Value {
     match *expr {
+        AExpr::GetMethod(ref type_, name) => match atomic(type_, env, globals, store) {
+            Value::Symbol(type_) => globals
+                .get(&format!("{}#{}", type_, name).into())
+                .cloned()
+                .unwrap_or_else(|| panic!("No such method {} for type {}", name, type_)),
+            value => panic!("Invalid type to get-method {}", value.display(store, false)),
+        },
         AExpr::Global(name) => globals
             .get(&name)
             .cloned()

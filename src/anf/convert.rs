@@ -24,6 +24,9 @@ impl From<AstDecl> for Decl {
     fn from(decl: AstDecl) -> Decl {
         match decl {
             AstDecl::Def(name, expr) => Decl::Def(name, expr.into()),
+            AstDecl::Defmethod(type_, name, args, body, tail) => {
+                Decl::Defmethod(type_, name, args, convert_block(body, tail))
+            }
             AstDecl::Defn(name, args, body, tail) => {
                 Decl::Defn(name, args, convert_block(body, tail))
             }
@@ -42,17 +45,22 @@ impl From<AstExpr> for Expr {
                     .collect();
                 apply_context(Expr::CExpr(CExpr::Call(func, args)), context)
             }
-            AstExpr::Decl(decl) => match *decl {
-                // A def in the tail position can have no effect besides that
-                // of evaluating its expr.
-                AstDecl::Def(_, expr) => Expr::Seq(
-                    Box::new(expr.into()),
-                    Box::new(Expr::AExpr(AExpr::Literal(Literal::Nil))),
-                ),
-
-                // A defn in the tail position can have no effect.
-                AstDecl::Defn(_, _, _, _) => Expr::AExpr(AExpr::Literal(Literal::Nil)),
-            },
+            // A def in the tail position can have no effect besides that of evaluating its
+            // expr.
+            AstExpr::Def(_, expr) => Expr::Seq(
+                Box::new((*expr).into()),
+                Box::new(Expr::AExpr(AExpr::Literal(Literal::Nil))),
+            ),
+            // A defn in the tail position can have no effect.
+            AstExpr::Defn(_, _, _, _) => Expr::AExpr(AExpr::Literal(Literal::Nil)),
+            AstExpr::GetMethod(type_, name) => {
+                let mut context = Vec::new();
+                let type_ = into_aexpr(*type_, &mut context);
+                apply_context(
+                    Expr::AExpr(AExpr::GetMethod(Box::new(type_), name)),
+                    context,
+                )
+            }
             AstExpr::If(c, t, e) => {
                 let mut context = Vec::new();
                 let c = into_aexpr(*c, &mut context);
@@ -88,10 +96,14 @@ fn apply_context(mut expr: Expr, mut context: Vec<(Symbol, Expr)>) -> Expr {
     expr
 }
 
-/// Attempts to convert an `ast::Expr` to an `anf::AExpr`, returning the
-/// `ast::Expr` back if it's not possible.
+/// Attempts to convert an `ast::Expr` to an `anf::AExpr`, returning the `ast::Expr` back if it's
+/// not possible.
 fn convert_aexpr(expr: AstExpr) -> Result<AExpr, AstExpr> {
     match expr {
+        AstExpr::GetMethod(type_, name) => match convert_aexpr(*type_) {
+            Ok(type_) => Ok(AExpr::GetMethod(Box::new(type_), name)),
+            Err(type_) => Err(AstExpr::GetMethod(Box::new(type_), name)),
+        },
         AstExpr::Lambda(name, args, body, tail) => Ok(AExpr::Lambda(
             name,
             args,
@@ -118,28 +130,24 @@ fn convert_block(body: Vec<AstExpr>, tail: AstExpr) -> Expr {
     let mut anf = tail.into();
     let mut lambdas = Vec::new();
     for expr in body.into_iter().rev() {
-        if let AstExpr::Decl(decl) = expr {
-            let decl = *decl;
-            match decl {
-                AstDecl::Def(name, expr) => {
-                    anf = save_lambdas(anf, &mut lambdas);
-                    anf = Expr::Let(name, Box::new(expr.into()), Box::new(anf));
-                }
-                AstDecl::Defn(name, args, body, tail) => {
-                    let (name, args, body, tail) = (name, args, body, tail);
-                    lambdas.push((name, args, convert_block(body, tail)));
-                }
+        match expr {
+            AstExpr::Def(name, expr) => {
+                anf = save_lambdas(anf, &mut lambdas);
+                anf = Expr::Let(name, Box::new((*expr).into()), Box::new(anf));
             }
-        } else {
-            anf = save_lambdas(anf, &mut lambdas);
-            anf = Expr::Seq(Box::new(expr.into()), Box::new(anf));
+            AstExpr::Defn(name, args, body, tail) => {
+                lambdas.push((name, args, convert_block(body, *tail)));
+            }
+            expr => {
+                anf = save_lambdas(anf, &mut lambdas);
+                anf = Expr::Seq(Box::new(expr.into()), Box::new(anf));
+            }
         }
     }
     save_lambdas(anf, &mut lambdas)
 }
 
-/// Converts an `ast::Expr` into an `anf::AExpr`, possibly adding bindings to
-/// the context.
+/// Converts an `ast::Expr` into an `anf::AExpr`, possibly adding bindings to the context.
 fn into_aexpr(expr: AstExpr, context: &mut Vec<(Symbol, Expr)>) -> AExpr {
     match convert_aexpr(expr) {
         Ok(aexpr) => aexpr,

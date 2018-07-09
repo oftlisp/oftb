@@ -145,6 +145,11 @@ impl AExpr {
                 }
                 Ok(AExpr::Vector(vals))
             }
+            0x0a => {
+                let type_ = AExpr::deserialize_from(r)?;
+                let name = deserialize_string(r)?;
+                Ok(AExpr::GetMethod(Box::new(type_), name.into()))
+            }
             _ => bail!("Unknown discriminant for AExpr: {}", discrim),
         }
     }

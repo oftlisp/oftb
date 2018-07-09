@@ -87,6 +87,11 @@ impl CExpr {
 impl AExpr {
     fn serialize_to<W: Write>(&self, w: &mut W) -> IoResult<()> {
         match *self {
+            AExpr::GetMethod(ref type_, name) => {
+                w.write_u8(0x0a)?;
+                type_.serialize_to(w)?;
+                serialize_str(name.as_str(), w)
+            }
             AExpr::Global(name) => {
                 w.write_u8(0x05)?;
                 serialize_str(name.as_str(), w)

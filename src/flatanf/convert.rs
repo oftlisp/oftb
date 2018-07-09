@@ -59,8 +59,8 @@ fn compile_module(globals: &mut HashSet<Symbol>, m: Module) -> Result<Vec<(Symbo
 
     // So the logic here is a bit complex...
     //
-    // We want to populate the context with all the defns, until we hit a def.
-    // Then we actually compile all the defns, then the def. Rinse & repeat.
+    // We want to populate the context with all the defns, until we hit a def or defmethod. Then we
+    // actually compile all the defns, then the def/defmethod. Rinse and repeat.
     let mut batched_defns = Vec::new();
     let mut decls = Vec::new();
     let compile_batched_defns = |batched_defns: &mut Vec<_>,
@@ -83,10 +83,10 @@ fn compile_module(globals: &mut HashSet<Symbol>, m: Module) -> Result<Vec<(Symbo
             AnfDecl::Defn(name, args, body) => {
                 batched_defns.push((name, args, body));
             }
-            AnfDecl::Def(name, expr) => {
+            decl => {
                 compile_batched_defns(&mut batched_defns, &mut decls, &mut context)?;
-                let (global_name, expr) =
-                    compile_decl(module_name, &mut context, AnfDecl::Def(name, expr))?;
+                let name = decl.name();
+                let (global_name, expr) = compile_decl(module_name, &mut context, decl)?;
                 decls.push((global_name, expr));
                 context.add_global(name, global_name);
             }
@@ -114,6 +114,13 @@ fn compile_decl(
         AnfDecl::Def(name, expr) => {
             let name = global(mod_name, name);
             let expr = compile_expr(context, expr)?;
+            Ok((name, expr))
+        }
+        AnfDecl::Defmethod(type_, name, args, body) => {
+            let body =
+                context.bracket_many(args.iter().cloned(), |context| compile_expr(context, body))?;
+            let name = format!("{}#{}", type_, name).into();
+            let expr = Expr::AExpr(AExpr::Lambda(Some(name), args.len(), Box::new(body)));
             Ok((name, expr))
         }
         AnfDecl::Defn(name, args, body) => {
@@ -179,6 +186,10 @@ fn compile_cexpr(context: &mut Context, expr: AnfCExpr) -> Result<CExpr, Error> 
 
 fn compile_aexpr(context: &mut Context, expr: AnfAExpr) -> Result<AExpr, Error> {
     match expr {
+        AnfAExpr::GetMethod(type_, name) => {
+            let type_ = compile_aexpr(context, *type_)?;
+            Ok(AExpr::GetMethod(Box::new(type_), name))
+        }
         AnfAExpr::Lambda(name, args, body) => {
             let argn = args.len();
             let body = context.bracket_many(args, |context| compile_expr(context, *body))?;
