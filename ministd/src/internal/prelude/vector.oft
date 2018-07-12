@@ -1,5 +1,5 @@
 (module ministd/internal/prelude/vector
-  [vector-append vector-each vector-length vector-nth vector-slice]
+  [vector-append vector-each vector-length vector-make vector-map vector-nth vector-slice]
   no-prelude)
 
 (import ministd/internal/prelude/intrinsics
@@ -9,6 +9,7 @@
 
 (intrinsics:def vector-append intrinsics/vector:append)
 (intrinsics:def vector-length intrinsics/vector:length)
+(intrinsics:def vector-make   intrinsics/vector:make)
 (intrinsics:def vector-nth    intrinsics/vector:nth)
 (intrinsics:def vector-slice  intrinsics/vector:slice)
 
@@ -21,3 +22,6 @@
         (f (vector-nth n v))
         (helper (1+ n)))))
   (helper 0))
+
+(intrinsics:defn vector-map (f v)
+  (vector-make \(f (vector-nth $ v)) (vector-length v)))

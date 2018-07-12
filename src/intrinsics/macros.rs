@@ -79,7 +79,7 @@ macro_rules! __intrinsics_mod {
             __intrinsics_argn!($name, _args, $($args)*);
             __intrinsics_args!(_args, $($args)*);
             #[allow(unreachable_code)]
-            $crate::interpreter::eval::kontinue($body, $konts)
+            $crate::interpreter::eval::kontinue($body, $store, $konts)
         })*
 
         lazy_static! {

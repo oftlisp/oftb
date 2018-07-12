@@ -5,7 +5,7 @@ mod macros;
 
 use std::cmp::Ordering;
 
-use interpreter::{Addr, Store, Value};
+use interpreter::{Addr, Kont, Store, Value};
 use {parse_file, Literal};
 
 fn boolify(b: bool) -> Value {
@@ -622,6 +622,18 @@ intrinsics! {
                 Value::Fixnum(l as isize)
             } else {
                 unimplemented!("TODO Type Error in vector-length")
+            }
+        }
+
+        fn make[store, konts](func, len) {
+            typeck_name!(len as Value::Fixnum(len));
+            if len <= 0 {
+                let (addr, len) = store.store_vec(&[]);
+                Value::Vector(addr, len)
+            } else {
+                let mut konts = konts;
+                konts.push(Kont::MakeVector(0, (len - 1) as usize, func, Vec::new()));
+                return ::interpreter::eval::apply(func, vec![Value::Fixnum(0)], store, konts);
             }
         }
 

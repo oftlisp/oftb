@@ -19,7 +19,7 @@ pub fn step<'program>(
         Control::Normal(expr) => match *expr {
             Expr::AExpr(ref expr) => {
                 let val = atomic(expr, &env, globals, store);
-                kontinue(val, konts)
+                kontinue(val, store, konts)
             }
             Expr::CExpr(ref expr) => match *expr {
                 CExpr::Call(ref func, ref args) => {
@@ -126,11 +126,28 @@ pub fn atomic<'program>(
 
 /// Applies a value onto the top continuation of the continuation stack,
 /// returning the new state.
-pub fn kontinue<'program>(val: Value, mut konts: Vec<Kont<'program>>) -> State<'program> {
+pub fn kontinue<'program>(
+    val: Value,
+    store: &mut Store<'program>,
+    mut konts: Vec<Kont<'program>>,
+) -> State<'program> {
     match konts.pop() {
         Some(Kont::Let(expr, env)) => {
             let env = env.push(val.clone());
             State::Running(Control::Normal(expr), env, konts)
+        }
+        Some(Kont::MakeVector(cur, last, func, mut acc)) => {
+            debug_assert_eq!(cur, acc.len());
+            acc.push(store.store(val));
+            if cur == last {
+                let (addr, len) = store.store_vec(&acc);
+                debug_assert_eq!(len, cur + 1);
+                kontinue(Value::Vector(addr, len), store, konts)
+            } else {
+                let cur = cur + 1;
+                konts.push(Kont::MakeVector(cur, last, func, acc));
+                apply(func, vec![Value::Fixnum(cur as isize)], store, konts)
+            }
         }
         Some(Kont::Seq(expr, env)) => State::Running(Control::Normal(expr), env, konts),
         None => State::Halted(val),

@@ -28,7 +28,7 @@
                   (intrinsics:def evald (map \(eval $ env) expr))
                   ((car evald) (cdr evald)))))))))
     (if (vector? expr)
-      (panic "TODO Vectors")
+      (vector-map \(eval $ env) expr)
       (if (symbol? expr)
         (expect (lookup expr env)
           (string-append "Unbound variable: " (symbol->string expr)))
