@@ -31,6 +31,9 @@ proptest = "0.7.0"
 default = ["elf"]
 elf = ["libc", "rustc-demangle", "xmas-elf"]
 
+[profile.release]
+debug = true
+
 [[bin]]
 name = "oftb"
 path = "src/bin/main.rs"

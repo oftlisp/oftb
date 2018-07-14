@@ -16,7 +16,8 @@
 ; Macro-expands an arbitrary value, returning the expanded value. Will panic if a defmacro is
 ; encountered.
 (intrinsics:defn expand-value (value env macros top-level)
-  (if (and (not top-level) (shl? 'intrinsics:defmacro value))
+  %(list 'macro-expanding value '...)
+  (intrinsics:def after (if (and (not top-level) (shl? 'intrinsics:defmacro value))
     (panic "defmacros must appear at the top level of a module")
     (if (or (shl? 'quote value) (and top-level (shl? 'progn value)))
       value
@@ -27,6 +28,8 @@
           (if (vector? value)
             (list->vector (map \(expand-value $ env macros false) (vector->list value)))
             value))))))
+  %(list 'EXPAND-VALUE value '---> after)
+  after)
 
 ; Expands the decls at the top level of a module, expanding progns and evaluating defmacros and
 ; decls. Returns a list (EXPANDED-DECLS ENV MACROS).

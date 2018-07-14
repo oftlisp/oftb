@@ -7,6 +7,11 @@
   [global-name])
 
 (intrinsics:defn eval (expr env)
+  (intrinsics:def value (eval-real expr env))
+  %[expr '===> value]
+  value)
+
+(intrinsics:defn eval-real (expr env)
   (if (cons? expr)
     (if (shl? 'intrinsics:def expr)
       (progn
@@ -19,14 +24,16 @@
             (eval (nth 2 expr) env)
             (eval (nth 3 expr) env))
           (if (shl? 'intrinsics:fn expr)
-            (panic ['todo 'intrinsics:fn])
-            (if (shl? 'quote expr)
-              (nth 1 expr)
-              (if (shl? 'progn expr)
-                (eval-progn (cdr expr) env)
-                (progn
-                  (intrinsics:def evald (map \(eval $ env) expr))
-                  ((car evald) (cdr evald)))))))))
+            (make-lambda (nth 1 expr) (skip 2 expr) (intrinsics:fn () env))
+            (if (shl? 'intrinsics:named-fn expr)
+              (make-lambda (nth 2 expr) (skip 3 expr) (intrinsics:fn () env))
+              (if (shl? 'quote expr)
+                (nth 1 expr)
+                (if (shl? 'progn expr)
+                  (eval-progn (cdr expr) env)
+                  (progn
+                    (intrinsics:def evald (map \(eval $ env) expr))
+                    ((car evald) (cdr evald))))))))))
     (if (vector? expr)
       (vector-map \(eval $ env) expr)
       (if (symbol? expr)
