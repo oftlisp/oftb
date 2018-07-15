@@ -7,11 +7,6 @@
   [global-name])
 
 (intrinsics:defn eval (expr env)
-  (intrinsics:def value (eval-real expr env))
-  %[expr '===> value]
-  value)
-
-(intrinsics:defn eval-real (expr env)
   (if (cons? expr)
     (if (shl? 'intrinsics:def expr)
       (progn
@@ -24,7 +19,7 @@
             (eval (nth 2 expr) env)
             (eval (nth 3 expr) env))
           (if (shl? 'intrinsics:fn expr)
-            (make-lambda (nth 1 expr) (skip 2 expr) (intrinsics:fn () env))
+            (make-lambda (nth 1 expr) (cons 'progn (skip 2 expr)) (intrinsics:fn () env))
             (if (shl? 'intrinsics:named-fn expr)
               (make-lambda (nth 2 expr) (skip 3 expr) (intrinsics:fn () env))
               (if (shl? 'quote expr)

@@ -366,43 +366,43 @@ intrinsics! {
     }
 
     mod "math" as math {
-        fn add[_s, _k](l, r) {
+        fn add[store, _k](l, r) {
             match (l, r) {
                 (Value::Byte(l), Value::Byte(r)) => Value::Byte(l + r),
                 (Value::Fixnum(l), Value::Fixnum(r)) => Value::Fixnum(l + r),
-                _ => panic!("TODO Math Type Error {:?} {:?}", l, r),
+                _ => panic!("TODO Math Type Error {} + {}", l.display(store, false), r.display(store, false)),
             }
         }
 
-        fn divide[_s, _k](l, r) {
+        fn divide[store, _k](l, r) {
             match (l, r) {
                 (Value::Byte(l), Value::Byte(r)) => Value::Byte(l / r),
                 (Value::Fixnum(l), Value::Fixnum(r)) => Value::Fixnum(l / r),
-                _ => panic!("TODO Math Type Error {:?} {:?}", l, r),
+                _ => panic!("TODO Math Type Error {} / {}", l.display(store, false), r.display(store, false)),
             }
         }
 
-        fn modulo[_s, _k](l, r) {
+        fn modulo[store, _k](l, r) {
             match (l, r) {
                 (Value::Byte(l), Value::Byte(r)) => Value::Byte(l % r),
                 (Value::Fixnum(l), Value::Fixnum(r)) => Value::Fixnum(l % r),
-                _ => panic!("TODO Math Type Error {:?} {:?}", l, r),
+                _ => panic!("TODO Math Type Error {} mod {}", l.display(store, false), r.display(store, false)),
             }
         }
 
-        fn multiply[_s, _k](l, r) {
+        fn multiply[store, _k](l, r) {
             match (l, r) {
                 (Value::Byte(l), Value::Byte(r)) => Value::Byte(l * r),
                 (Value::Fixnum(l), Value::Fixnum(r)) => Value::Fixnum(l * r),
-                _ => panic!("TODO Math Type Error {:?} {:?}", l, r),
+                _ => panic!("TODO Math Type Error {} * {}", l.display(store, false), r.display(store, false)),
             }
         }
 
-        fn subtract[_s, _k](l, r) {
+        fn subtract[store, _k](l, r) {
             match (l, r) {
                 (Value::Byte(l), Value::Byte(r)) => Value::Byte(l - r),
                 (Value::Fixnum(l), Value::Fixnum(r)) => Value::Fixnum(l - r),
-                _ => panic!("TODO Math Type Error {:?} {:?}", l, r),
+                _ => panic!("TODO Math Type Error {} - {}", l.display(store, false), r.display(store, false)),
             }
         }
     }

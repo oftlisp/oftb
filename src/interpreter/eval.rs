@@ -82,7 +82,7 @@ pub fn apply<'program>(
             State::Running(Control::Normal(body), env, konts)
         }
         Value::Intrinsic(Intrinsic(f)) => f(args, store, konts),
-        _ => unimplemented!("Not callable: {:?}", func),
+        _ => unimplemented!("Not callable: {}", func.display(store, false)),
     }
 }
 
