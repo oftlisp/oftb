@@ -18,7 +18,8 @@
           (progn
             (intrinsics:def type (eval (nth 1 expr) env))
             (intrinsics:def name (nth 2 expr))
-            (intrinsics:def method-name (string-append type (string-append "#" name)))
+            (intrinsics:def method-name (string->symbol (string-append (symbol->string type)
+              (string-append "#" (symbol->string name)))))
             (expect (lookup method-name env)
               (string-append "Unbound method: " (symbol->string method-name))))
           (if (shl? 'if expr)
