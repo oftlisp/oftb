@@ -101,4 +101,4 @@
         (cons (pair (car params) (car args)) env))))
   (if (= (length params) (length args))
     (helper params args nil)
-    (panic "bad argn")))
+    (panic (list 'bad-argn params args))))

@@ -28,6 +28,15 @@
             (list->vector (map \(expand-value $ env macros false) (vector->list value)))
             value))))))
 
+; Converts a defmethod to a defn.
+(intrinsics:defn defmethod->defn (form)
+  (intrinsics:def name (string->symbol (string-append
+    (symbol->string (car (cdr form)))
+    (string-append
+      "#"
+      (symbol->string (car (cdr (cdr form))))))))
+  (cons 'intrinsics:defn (cons name (cdr (cdr (cdr form))))))
+
 ; Expands the decls at the top level of a module, expanding progns and evaluating defmacros and
 ; decls. Returns a list (EXPANDED-DECLS ENV MACROS).
 (intrinsics:defn expand-decls (module-name decls env macros)
@@ -46,18 +55,22 @@
               (loop decls acc-expanded nil env (cons (make-macro expanded env) macros)))
             (if (shl? 'progn expanded)
               (loop (append (cdr expanded) decls) acc-expanded acc-defns env macros)
-              (if (shl? 'intrinsics:defn expanded)
-                (loop decls (cons expanded acc-expanded) (cons expanded acc-defns) env macros)
-                (if (shl? 'intrinsics:def expanded)
-                  (loop decls (cons expanded acc-expanded) nil
-                    (progn
-                      (intrinsics:def env (make-letrec-env acc-defns module-name env))
-                      (intrinsics:def value (eval (nth 2 expanded) env))
-                      (intrinsics:def name (nth 1 expanded))
-                      (cons (pair (global-name module-name name) value)
-                        (cons (pair name value) env)))
-                    macros)
-                  (panic (list 'todo expand-decls expanded))))))))))
+              (if (shl? 'intrinsics:defmethod expanded)
+                (progn
+                  (intrinsics:def defnish (defmethod->defn expanded))
+                  (loop decls (cons defnish acc-expanded) (cons defnish acc-defns) env macros))
+                (if (shl? 'intrinsics:defn expanded)
+                  (loop decls (cons expanded acc-expanded) (cons expanded acc-defns) env macros)
+                  (if (shl? 'intrinsics:def expanded)
+                    (loop decls (cons expanded acc-expanded) nil
+                      (progn
+                        (intrinsics:def env (make-letrec-env acc-defns module-name env))
+                        (intrinsics:def value (eval (nth 2 expanded) env))
+                        (intrinsics:def name (nth 1 expanded))
+                        (cons (pair (global-name module-name name) value)
+                          (cons (pair name value) env)))
+                      macros)
+                  (panic (list 'todo expand-decls expanded)))))))))))
   (loop decls nil nil env macros))
 
 ; Creates a macro as a single-argument function, which takes the form it expands and returns the
