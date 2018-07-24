@@ -37,6 +37,7 @@
       (intrinsics:def tmp (build-initial-env imports mods))
       (intrinsics:def env (fst tmp))
       (intrinsics:def macros (snd tmp))
+      ;%[target-module 'imports (map fst macros)]
       (intrinsics:def decls (find-decls mod-src))
 
       (intrinsics:def initial-env-length (length env))
@@ -46,6 +47,7 @@
       (intrinsics:def decls (nth 0 tmp))
       (intrinsics:def env (nth 1 tmp))
       (intrinsics:def macros (nth 2 tmp))
+      ;%[target-module 'exports (map fst macros)]
 
       (intrinsics:def m (list
         target-module
@@ -72,15 +74,19 @@
       (filter \(global? (fst $)) mod-env))
     (flat-map helper mods))
   (intrinsics:defn helper (l acc)
+    %['helper l]
     (if (nil? l)
       (map-pair \(append (reverse $) (find-global-funcs mods)) reverse acc)
       (progn
-        (intrinsics:def value (car l))
-        (intrinsics:def name (fst value))
-        (intrinsics:def acc (either
-          \(map-fst (intrinsics:fn (ds) (cons (pair name $) ds)) acc)
-          \(map-snd (intrinsics:fn (ms) (cons (pair name $) ms)) acc)
-          (snd value)))
+        (intrinsics:def values (fst acc))
+        (intrinsics:def macros (snd acc))
+        (intrinsics:def hd (car l))
+        (intrinsics:def name (nth 0 hd))
+        %['before acc]
+        (intrinsics:def acc (pair
+          (option-cases \(cons (pair name $) values) values (nth 1 hd))
+          (option-cases \(cons (pair name $) macros) macros (nth 2 hd))))
+        %['after acc]
         (helper (cdr l) acc))))
   (helper (flat-map \(process-import $ mods) imports) (pair (wrap-intrinsics intrinsics) nil)))
 
@@ -100,7 +106,7 @@
 (intrinsics:defn find-imports-no-prelude (m)
   (take-while \(shl? 'import $) (cdr m)))
 
-; Returns all the import forms from a module, injecting the prelude import.
+; Returns all the import forms from a module, injecting the prelude import if needed.
 (intrinsics:defn find-imports (m std-name mod-srcs)
   (intrinsics:def prelude (prelude-name std-name))
   (intrinsics:def prelude-exports (module-exports
@@ -111,9 +117,10 @@
     (list 'import prelude prelude-exports)
     (take-while \(shl? 'import $) (cdr m))))
 
-; Takes an import form and an assoc of already-expanded modules. Returns a list of pairs, where the
-; fst is the imported value name and the snd is an either. The left of the either is a value from
-; interpreting the module. The right of the either is a function that runs the macro.
+; Takes an import form and an assoc of already-expanded modules. Returns a list of triples, where
+; the first value is the imported value name, the second value is an option possibly containing a
+; value from interpreting the module, and the third value is an option possibly containing a
+; function that runs the macro.
 (intrinsics:defn process-import (imp mods)
   (intrinsics:def mod-name (nth 1 imp))
   (intrinsics:def plain-imports (vector->list (nth 2 imp)))
@@ -141,25 +148,28 @@
           (if (set-has? $ no-import-macros)
             process-import-decl
             process-import-either)))
-      (expect (f mod-name $ mods)
-        (string-concat (list
+      (intrinsics:def triple (f mod-name $ mods))
+      (if (and (none? (nth 1 triple)) (none? (nth 2 triple)))
+        (panic (string-concat (list
           "Couldn't import "
           (symbol->string $)
           " from "
-          (symbol->string mod-name)))))
+          (symbol->string mod-name))))
+        triple))
     plain-imports))
 
-(intrinsics:defn process-import-decl (m name mods)
-  (option-map \(cons name (left $))
-    (lookup name (nth 1 (assoc m mods)))))
+(intrinsics:defn process-import-decl (mod-name name mods)
+  (intrinsics:def value (lookup name (nth 1 (assoc mod-name mods))))
+  (list name value none))
 
-(intrinsics:defn process-import-either (m name mods)
-  (option-cases some (intrinsics:fn () (process-import-macro m name mods))
-    (process-import-decl m name mods)))
+(intrinsics:defn process-import-either (mod-name name mods)
+  (intrinsics:def value (lookup name (nth 1 (assoc mod-name mods))))
+  (intrinsics:def macro (lookup name (nth 2 (assoc mod-name mods))))
+  (list name value macro))
 
-(intrinsics:defn process-import-macro (m name mods)
-  (option-map \(cons name (right $))
-    (lookup name (nth 2 (assoc m mods)))))
+(intrinsics:defn process-import-macro (mod-name name mods)
+  (intrinsics:def macro (lookup name (nth 2 (assoc mod-name mods))))
+  (list name none macro))
 
 (intrinsics:defn prelude-name (std-name)
   (string->symbol (string-append (symbol->string std-name) "/prelude")))
