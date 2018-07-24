@@ -3,7 +3,7 @@
   no-prelude)
 
 (import ministd/internal/prelude/function
-  [. const id])
+  [. const0 id])
 (import ministd/internal/prelude/intrinsics
   [car cdr cons cons? eq equals println false nil nil? panic true])
 (import ministd/internal/prelude/math
@@ -23,7 +23,7 @@
     (some x)))
 
 (intrinsics:defn option->nullable (opt)
-  (option-cases id (intrinsics:fn () nil) opt))
+  (option-cases id (const0 nil) opt))
 
 (intrinsics:defn option-cases (s n opt)
   (if (some? opt)
@@ -33,7 +33,7 @@
       (panic "Not an option"))))
 
 (intrinsics:defn option-map (f opt)
-  (option-cases (. some f) (intrinsics:fn () none) opt))
+  (option-cases (. some f) (const0 none) opt))
 
 (intrinsics:defn or-else (f opt)
   (option-cases some f opt))

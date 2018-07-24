@@ -82,11 +82,9 @@
         (intrinsics:def macros (snd acc))
         (intrinsics:def hd (car l))
         (intrinsics:def name (nth 0 hd))
-        %['before acc]
         (intrinsics:def acc (pair
-          (option-cases \(cons (pair name $) values) values (nth 1 hd))
-          (option-cases \(cons (pair name $) macros) macros (nth 2 hd))))
-        %['after acc]
+          (option-cases \(cons (pair name $) values) (const0 values) (nth 1 hd))
+          (option-cases \(cons (pair name $) macros) (const0 macros) (nth 2 hd))))
         (helper (cdr l) acc))))
   (helper (flat-map \(process-import $ mods) imports) (pair (wrap-intrinsics intrinsics) nil)))
 
