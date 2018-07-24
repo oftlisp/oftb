@@ -37,7 +37,6 @@
       (intrinsics:def tmp (build-initial-env imports mods))
       (intrinsics:def env (fst tmp))
       (intrinsics:def macros (snd tmp))
-      ;%[target-module 'imports (map fst macros)]
       (intrinsics:def decls (find-decls mod-src))
 
       (intrinsics:def initial-env-length (length env))
@@ -47,7 +46,6 @@
       (intrinsics:def decls (nth 0 tmp))
       (intrinsics:def env (nth 1 tmp))
       (intrinsics:def macros (nth 2 tmp))
-      ;%[target-module 'exports (map fst macros)]
 
       (intrinsics:def m (list
         target-module
@@ -74,7 +72,6 @@
       (filter \(global? (fst $)) mod-env))
     (flat-map helper mods))
   (intrinsics:defn helper (l acc)
-    %['helper l]
     (if (nil? l)
       (map-pair \(append (reverse $) (find-global-funcs mods)) reverse acc)
       (progn
