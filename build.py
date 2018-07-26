@@ -10,7 +10,9 @@ import tarfile
 from tempfile import NamedTemporaryFile
 
 
-def command(cmd, redirect=None):
+def command(cmd, redirect=None, verbose=False):
+    if verbose:
+        print(" ".join(cmd))
     if redirect is True:
         return subprocess.check_output(cmd, universal_newlines=True)
     elif redirect is None:
@@ -32,54 +34,65 @@ def print_cyan(*args, indent=0):
     stdout.write("\x1b[0m\n")
 
 
-def cargo(subcmd, mode="debug"):
-    flags = []
+def cargo(subcmd, mode="debug", verbose=False):
+    flags = ["cargo"]
+    if not verbose:
+        flags.append("-q")
+    flags.append(subcmd)
     if mode == "release":
         flags.append("--release")
-    command(["cargo", "-q", subcmd] + flags)
+    return command(flags, verbose=verbose)
 
 
 oftb_exec = "target/release/oftb"
 
 
-def oftb(args, redirect=None):
-    return command([oftb_exec, "-v"] + args, redirect=redirect)
+def oftb(args, redirect=None, verbose=False):
+    return command([oftb_exec, "-v"] + args,
+                   redirect=redirect, verbose=verbose)
 
 
-def compile(pkg_dir, bin_name):
+def compile(pkg_dir, bin_name, verbose=False):
     print_cyan("compile", bin_name)
-    return oftb(["compile", "--std", "ministd", pkg_dir, bin_name])
+    return oftb(["compile", "--std", "ministd",
+                 pkg_dir, bin_name], verbose=verbose)
 
 
-def interpret(pkg_dir, bin_name, *args, redirect=None):
+def interpret(pkg_dir, bin_name, *args, redirect=None, verbose=False):
     print_cyan("interpret", bin_name, *args)
     bin_path = "{}/build/{}.ofta".format(pkg_dir, bin_name)
-    return oftb(["interpret", bin_path] + list(args), redirect=redirect)
+    return oftb(["interpret", bin_path] + list(args),
+                redirect=redirect, verbose=verbose)
 
 
-def run(pkg_dir, bin_name, *args, redirect=None):
+def run(pkg_dir, bin_name, *args, redirect=None, verbose=False):
     print_cyan("run", bin_name, *args)
     args = ["run", "--std", "ministd", pkg_dir, bin_name] + list(args)
-    return oftb(args, redirect=redirect)
+    return oftb(args, redirect=redirect, verbose=verbose)
 
 
-def build_oftb():
+def build_oftb(verbose=False):
     print_cyan("build oftb")
     print_cyan("check oftb", indent=2)
-    cargo("check")
+    cargo("check", verbose=verbose)
     print_cyan("compile oftb", indent=2)
-    cargo("build", mode="release")
+    cargo("build", mode="release", verbose=verbose)
 
 
-def test_macro_expander(use_prebuilt):
+def test_macro_expander(use_prebuilt, verbose=False):
     def run_with_macros(pkg_dir, bin_name, *args, expected=None):
         if use_prebuilt:
             f = interpret
         else:
             f = run
         f("macro-expander", "oftb-macro-expander", "ministd", pkg_dir,
-          bin_name, redirect="{}/build/{}.ofta".format(pkg_dir, bin_name))
-        output = interpret(pkg_dir, bin_name, *args, redirect=True)
+          bin_name, redirect="{}/build/{}.ofta".format(pkg_dir, bin_name), verbose=verbose)
+        output = interpret(
+            pkg_dir,
+            bin_name,
+            *args,
+            redirect=True,
+            verbose=verbose)
         if expected is not None:
             if output != expected:
                 raise Exception(
@@ -91,13 +104,14 @@ def test_macro_expander(use_prebuilt):
                     expected="Got arguments: (\"foo\" \"bar\")\nHello, world!\nhullo\nGoodbye, world!\n(\"foo\" \"bar\")\n")
 
 
-def triple_compile_macro_expander():
+def triple_compile_macro_expander(verbose=False):
     # Compile 1: oftb -> oftb-macro-expander
-    compile("macro-expander", "oftb-macro-expander")
+    compile("macro-expander", "oftb-macro-expander", verbose=verbose)
 
     # Compile 2: oftb-macro-expander -> oftb-macro-expander-2
     interpret("macro-expander", "oftb-macro-expander", "ministd", "macro-expander",
-              "oftb-macro-expander", redirect="macro-expander/build/oftb-macro-expander-2.ofta")
+              "oftb-macro-expander", redirect="macro-expander/build/oftb-macro-expander-2.ofta",
+              verbose=verbose)
     # oftb-macro-expander and oftb-macro-expander-2 should be equivalent in
     # functionality, but are possibly not identical files, as oftb and
     # oftb-macro-expander may apply different optimizations, order things
@@ -105,7 +119,8 @@ def triple_compile_macro_expander():
 
     # Compile 3: oftb-macro-expander-2 -> oftb-macro-expander-3
     interpret("macro-expander", "oftb-macro-expander-2", "ministd", "macro-expander",
-              "oftb-macro-expander", redirect="macro-expander/build/oftb-macro-expander-3.ofta")
+              "oftb-macro-expander", redirect="macro-expander/build/oftb-macro-expander-3.ofta",
+              verbose=verbose)
 
     # oftb-macro-expander-2 and oftb-macro-expander-3 should be identical,
     # given that the macro expander is deterministic (which it should be).
@@ -119,12 +134,12 @@ def triple_compile_macro_expander():
     remove("macro-expander/build/oftb-macro-expander-3.ofta")
 
 
-def bootstrap():
+def bootstrap(verbose=False):
     run("macro-expander", "make-prelude", "ministd",
         redirect="ministd/src/prelude.oft")
-    test_macro_expander(False)
-    triple_compile_macro_expander()
-    test_macro_expander(True)
+    test_macro_expander(False, verbose=verbose)
+    triple_compile_macro_expander(verbose=verbose)
+    test_macro_expander(True, verbose=verbose)
 
 
 def make_archive():
@@ -140,14 +155,15 @@ if __name__ == "__main__":
     parser.add_argument("--no-oftb-build", action="store_true")
     parser.add_argument("--rebuild-macro-expander", action="store_true")
     parser.add_argument("--use-system-oftb", action="store_true")
+    parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
     if args.use_system_oftb:
         oftb_exec = "oftb"
     elif not args.no_oftb_build:
-        build_oftb()
+        build_oftb(verbose=args.verbose)
     if args.rebuild_macro_expander:
-        triple_compile_macro_expander()
+        triple_compile_macro_expander(verbose=args.verbose)
     else:
-        bootstrap()
+        bootstrap(verbose=args.verbose)
         make_archive()
     print_cyan("done")

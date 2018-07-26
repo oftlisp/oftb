@@ -1,7 +1,7 @@
 (module ministd/internal/prelude/list
-  [all all-some any append assoc contains? each filter find first-nonnil first-some flat-map foldl
-   foldr index-into init last length lookup map nth partition position position-of reverse skip
-   skip-while split-at take take-while]
+  [all all-some any append assoc concat contains? each filter find first-nonnil first-some flat-map
+   foldl foldr index-into init last length lookup map nth partition position position-of reverse
+   skip skip-while split-at take take-while]
   no-prelude)
 
 (import ministd/internal/prelude/either
@@ -49,6 +49,15 @@
       r
       (helper (cdr l) (cons (car l) r))))
   (helper (reverse l) r))
+
+(intrinsics:defn concat (lst)
+  (intrinsics:defn helper (lst acc)
+    (if (nil? lst)
+      acc
+      (helper
+        (cdr lst)
+        (append (car lst) acc))))
+  (helper (reverse lst) nil))
 
 (intrinsics:defn assoc (x l)
   (if (nil? l)

@@ -1,4 +1,4 @@
-(module ministd/prelude [* + - . / 0? 1+ 1- < <= = > >= all all-some and any append apply as-shl assoc byte->bytes byte->fixnum byte? bytes-append bytes-concat bytes-length bytes-nth bytes-slice bytes? car cdr compare cons cons? const0 const1 contains? debug-trace each either eq equals err err? expect false filter find first-nonnil first-some fix fixnum->byte fixnum-and fixnum-not fixnum-or fixnum-rol fixnum-ror fixnum-shl fixnum-shr fixnum-xor fixnum? flat-map flip foldl foldr fst function? gensym get-type id index-into init last left left->option left? length list list->vector lookup make-object map map-err map-fst map-ok map-pair map-result map-snd mod must nil nil? none none? not nth nullable->option ok ok? option->nullable option-cases option-map or or-else pair panic partition position position-of print println reverse right right->option right? shl? skip skip-while snd some some? sort sort-by split-at string->bytes string->symbol string-append string-concat string-join string-length string-nth string-replace string-search string-slice string-split-on string-split-on-1 string? symbol->string symbol? take take-while true vector->list vector-append vector-each vector-length vector-make vector-map vector-nth vector-slice vector? write write-bytes writeln] no-prelude)
+(module ministd/prelude [* + - . / 0? 1+ 1- < <= = > >= all all-some and any append apply as-shl assoc byte->bytes byte->fixnum byte? bytes-append bytes-concat bytes-length bytes-nth bytes-slice bytes? car cdr compare concat cons cons? const0 const1 contains? debug-trace each either eq equals err err? expect false filter find first-nonnil first-some fix fixnum->byte fixnum-and fixnum-not fixnum-or fixnum-rol fixnum-ror fixnum-shl fixnum-shr fixnum-xor fixnum? flat-map flip foldl foldr fst function? gensym get-type id index-into init last left left->option left? length list list->vector lookup make-object map map-err map-fst map-ok map-pair map-result map-snd mod must nil nil? none none? not nth nullable->option ok ok? option->nullable option-cases option-map or or-else pair panic partition position position-of print println reverse right right->option right? shl? skip skip-while snd some some? sort sort-by split-at string->bytes string->symbol string-append string-concat string-join string-length string-nth string-replace string-search string-slice string-split-on string-split-on-1 string? symbol->string symbol? take take-while true vector->list vector-append vector-each vector-length vector-make vector-map vector-nth vector-slice vector? write write-bytes writeln] no-prelude)
 
 (import ministd/internal/prelude/bytes [bytes-append bytes-concat bytes-length bytes-nth bytes-slice])
 (import ministd/internal/prelude/compare [< <= > >=])
@@ -7,7 +7,7 @@
 (import ministd/internal/prelude/fixnum [fixnum-and fixnum-or fixnum-not fixnum-rol fixnum-ror fixnum-shl fixnum-shr fixnum-xor])
 (import ministd/internal/prelude/function [. apply const0 const1 fix flip id])
 (import ministd/internal/prelude/intrinsics [* + - / = byte? bytes? car cdr compare cons cons? eq equals false fixnum? function? gensym get-type list make-object mod nil nil? panic print println string? symbol? true vector? write write-bytes writeln])
-(import ministd/internal/prelude/list [all all-some any append assoc contains? each filter find first-nonnil first-some flat-map foldl foldr index-into init last length lookup map nth partition position position-of reverse skip skip-while split-at take take-while])
+(import ministd/internal/prelude/list [all all-some any append assoc concat contains? each filter find first-nonnil first-some flat-map foldl foldr index-into init last length lookup map nth partition position position-of reverse skip skip-while split-at take take-while])
 (import ministd/internal/prelude/logic [and not or])
 (import ministd/internal/prelude/math [0? 1+ 1-])
 (import ministd/internal/prelude/option [expect none none? nullable->option option->nullable option-cases option-map or-else some some?])
@@ -96,6 +96,7 @@
 (intrinsics:def any any)
 (intrinsics:def append append)
 (intrinsics:def assoc assoc)
+(intrinsics:def concat concat)
 (intrinsics:def contains? contains?)
 (intrinsics:def each each)
 (intrinsics:def filter filter)
