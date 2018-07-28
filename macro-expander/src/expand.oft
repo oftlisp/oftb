@@ -13,27 +13,21 @@
     (some? (lookup s macros))
     false))
 
-; Macro-expands an arbitrary value, returning the expanded value. Will panic if a defmacro is
-; encountered.
-(intrinsics:defn expand-value (value env macros top-level)
-  (intrinsics:defn multiple-helper (value)
-    (intrinsics:def value (expand-value value env macros false))
-    (if (shl? 'macro-multiple value)
-      (cdr value)
-      (list value)))
-  (if (and (not top-level) (shl? 'intrinsics:defmacro value))
-    (panic "defmacros must appear at the top level of a module")
-    (if (shl? 'progn value)
-      %(cons 'progn (flat-map multiple-helper (cdr %value)))
-      (if (shl? 'quote value)
-        value
-        (if (expandable? value macros)
-          (expand-value ((assoc (car value) macros) (cdr value)) env macros top-level)
-          (if (cons? value)
-            (map \(expand-value $ env macros false) value)
-            (if (vector? value)
-              (list->vector (map \(expand-value $ env macros false) (vector->list value)))
-              value)))))))
+; Macro-expands an arbitrary value, returning the list of expanded values. Will panic if a defmacro
+; is encountered and top-level is not true.
+(intrinsics:defn expand-value (value macros top-level)
+  (if (and (shl? 'intrinsics:defmacro value) (not top-level))
+    (panic ["defmacros must appear at the top level of a module" value])
+    (if (shl? 'quote value)
+      (list value)
+      (if (expandable? value macros)
+        (flat-map \(expand-value $ macros top-level)
+          ((assoc (car value) macros) (cdr value)))
+        (if (cons? value)
+          (list (flat-map \(expand-value $ macros false) value))
+          (if (vector? value)
+            (list (list->vector (flat-map \(expand-value $ macros false) (vector->list value))))
+            (list value)))))))
 
 ; Converts a defmethod to a defn.
 (intrinsics:defn defmethod->defn (form)
@@ -46,36 +40,45 @@
 
 ; Expands the decls at the top level of a module, evaluating defmacros and decls. Returns a list
 ; (EXPANDED-DECLS ENV MACROS).
+;
+; TODO: Correctness here is non-obvious; this should probably be rewritten using loop macros and
+; an appropriate state or writer monad.
 (intrinsics:defn expand-decls (module-name decls env macros)
   ; This loop lets us accumulate defns.
-  (intrinsics:defn loop (decls acc-expanded acc-defns env macros)
-    (if (nil? decls)
+  (intrinsics:defn loop (forms acc-expanded acc-defns env macros)
+    (if (nil? forms)
       (list (reverse acc-expanded) (make-letrec-env acc-defns module-name env) macros)
       (progn
-        (intrinsics:def value (car decls))
-        (intrinsics:def decls (cdr decls))
+        (intrinsics:def form (car forms))
+        (intrinsics:def forms (cdr forms))
         (progn
-          (intrinsics:def expanded (expand-value value env macros true))
-          (if (shl? 'intrinsics:defmacro expanded)
-            (progn
-              (intrinsics:def env (make-letrec-env acc-defns module-name env))
-              (loop decls acc-expanded nil env (cons (make-macro expanded env) macros)))
-            (if (shl? 'intrinsics:defmethod expanded)
+          (intrinsics:defn add-values (values acc-expanded acc-defns env macros)
+            (if (nil? values)
+              (loop forms acc-expanded acc-defns env macros)
               (progn
-                (intrinsics:def defnish (defmethod->defn expanded))
-                (loop decls (cons defnish acc-expanded) (cons defnish acc-defns) env macros))
-              (if (shl? 'intrinsics:defn expanded)
-              (loop decls (cons expanded acc-expanded) (cons expanded acc-defns) env macros)
-                (if (shl? 'intrinsics:def expanded)
-                  (loop decls (cons expanded acc-expanded) nil
+                (intrinsics:def form (car values))
+                (intrinsics:def values (cdr values))
+                (if (shl? 'intrinsics:defmacro form)
+                  (progn
+                    (intrinsics:def env (make-letrec-env acc-defns module-name env))
+                    (loop forms acc-expanded nil env (cons (make-macro form env) macros)))
+                  (if (shl? 'intrinsics:defmethod form)
                     (progn
-                      (intrinsics:def env (make-letrec-env acc-defns module-name env))
-                      (intrinsics:def value (eval (nth 2 expanded) env))
-                      (intrinsics:def name (nth 1 expanded))
-                      (cons (pair (global-name module-name name) value)
-                        (cons (pair name value) env)))
-                    macros)
-                (panic (list 'todo expand-decls expanded))))))))))
+                      (intrinsics:def defnish (defmethod->defn form))
+                      (loop forms (cons defnish acc-expanded) (cons defnish acc-defns) env macros))
+                    (if (shl? 'intrinsics:defn form)
+                    (loop forms (cons form acc-expanded) (cons form acc-defns) env macros)
+                      (if (shl? 'intrinsics:def form)
+                        (loop forms (cons form acc-expanded) nil
+                          (progn
+                            (intrinsics:def env (make-letrec-env acc-defns module-name env))
+                            (intrinsics:def value (eval (nth 2 form) env))
+                            (intrinsics:def name (nth 1 form))
+                            (cons (pair (global-name module-name name) value)
+                              (cons (pair name value) env)))
+                          macros)
+                        (panic (list 'todo expand-decls form)))))))))
+          (add-values (expand-value form macros true) acc-expanded acc-defns env macros)))))
   (loop decls nil nil env macros))
 
 ; Creates a macro as a single-argument function, which takes the form it expands and returns the

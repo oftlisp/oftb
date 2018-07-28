@@ -32,7 +32,7 @@
       (cons 'call (cons func args)))))))
 
 (intrinsics:defn decl->anf (decl)
-  (if (shl? 'intrinsics:def %decl)
+  (if (shl? 'intrinsics:def decl)
     (append (take 2 decl) (list (expr->anf (nth 2 decl))))
     (if (shl? 'intrinsics:defn decl)
       (append (take 3 decl) (progn->anf (skip 3 decl)))
