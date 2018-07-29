@@ -61,22 +61,21 @@
                 (if (shl? 'intrinsics:defmacro form)
                   (progn
                     (intrinsics:def env (make-letrec-env acc-defns module-name env))
-                    (loop forms acc-expanded nil env (cons (make-macro form env) macros)))
+                    (add-values values acc-expanded nil env (cons (make-macro form env) macros)))
                   (if (shl? 'intrinsics:defmethod form)
                     (progn
                       (intrinsics:def defnish (defmethod->defn form))
-                      (loop forms (cons defnish acc-expanded) (cons defnish acc-defns) env macros))
+                      (add-values values (cons defnish acc-expanded) (cons defnish acc-defns) env macros))
                     (if (shl? 'intrinsics:defn form)
-                    (loop forms (cons form acc-expanded) (cons form acc-defns) env macros)
+                      (add-values values (cons form acc-expanded) (cons form acc-defns) env macros)
                       (if (shl? 'intrinsics:def form)
-                        (loop forms (cons form acc-expanded) nil
-                          (progn
-                            (intrinsics:def env (make-letrec-env acc-defns module-name env))
-                            (intrinsics:def value (eval (nth 2 form) env))
-                            (intrinsics:def name (nth 1 form))
-                            (cons (pair (global-name module-name name) value)
-                              (cons (pair name value) env)))
-                          macros)
+                        (progn
+                          (intrinsics:def env (make-letrec-env acc-defns module-name env))
+                          (intrinsics:def value (eval (nth 2 form) env))
+                          (intrinsics:def name (nth 1 form))
+                          (intrinsics:def env (cons (pair (global-name module-name name) value)
+                            (cons (pair name value) env)))
+                          (add-values values (cons form acc-expanded) nil env macros))
                         (panic (list 'todo expand-decls form)))))))))
           (add-values (expand-value form macros true) acc-expanded acc-defns env macros)))))
   (loop decls nil nil env macros))
