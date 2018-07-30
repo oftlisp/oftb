@@ -85,7 +85,7 @@ def test_macro_expander(use_prebuilt, verbose=False):
             f = interpret
         else:
             f = run
-        f("macro-expander", "oftb-macro-expander", "ministd", pkg_dir,
+        f("macro-expander", "oftb-stage2", "ministd", pkg_dir,
           bin_name, redirect="{}/build/{}.ofta".format(pkg_dir, bin_name), verbose=verbose)
         output = interpret(
             pkg_dir,
@@ -105,33 +105,33 @@ def test_macro_expander(use_prebuilt, verbose=False):
 
 
 def triple_compile_macro_expander(verbose=False):
-    # Compile 1: oftb -> oftb-macro-expander
-    compile("macro-expander", "oftb-macro-expander", verbose=verbose)
+    # Compile 1: oftb -> oftb-stage2
+    compile("macro-expander", "oftb-stage2", verbose=verbose)
 
-    # Compile 2: oftb-macro-expander -> oftb-macro-expander-2
-    interpret("macro-expander", "oftb-macro-expander", "ministd", "macro-expander",
-              "oftb-macro-expander", redirect="macro-expander/build/oftb-macro-expander-2.ofta",
+    # Compile 2: oftb-stage2 -> oftb-stage2-2
+    interpret("macro-expander", "oftb-stage2", "ministd", "macro-expander",
+              "oftb-stage2", redirect="macro-expander/build/oftb-stage2-2.ofta",
               verbose=verbose)
-    # oftb-macro-expander and oftb-macro-expander-2 should be equivalent in
+    # oftb-stage2 and oftb-stage2-2 should be equivalent in
     # functionality, but are possibly not identical files, as oftb and
-    # oftb-macro-expander may apply different optimizations, order things
+    # oftb-stage2 may apply different optimizations, order things
     # differently, etc.
 
-    # Compile 3: oftb-macro-expander-2 -> oftb-macro-expander-3
-    interpret("macro-expander", "oftb-macro-expander-2", "ministd", "macro-expander",
-              "oftb-macro-expander", redirect="macro-expander/build/oftb-macro-expander-3.ofta",
+    # Compile 3: oftb-stage2-2 -> oftb-stage2-3
+    interpret("macro-expander", "oftb-stage2-2", "ministd", "macro-expander",
+              "oftb-stage2", redirect="macro-expander/build/oftb-stage2-3.ofta",
               verbose=verbose)
 
-    # oftb-macro-expander-2 and oftb-macro-expander-3 should be identical,
+    # oftb-stage2-2 and oftb-stage2-3 should be identical,
     # given that the macro expander is deterministic (which it should be).
-    if not filecmp.cmp("macro-expander/build/oftb-macro-expander-2.ofta",
-                       "macro-expander/build/oftb-macro-expander-3.ofta"):
-        raise Exception("oftb-macro-expander is not idempotent")
+    if not filecmp.cmp("macro-expander/build/oftb-stage2-2.ofta",
+                       "macro-expander/build/oftb-stage2-3.ofta"):
+        raise Exception("oftb-stage2 is not idempotent")
 
-    shutil.copy("macro-expander/build/oftb-macro-expander-3.ofta",
-                "macro-expander/build/oftb-macro-expander.ofta")
-    remove("macro-expander/build/oftb-macro-expander-2.ofta")
-    remove("macro-expander/build/oftb-macro-expander-3.ofta")
+    shutil.copy("macro-expander/build/oftb-stage2-3.ofta",
+                "macro-expander/build/oftb-stage2.ofta")
+    remove("macro-expander/build/oftb-stage2-2.ofta")
+    remove("macro-expander/build/oftb-stage2-3.ofta")
 
 
 def bootstrap(verbose=False):

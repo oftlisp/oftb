@@ -16,5 +16,8 @@
     (name "make-prelude")
     (path "bin/make-prelude.oft"))
   (binary
-    (name "oftb-macro-expander")
-    (path "bin/main.oft")))
+    (name "oftb-expand")
+    (path "bin/expand.oft"))
+  (binary
+    (name "oftb-stage2")
+    (path "bin/stage2.oft")))
