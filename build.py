@@ -134,12 +134,17 @@ def triple_compile_macro_expander(verbose=False):
     remove("macro-expander/build/oftb-stage2-3.ofta")
 
 
+def compile_extras(verbose=False):
+    compile("macro-expander", "oftb-expand", verbose=verbose)
+
+
 def bootstrap(verbose=False):
     run("macro-expander", "make-prelude", "ministd",
         redirect="ministd/src/prelude.oft")
     test_macro_expander(False, verbose=verbose)
     triple_compile_macro_expander(verbose=verbose)
     test_macro_expander(True, verbose=verbose)
+    compile_extras(verbose=verbose)
 
 
 def make_archive():
