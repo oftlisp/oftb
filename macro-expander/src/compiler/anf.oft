@@ -42,7 +42,7 @@
 (intrinsics:defn expr->anf (expr)
   (if (shl? 'intrinsics:def expr)
     (list 'seq
-      (nth 2 expr)
+      (expr->anf (nth 2 expr))
       (list 'lit nil))
     (if (shl? 'intrinsics:defn expr)
       (list 'lit nil)
@@ -58,7 +58,7 @@
           (list 'fn none (nth 1 expr) (progn->anf (skip 2 expr)))
           (if (shl? 'intrinsics:get-method expr)
             (anf->aexpr (expr->anf (nth 1 expr))
-              \(list 'get-method $ (nth 2 expr)))
+              \%(list 'get-method $ (nth 2 expr)))
             (if (shl? 'quote expr)
               (list 'lit (nth 1 expr))
               (if (shl? 'progn expr)
