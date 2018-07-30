@@ -73,42 +73,44 @@
       (nth 1 expr)
       (length (nth 2 expr))
       (flatten-expr (nth 3 expr) (with-vars (nth 2 expr) scope)))
-    (if (shl? 'lit expr)
-      expr
-      (if (shl? 'var expr)
-        (progn
-          (intrinsics:def var (nth 1 expr))
-          (if (global? var)
-            (cons 'global var)
-            (expect
-              (or-else
-                (intrinsics:fn () (option-map \(cons 'local $) (position-of var (fst scope))))
-                (option-map \(cons 'global $) (lookup var (snd scope))))
-              (string-append "variable not found: " (symbol->string (nth 1 expr))))))
-        (if (shl? 'vector expr)
-          (cons 'vector (map \(flatten-expr $ scope) (cdr expr)))
-          (if (shl? 'call expr)
-            (cons 'call (map \(flatten-expr $ scope) (cdr expr)))
-            (if (shl? 'if expr)
-              (cons 'if (map \(flatten-expr $ scope) (cdr expr)))
-              (if (shl? 'letrec expr)
-                (progn
-                  (intrinsics:def scope (with-vars (map fst (nth 1 expr)) scope))
-                  (list 'letrec
-                    (map
-                      (intrinsics:fn (func)
-                        (list
-                          (nth 0 func)
-                          (length (nth 1 func))
-                          (flatten-expr (nth 2 func) (with-vars (nth 1 func) scope))))
-                      (nth 1 expr))
-                    (flatten-expr (nth 2 expr) scope)))
-                (if (shl? 'let expr)
-                  (list 'let (flatten-expr (nth 2 expr) scope)
-                    (flatten-expr (nth 3 expr) (map-fst \(cons (nth 1 expr) $) scope)))
-                  (if (shl? 'seq expr)
-                    (list 'seq (flatten-expr (nth 1 expr) scope) (flatten-expr (nth 2 expr) scope))
-                    (panic (cons 'invalid-anf-expr expr))))))))))))
+    (if (shl? 'get-method expr)
+      (list 'get-method (flatten-expr (nth 1 expr) scope) (nth 2 expr))
+      (if (shl? 'lit expr)
+        expr
+        (if (shl? 'var expr)
+          (progn
+            (intrinsics:def var (nth 1 expr))
+            (if (global? var)
+              (cons 'global var)
+              (expect
+                (or-else
+                  (intrinsics:fn () (option-map \(cons 'local $) (position-of var (fst scope))))
+                  (option-map \(cons 'global $) (lookup var (snd scope))))
+                (string-append "variable not found: " (symbol->string (nth 1 expr))))))
+          (if (shl? 'vector expr)
+            (cons 'vector (map \(flatten-expr $ scope) (cdr expr)))
+            (if (shl? 'call expr)
+              (cons 'call (map \(flatten-expr $ scope) (cdr expr)))
+              (if (shl? 'if expr)
+                (cons 'if (map \(flatten-expr $ scope) (cdr expr)))
+                (if (shl? 'letrec expr)
+                  (progn
+                    (intrinsics:def scope (with-vars (map fst (nth 1 expr)) scope))
+                    (list 'letrec
+                      (map
+                        (intrinsics:fn (func)
+                          (list
+                            (nth 0 func)
+                            (length (nth 1 func))
+                            (flatten-expr (nth 2 func) (with-vars (nth 1 func) scope))))
+                        (nth 1 expr))
+                      (flatten-expr (nth 2 expr) scope)))
+                  (if (shl? 'let expr)
+                    (list 'let (flatten-expr (nth 2 expr) scope)
+                      (flatten-expr (nth 3 expr) (map-fst \(cons (nth 1 expr) $) scope)))
+                    (if (shl? 'seq expr)
+                      (list 'seq (flatten-expr (nth 1 expr) scope) (flatten-expr (nth 2 expr) scope))
+                      (panic (cons 'invalid-anf-expr expr)))))))))))))
 
 (intrinsics:defn collect-globals (decls)
   (intrinsics:defn helper (expr)
@@ -124,15 +126,17 @@
               (foldl set-merge (helper (nth 2 expr)) (map \(helper (nth 2 $)) (nth 1 expr)))
               (if (shl? 'global expr)
                 (singleton-set (cdr expr))
-                (if (shl? 'fn expr)
-                  (helper (nth 3 expr))
-                  (if (shl? 'lit expr)
-                    empty-set
-                    (if (shl? 'local expr)
+                (if (shl? 'get-method expr)
+                  empty-set
+                  (if (shl? 'fn expr)
+                    (helper (nth 3 expr))
+                    (if (shl? 'lit expr)
                       empty-set
-                      (if (shl? 'vector expr)
-                        (foldl set-merge empty-set (map helper (cdr expr)))
-                        (panic (cons 'invalid-anf-expr expr)))))))))))))
+                      (if (shl? 'local expr)
+                        empty-set
+                        (if (shl? 'vector expr)
+                          (foldl set-merge empty-set (map helper (cdr expr)))
+                          (panic (cons 'invalid-anf-expr expr))))))))))))))
   (foldl set-merge empty-set (map (. helper cdr) decls)))
 
 (intrinsics:defn with-var (var scope)
