@@ -94,8 +94,8 @@
                         (bytes-append
                           (bytes-append
                             b"\x0a"
-                            (serialize-expr (nth 1 expr))
-                          (serialize-string (symbol->string (nth 2 expr)))))
+                            (serialize-expr (nth 1 expr)))
+                          (serialize-string (symbol->string (nth 2 expr))))
                         (panic (cons 'invalid-expr expr))))))))))))))
 
 (intrinsics:defn serialize-list (f l)

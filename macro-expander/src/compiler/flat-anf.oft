@@ -42,7 +42,20 @@
               (map-snd \(cons (pair name (global-name mod-name name)) $) scope)
               (cons decl collected-defns)
               acc)
-            (panic (cons 'invalid-decl decl)))))))
+            (if (shl? 'intrinsics:defmethod decl)
+              (progn
+                (intrinsics:def name (string->symbol
+                  (string-append (symbol->string (nth 1 decl))
+                    (string-append "#" (symbol->string (nth 2 decl))))))
+                ; This might be slightly semantically incorrect w.r.t. accumulated decls, but code
+                ; shouldn't rely on this being the case regardless... And I know that isn't a real
+                ; excuse, but this is the middle bootstrap stage, gosh darn it!
+                (helper
+                  (cdr decls)
+                  (map-snd \(cons (pair name (global-name mod-name name)) $) scope)
+                  collected-defns
+                  (cons (flatten-decl mod-name decl scope) acc)))
+              (panic (cons 'unknown-decl decl))))))))
 
   (intrinsics:def imports (fst (snd m)))
   (intrinsics:def decls (snd (snd m)))
@@ -65,7 +78,17 @@
             (some name)
             (length (nth 2 decl))
             (flatten-expr (skip 3 decl) (with-vars (nth 2 decl) scope)))))
-      (panic (cons 'invalid-decl decl)))))
+      (if (shl? 'intrinsics:defmethod decl)
+        (progn
+          (intrinsics:def name (string->symbol
+            (string-append (symbol->string (nth 1 decl))
+              (string-append "#" (symbol->string (nth 2 decl))))))
+          (pair name
+            (list 'fn
+              (some name)
+              (length (nth 3 decl))
+              (flatten-expr (skip 4 decl) (with-vars (nth 3 decl) scope)))))
+        (panic (cons 'unknown-decl decl))))))
 
 (intrinsics:defn flatten-expr (expr scope)
   (if (shl? 'fn expr)

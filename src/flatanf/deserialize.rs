@@ -70,7 +70,7 @@ impl Expr {
                 Ok(Expr::Seq(Box::new(a), Box::new(b)))
             }
             0x02...0x04 => CExpr::deserialize_from_discrim(r, discrim).map(Expr::CExpr),
-            0x05...0x09 => AExpr::deserialize_from_discrim(r, discrim).map(Expr::AExpr),
+            0x05...0x0a => AExpr::deserialize_from_discrim(r, discrim).map(Expr::AExpr),
             _ => bail!("Unknown discriminant for Expr: {}", discrim),
         }
     }

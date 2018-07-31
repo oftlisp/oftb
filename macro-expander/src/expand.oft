@@ -65,7 +65,7 @@
                   (if (shl? 'intrinsics:defmethod form)
                     (progn
                       (intrinsics:def defnish (defmethod->defn form))
-                      (add-values values (cons defnish acc-expanded) (cons defnish acc-defns) env macros))
+                      (add-values values (cons form acc-expanded) (cons defnish acc-defns) env macros))
                     (if (shl? 'intrinsics:defn form)
                       (add-values values (cons form acc-expanded) (cons form acc-defns) env macros)
                       (if (shl? 'intrinsics:def form)
