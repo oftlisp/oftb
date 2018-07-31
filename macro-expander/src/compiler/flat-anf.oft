@@ -52,9 +52,9 @@
                 ; excuse, but this is the middle bootstrap stage, gosh darn it!
                 (helper
                   (cdr decls)
-                  (map-snd \(cons (pair name (global-name mod-name name)) $) scope)
-                  collected-defns
-                  (cons (flatten-decl mod-name decl scope) acc)))
+                  (map-snd \(cons (pair name name) $) scope)
+                  (cons decl collected-defns)
+                  acc))
               (panic (cons 'unknown-decl decl))))))))
 
   (intrinsics:def imports (fst (snd m)))
