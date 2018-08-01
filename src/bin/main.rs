@@ -1,8 +1,5 @@
 #[macro_use]
 extern crate failure;
-#[cfg(not(debug_assertions))]
-#[macro_use]
-extern crate human_panic;
 #[macro_use]
 extern crate log;
 extern crate oftb;
@@ -24,7 +21,6 @@ use options::{Options, Subcommand};
 fn main() {
     let options = Options::from_args();
     options.start_logger();
-    setup_panic(&options);
 
     let result = match options.subcommand {
         Subcommand::Compile(options) => compile::run(options),
@@ -49,15 +45,5 @@ fn main() {
         }
         debug!("{}", err.backtrace());
         exit(1);
-    }
-}
-
-#[cfg(debug_assertions)]
-fn setup_panic(_: &Options) {}
-
-#[cfg(not(debug_assertions))]
-fn setup_panic(options: &Options) {
-    if options.verbose == 0 {
-        setup_panic!();
     }
 }
