@@ -4,6 +4,7 @@
 mod macros;
 
 use std::cmp::Ordering;
+use std::process::exit;
 
 use interpreter::{Addr, Kont, Store, Value};
 use {parse_file, Literal};
@@ -111,6 +112,17 @@ intrinsics! {
         }
 
         fn panic[store, _k](msg) {
+            if let Value::Cons(hd, tl) = msg {
+                if store.get(hd) == Value::Symbol("exit".into()) {
+                    if let Value::Fixnum(n) = store.get(tl) {
+                        // TODO: When this gets more Erlang-like, the behavior here will need to
+                        // change.
+                        exit(n as i32);
+                    }
+                }
+            } else if msg == Value::Symbol("exit".into()) {
+                exit(0);
+            }
             panic!("{}", msg.display(store, false))
         }
     }
